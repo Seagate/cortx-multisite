@@ -5,6 +5,10 @@
 # Replicator script which host different end points
 
 from aiohttp import web
+import logging
+from log import setup_logging
+
+LOG = logging.getLogger('multisite')
 
 # Dictionary holding job_id and fdmi record
 # e.g. : jobs = {"job1": {"obj_name": "foo"}}
@@ -26,7 +30,7 @@ async def list_jobs(request):
 
     Handler to list in-progress jobs
     """
-    print(jobs_inprogress)
+    LOG.info(jobs_inprogress)
     # Returns jobs_inprogress
     return web.Response(text="In-Progress jobs : {}".format(jobs_inprogress))
 
@@ -38,7 +42,7 @@ async def get_job_attr(request):
     Handler to get job attributes
     """
     ID = (request.match_info['job_id'])
-    print('ID is : {} '.format(ID))
+    LOG.info('ID is : {} '.format(ID))
     if ID in jobs.keys():
         return web.Response(text="Job attributes : {}".format(jobs[ID]))
     else:
@@ -52,7 +56,7 @@ async def add_jobs(request):
     Handler to add jobs to the queue
     """
     entries = await request.json()
-    print(entries)
+    LOG.info(entries)
     jobs.update(entries)
     return web.Response(text="Present jobs are : {}".format(jobs))
 
@@ -64,7 +68,7 @@ async def abort_job(request):
     Handler to abort a job with given job_id
     """
     ID = (request.match_info['job_id'])
-    print("ID is {}".format(ID))
+    LOG.info("ID is {}".format(ID))
     if ID in jobs.keys():
         jobs_inprogress.remove(ID)
         del jobs[ID]
