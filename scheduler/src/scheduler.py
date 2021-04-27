@@ -7,6 +7,10 @@
 
 from aiohttp import web
 from urllib.parse import urlparse, parse_qs
+import logging
+from log import setup_logging
+
+LOG = logging.getLogger('multisite')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -21,6 +25,8 @@ jobs_inprogress = []
 # Route table declaration
 routes = web.RouteTableDef()
 
+setup_logging()
+
 @routes.get('/jobs')
 async def list_jobs(request):
     """
@@ -33,7 +39,7 @@ async def list_jobs(request):
     query = parse_qs(url_ob.query)
     # Return in progress jobs
     if 'inProgress' in query:
-        print('InProgress is : {}'.format(query['inProgress']))
+        LOG.info('InProgress is : {}'.format(query['inProgress']))
         return web.Response(text='InProgress jobs: {}'.format(jobs_inprogress))
     # Return job counts
     elif 'count' in query:
@@ -44,13 +50,16 @@ async def list_jobs(request):
         pf_cnt = req_list1[0]
         req_list2 = query['subscriber_id']
         sub_id = req_list2[0]
-        print(pf_cnt)
-        print("sub_id is : {}".format(sub_id))
+        LOG.info(pf_cnt)
+        LOG.info("sub_id is : {}".format(sub_id))
         if sub_id in subscribers:
             if int(pf_cnt) <= len(jobs):
                 return web.Response(text='{}'.format(pf_cnt))
             else:
                 return web.Response(text='{}'.format(len(jobs)))
+        else:
+            return web.Response(text='INVALID subscriber')
+
     else:
         return web.Response(text='List of jobs : {}'.format(jobs.keys()))
 
@@ -75,9 +84,9 @@ async def add_jobs(request):
     Handler to add jobs to the job queue
     """
     entries = await request.json()
-    print(entries)
+    LOG.info(entries)
     jobs.update(entries)
-    print('Job list : {}'.format(jobs))
+    LOG.info('Job list : {}'.format(jobs))
 
 @routes.post('/subscribers')
 async def add_subscriber(request):
@@ -87,12 +96,12 @@ async def add_subscriber(request):
     Handler for Subscriber
     """
     sub_id = await request.json()
-    print('subscriber is : {}'.format(sub_id))
+    LOG.info('subscriber is : {}'.format(sub_id))
     if sub_id in subscribers:
         return web.Response(text='Replicator is Already subscribed!')
     else:
         subscribers.append(sub_id)
-        print(subscribers)
+        LOG.info(subscribers)
         return web.Response(text='Replicator added! : {}'.format(subscribers))
 
 @routes.get('/subscribers')
@@ -113,7 +122,7 @@ async def update_job_attr(request):
     """
     val = await request.json()  # ToDo
     ID = (request.match_info['job_id'])
-    print('ID is {}'.format(ID))
+    LOG.info('ID is {}'.format(ID))
     if ID in jobs.keys():
         jobs[ID] = val
         return web.Response(text='{} attributs are: {}'.format(ID, jobs[ID]))
