@@ -1,24 +1,20 @@
 #!/usr/bin/env python3
 
-## @scheder scheduler client
+# scheduler client
 #
-#  This file contains scheduler client
-#  which makes various REST api calls
+# This file contains scheduler client
+# which makes various REST api calls
 
 import sys
 import aiohttp
 import asyncio
 
-job_url = 'http://0.0.0.0:8080/jobs'
-sub_url = 'http://0.0.0.0:8080/subscribers'
-
-## @main main function
-#
-#  Main functioncalls All REST api
-
-
 async def main():
+    """
+    main - main function
 
+    Main function calls REST apis
+    """
     # Client session starts here
     async with aiohttp.ClientSession() as session:
 
