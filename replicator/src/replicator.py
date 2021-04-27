@@ -23,8 +23,6 @@ jobs_inprogress = []
 # Route table declaration
 routes = web.RouteTableDef()
 
-setup_logging()
-
 @routes.get('/jobs')
 async def list_jobs(request):
     """
@@ -32,7 +30,7 @@ async def list_jobs(request):
 
     Handler to list in-progress jobs
     """
-    LOG.info(jobs_inprogress)
+    LOG.debug(jobs_inprogress)
     # Returns jobs_inprogress
     return web.Response(text="In-Progress jobs : {}".format(jobs_inprogress))
 
@@ -43,8 +41,8 @@ async def get_job_attr(request):
 
     Handler to get job attributes
     """
-    ID = (request.match_info['job_id'])
-    LOG.info('ID is : {} '.format(ID))
+    ID = (request.match_debug['job_id'])
+    LOG.debug('ID is : {} '.format(ID))
     if ID in jobs.keys():
         return web.Response(text="Job attributes : {}".format(jobs[ID]))
     else:
@@ -58,7 +56,7 @@ async def add_jobs(request):
     Handler to add jobs to the queue
     """
     entries = await request.json()
-    LOG.info(entries)
+    LOG.debug(entries)
     jobs.update(entries)
     return web.Response(text="Present jobs are : {}".format(jobs))
 
@@ -69,8 +67,8 @@ async def abort_job(request):
 
     Handler to abort a job with given job_id
     """
-    ID = (request.match_info['job_id'])
-    LOG.info("ID is {}".format(ID))
+    ID = (request.match_debug['job_id'])
+    LOG.debug("ID is {}".format(ID))
     if ID in jobs.keys():
         jobs_inprogress.remove(ID)
         del jobs[ID]
@@ -79,6 +77,12 @@ async def abort_job(request):
     else:
         return web.Response(text="ERROR : No such job present!")
 
-app = web.Application()
-app.add_routes(routes)
-web.run_app(app)
+
+if __name__ == '__main__':
+
+    #setup logging
+    setup_logging()
+
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app)
