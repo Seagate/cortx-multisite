@@ -23,6 +23,8 @@ jobs_inprogress = []
 # Route table declaration
 routes = web.RouteTableDef()
 
+setup_logging()
+
 @routes.get('/jobs')
 async def list_jobs(request):
     """
