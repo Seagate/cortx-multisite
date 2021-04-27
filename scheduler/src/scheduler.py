@@ -25,8 +25,6 @@ jobs_inprogress = []
 # Route table declaration
 routes = web.RouteTableDef()
 
-setup_logging()
-
 @routes.get('/jobs')
 async def list_jobs(request):
     """
@@ -39,7 +37,7 @@ async def list_jobs(request):
     query = parse_qs(url_ob.query)
     # Return in progress jobs
     if 'inProgress' in query:
-        LOG.info('InProgress is : {}'.format(query['inProgress']))
+        LOG.debug('InProgress jobs : {}'.format(query['inProgress']))
         return web.Response(text='InProgress jobs: {}'.format(jobs_inprogress))
     # Return job counts
     elif 'count' in query:
@@ -50,8 +48,8 @@ async def list_jobs(request):
         pf_cnt = req_list1[0]
         req_list2 = query['subscriber_id']
         sub_id = req_list2[0]
-        LOG.info(pf_cnt)
-        LOG.info("sub_id is : {}".format(sub_id))
+        LOG.debug(pf_cnt)
+        LOG.debug("sub_id is : {}".format(sub_id))
         if sub_id in subscribers:
             if int(pf_cnt) <= len(jobs):
                 return web.Response(text='{}'.format(pf_cnt))
@@ -70,7 +68,7 @@ async def get_job_attr(request):
 
     Handler api to fetch job attributes
     """
-    ID = (request.match_info['job_id'])
+    ID = (request.match_debug['job_id'])
     if ID in jobs.keys():
         return web.Response(text='attributes are : {}'.format(jobs['job_id']))
     else:
@@ -84,9 +82,9 @@ async def add_jobs(request):
     Handler to add jobs to the job queue
     """
     entries = await request.json()
-    LOG.info(entries)
+    LOG.debug(entries)
     jobs.update(entries)
-    LOG.info('Job list : {}'.format(jobs))
+    LOG.debug('Job list : {}'.format(jobs))
 
 @routes.post('/subscribers')
 async def add_subscriber(request):
@@ -96,12 +94,12 @@ async def add_subscriber(request):
     Handler for Subscriber
     """
     sub_id = await request.json()
-    LOG.info('subscriber is : {}'.format(sub_id))
+    LOG.debug('subscriber is : {}'.format(sub_id))
     if sub_id in subscribers:
         return web.Response(text='Replicator is Already subscribed!')
     else:
         subscribers.append(sub_id)
-        LOG.info(subscribers)
+        LOG.debug(subscribers)
         return web.Response(text='Replicator added! : {}'.format(subscribers))
 
 @routes.get('/subscribers')
@@ -121,8 +119,8 @@ async def update_job_attr(request):
     Update attributes for job_id
     """
     val = await request.json()  # ToDo
-    ID = (request.match_info['job_id'])
-    LOG.info('ID is {}'.format(ID))
+    ID = (request.match_debug['job_id'])
+    LOG.debug('ID is {}'.format(ID))
     if ID in jobs.keys():
         jobs[ID] = val
         return web.Response(text='{} attributs are: {}'.format(ID, jobs[ID]))
@@ -131,6 +129,11 @@ async def update_job_attr(request):
         jobs_inprogress.append(ID)
         return web.Response(text='updated list is {}!'.format(jobs))
 
-app = web.Application()
-app.add_routes(routes)
-web.run_app(app)
+if __name__ == '__main__':
+
+    #setup logging
+    setup_logging()
+
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app)
