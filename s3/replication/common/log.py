@@ -26,7 +26,6 @@ LOG = logging.getLogger('multisite')
 
 __all__ = ['TRACE', 'setup_logging']
 
-
 def setup_logging(log_level: int = logging.DEBUG):
     """
     Initializes the logging for the whole application.

@@ -4,9 +4,14 @@
 #
 # Replicator script which host different end points
 
+import sys
 from aiohttp import web
 import logging
+sys.path.append("../../common")
 from log import setup_logging
+
+logging.basicConfig(filename="replicator.log",
+                format='%(asctime)s [%(levelname)s] %(message)s', filemode='w')
 
 LOG = logging.getLogger('multisite')
 
@@ -41,7 +46,7 @@ async def get_job_attr(request):
 
     Handler to get job attributes
     """
-    ID = (request.match_debug['job_id'])
+    ID = (request.match_info['job_id'])
     LOG.debug('ID is : {} '.format(ID))
     if ID in jobs.keys():
         return web.Response(text="Job attributes : {}".format(jobs[ID]))
@@ -67,7 +72,7 @@ async def abort_job(request):
 
     Handler to abort a job with given job_id
     """
-    ID = (request.match_debug['job_id'])
+    ID = (request.match_info['job_id'])
     LOG.debug("ID is {}".format(ID))
     if ID in jobs.keys():
         jobs_inprogress.remove(ID)

@@ -4,13 +4,17 @@
 #
 # This file contains scheduler sever
 # which exposes various REST endpoints
-
+import sys
 from aiohttp import web
 from urllib.parse import urlparse, parse_qs
 import logging
+sys.path.append("../../common")
 from log import setup_logging
 
 LOG = logging.getLogger('multisite')
+
+logging.basicConfig(filename="scheduler.log",
+                format='%(asctime)s [%(levelname)s] %(message)s', filemode='w')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -68,7 +72,7 @@ async def get_job_attr(request):
 
     Handler api to fetch job attributes
     """
-    ID = (request.match_debug['job_id'])
+    ID = (request.match_info['job_id'])
     if ID in jobs.keys():
         return web.Response(text='attributes are : {}'.format(jobs['job_id']))
     else:
@@ -119,7 +123,7 @@ async def update_job_attr(request):
     Update attributes for job_id
     """
     val = await request.json()  # ToDo
-    ID = (request.match_debug['job_id'])
+    ID = (request.match_info['job_id'])
     LOG.debug('ID is {}'.format(ID))
     if ID in jobs.keys():
         jobs[ID] = val

@@ -9,6 +9,7 @@ import sys
 import aiohttp
 import asyncio
 import logging
+sys.path.append("../../common")
 from log import setup_logging
 
 LOG = logging.getLogger('multisite')
