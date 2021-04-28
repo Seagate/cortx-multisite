@@ -41,7 +41,7 @@ TODO assign stable IDs
     * - ID
       - Description
       - Comment
-      - Implemented?
+      - Done?
       - How and what else is needed?
     * - TBD
       - It MUST be possible to get DIX PUT kv pairs in a Motr process which
