@@ -86,9 +86,9 @@ TODO assign stable IDs
         Each CAS would provide such position, and it would be possible to do
         per- storage device pruning.
     * - TBD
-      - It MUST be possible to adjust FDMI filter targets in runtime.
-      - This is needed to configure or reconfigure sets of Schedulers after
-        initial cluster bootstrap.
+      - It MUST be possible to adjust FDMI filters in runtime.
+      - This is needed to adjust replication configuration (what to replicate,
+        where to replicate to etc.) in runtime.
       - N
       - We need to do the following:
 
@@ -97,6 +97,17 @@ TODO assign stable IDs
           startup
         - add a way to update filter configuration in runtime
         - add a tool to adjust filter configuration in runtime
+
+        Currently we have filters in Motr configuration. Each filter supports
+        only one endpoint where to send FDMI records to (this may not enough
+        for multisite). Currently there is no code in Motr/Hare to add filters
+        to the configuration or to change the filter configuration.
+    * - TBD
+      - It MUST be possible to adjust FDMI filter targets in runtime.
+      - This is needed to configure or reconfigure sets of Schedulers after
+        initial cluster bootstrap.
+      - N
+      - We need to do the same as for the previous requirement.
     * - TBD
       - It MUST be possible to determine the outcome of DIX PUT operation if
         multiple DIX PUT operations were executed for the same key in the same
