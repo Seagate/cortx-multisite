@@ -35,6 +35,7 @@ Requirements
 TODO assign stable IDs
 
 .. list-table::
+    :widths: 5 30 30 5 30
     :header-rows: 1
 
     * - ID
