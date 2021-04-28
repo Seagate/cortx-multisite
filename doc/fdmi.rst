@@ -49,9 +49,13 @@ TODO assign stable IDs
         request.
       - It's needed to be able to get kv pairs from all CASes in a single Motr
         process.
-      - Y
-      - FDMI record contains CAS kv pairs, and there is an implementation for
-        FDMI record sending/receiving.
+      - N
+      - FDMI record is supposed to contains CAS kv pairs, and there is an
+        implementation for FDMI record sending/receiving. There is a bug in
+        implementation though: kv pairs are being freed too early in CAS, and
+        they are not beint sent nor logged to BE log as FOL records. Fix for
+        this issue: `cortx-motr/pull/588
+        <https://github.com/Seagate/cortx-motr/pull/588>`_.
     * - TBD
       - It MUST be possible to get CAS kv pair even if CAS was not running at
         the time DIX PUT execution was initiated.
