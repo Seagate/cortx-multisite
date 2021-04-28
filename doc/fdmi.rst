@@ -113,9 +113,9 @@ TODO assign stable IDs
       - N
       - We need to do the same as for the previous requirement.
     * - TBD
-      - It MUST be possible to determine the outcome of DIX PUT operation if
+      - It MUST be possible to determine the outcome of a DIX PUT operation if
         multiple DIX PUT operations were executed for the same key in the same
-        index.
+        distributed index.
       - This is needed to handle sequential and, if required, concurrent object
         metadata updates for the same object.
       - N
