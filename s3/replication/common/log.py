@@ -42,7 +42,7 @@ def setup_logging(log_level: int = logging.DEBUG):
     multisite_logger.setLevel(log_level)
 
     formatter = logging.Formatter(
-        '%(asctime)s [%(levelname)s] {%(threadName)s} %(message)s')
+        '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
     console = logging.StreamHandler(sys.stdout)
     console.setFormatter(formatter)
 

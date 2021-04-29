@@ -5,13 +5,14 @@
 # Replicator script which host different end points
 
 import sys
+import json
 from aiohttp import web
 import logging
 sys.path.append("../../common")
 from log import setup_logging
 
 logging.basicConfig(filename="replicator.log",
-                format='%(asctime)s [%(levelname)s] %(message)s', filemode='w')
+            format='%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s', filemode='w')
 
 LOG = logging.getLogger('multisite')
 
@@ -49,7 +50,8 @@ async def get_job_attr(request):
     ID = (request.match_info['job_id'])
     LOG.debug('ID is : {} '.format(ID))
     if ID in jobs.keys():
-        return web.Response(text="Job attributes : {}".format(jobs[ID]))
+        #return web.Response(text="Job attributes : {}".format(jobs[ID]))
+        return web.json_response(jobs[ID])
     else:
         return web.Response(text="ERROR : Job is not present!")
 

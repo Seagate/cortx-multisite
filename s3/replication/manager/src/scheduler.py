@@ -5,6 +5,7 @@
 # This file contains scheduler sever
 # which exposes various REST endpoints
 import sys
+import json
 from aiohttp import web
 from urllib.parse import urlparse, parse_qs
 import logging
@@ -14,7 +15,7 @@ from log import setup_logging
 LOG = logging.getLogger('multisite')
 
 logging.basicConfig(filename="scheduler.log",
-                format='%(asctime)s [%(levelname)s] %(message)s', filemode='w')
+            format='%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s', filemode='w')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -74,7 +75,8 @@ async def get_job_attr(request):
     """
     ID = (request.match_info['job_id'])
     if ID in jobs.keys():
-        return web.Response(text='attributes are : {}'.format(jobs['job_id']))
+        return web.json_response(jobs[ID])
+        #return web.Response(text='attributes are : {}'.format(jobs['job_id']))
     else:
         return web.Response(text='ERROR : Job is not present!')
 
