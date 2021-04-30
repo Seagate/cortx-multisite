@@ -127,3 +127,37 @@ TODO assign stable IDs
       - N
       - DTM0 design is required to figure out how to do this and DTM0 landing
         is required to implement this.
+
+
+Prototype
+=========
+
+As a part of `FDMI prototype work
+<https://github.com/Seagate/cortx/milestone/1>`_ the following was done:
+
+- single node Motr/Hare/`m0crate`/FDMI plugin setup was used;
+- a hardcoded FDMI filter was added on FDMI source side to check that FDMI
+  records could be filtered before they are sent to FDMI plugins;
+- full `m0crate` `DIX` -> `CAS` -> FDMI plugin pipeline was configured and
+  implemented. FDMI plugin in this setup prints kv pairs that are originated in
+  `m0crate`;
+- analysis of what is missing in the current FDMI implementation that is needed
+  for FDMI-based replication.
+
+Outcome:
+
+- a branch with the source code https://github.com/somnathbghule/cortx-motr/commits/fdmi-plugin-multisite;
+- documentation on how to run the prototype https://github.com/somnathbghule/cortx-motr/blob/fdmi-plugin-multisite/doc/m0sched.rst;
+- list of requirements for FDMI for Multisite replication along with approach on how to implement each of them https://github.com/Seagate/cortx-multisite/blob/max/doc/fdmi.rst#requirements;
+- GitHub milestone to track the work https://github.com/Seagate/cortx/milestone/1;
+- a bugfix for Motr: CAS kv pairs were not added to FDMI records: https://github.com/Seagate/cortx-motr/pull/588;
+
+Further directions
+
+- make a setup with S3server as a source of DIX operations to see object
+  metadata in the output of the FDMI plugin made as part of the prototype;
+- land the prototype as an FDMI demo to Motr. There is no such demo at the
+  moment;
+- incorporate knowledge acquired during prototype work into Multisite designs;
+- design, plan and implement missing FDMI features that are needed for
+  Multisite work.
