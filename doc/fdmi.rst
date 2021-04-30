@@ -157,7 +157,8 @@ Outcome:
 Further directions
 
 - make a setup with S3server as a source of DIX operations to see object
-  metadata in the output of the FDMI plugin made as part of the prototype;
+  metadata in the output of the FDMI plugin that was made as part of the
+  prototype;
 - land the prototype as an FDMI demo to Motr. There is no such demo at the
   moment;
 - incorporate knowledge acquired during prototype work into Multisite designs;
