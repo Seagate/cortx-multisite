@@ -57,6 +57,12 @@ TODO assign stable IDs
         this issue: `cortx-motr/pull/588
         <https://github.com/Seagate/cortx-motr/pull/588>`_.
     * - TBD
+      - It MUST be possible to get CAS kv pairs even after FDMI plugin restart.
+      - It's needed to handle Scheduler restarts.
+      - N
+      - Hare MUST notify Motr about Scheduler restart. RPC connections need to
+        be re-established after Scheduler restart.
+    * - TBD
       - It MUST be possible to get CAS kv pair even if CAS was not running at
         the time DIX PUT execution was initiated.
       - This is needed to handle transient process failures (crash/restart
