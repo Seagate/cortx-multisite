@@ -34,6 +34,8 @@ Requirements
 
 TODO assign stable IDs
 
+TBD == to be defined
+
 .. list-table::
     :widths: 5 30 30 5 30
     :header-rows: 1
