@@ -12,17 +12,19 @@ import logging
 sys.path.append("../../common")
 from log import setup_logging
 
-LOG = logging.getLogger('multisite')
+LOG = logging.getLogger('multisite')#TBD
 
 async def main():
-    """
-    main - main function
+    """Main function
 
     Main function calls REST apis
+
     """
     # Client session starts here
 
     setup_logging()
+
+    fetch_cnt = 2 # Added default count for pre-fetch request
 
     async with aiohttp.ClientSession() as session:
 
@@ -30,35 +32,43 @@ async def main():
         async with session.get(
         'http://0.0.0.0:8080/jobs', params={"inProgress": "true"}) as response:
             LOG.info("Status: {}".format(response.status))
-            html = await response.text()
+            html = await response.json()
+            LOG.info("Body: {}".format(html))
+
+
+        # Get jobs list
+        async with session.get('http://0.0.0.0:8080/jobs')as response:
+            LOG.info("Status: {}".format(response.status))
+            html = await response.json()
+            LOG.info("Body: {}".format(html))
+
+        # Get subscriber list
+        async with session.get(
+        'http://0.0.0.0:8080/subscribers') as response:
+            LOG.info("Status: {}".format(response.status))
+            html = await response.json()
+            LOG.info("Body: {}".format(html))
+
+        # Update subscriber list
+        async with session.post(
+        'http://0.0.0.0:8080/subscribers', json={'sub_id': sys.argv[2] }) as response:
+            LOG.info("Status: {}".format(response.status))
+            html = await response.json()
             LOG.info("Body: {}".format(html))
 
         # Get Prefetch count
         async with session.get(
         'http://0.0.0.0:8080/jobs',
-        params={"prefetch": "10", "subscriber_id": "sub1"}) as response:
+        params={"prefetch": fetch_cnt, "subscriber_id": "sub1"}) as response:
             LOG.info("Status: {}".format(response.status))
-            html = await response.text()
-            LOG.info("Body: {}".format(html))
-
-        # Get jobs list
-        async with session.get('http://0.0.0.0:8080/jobs')as response:
-            LOG.info("Status: {}".format(response.status))
-            html = await response.text()
-            LOG.info("Body: {}".format(html))
-
-        # Update subscriber list
-        async with session.post(
-        'http://0.0.0.0:8080/subscribers', json={'rep1': 'R1'}) as resp:
-            LOG.info("Status: {}".format(response.status))
-            html = await response.text()
+            html = await response.json()
             LOG.info("Body: {}".format(html))
 
         # Update Job's attributes
         async with session.put(
         'http://0.0.0.0:8080/jobs/' + sys.argv[1], json={"K2": "V2"}) as resp:
             LOG.info("Status: {}".format(response.status))
-            html = await response.text()
+            html = await response.json()
             LOG.info("Body: {}".format(html))
 
 loop = asyncio.get_event_loop()

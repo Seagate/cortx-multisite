@@ -8,13 +8,13 @@ import sys
 import json
 from aiohttp import web
 import logging
-sys.path.append("../../common")
 from log import setup_logging
+from replicator_conf_init import config
 
-logging.basicConfig(filename="replicator.log",
-            format='%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s', filemode='w')
+# logging.basicConfig(filename="replicator.log",
+#             format='%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s', filemode='w')
 
-LOG = logging.getLogger('multisite')
+LOG = logging.getLogger('replicator_proc')
 
 # Dictionary holding job_id and fdmi record
 # e.g. : jobs = {"job1": {"obj_name": "foo"}}
@@ -31,65 +31,75 @@ routes = web.RouteTableDef()
 
 @routes.get('/jobs')
 async def list_jobs(request):
-    """
-    list_jobs list jobs
+    """List_jobs
 
     Handler to list in-progress jobs
+
     """
     LOG.debug(jobs_inprogress)
     # Returns jobs_inprogress
-    return web.Response(text="In-Progress jobs : {}".format(jobs_inprogress))
+    return web.json_response({'jobs': jobs_inprogress})
 
 @routes.get('/jobs/{job_id}')
 async def get_job_attr(request):
-    """
-    get_job_attr get attributes
+    """Get job attribute
 
-    Handler to get job attributes
+    Handler to get job attributes for given job_id
+
     """
-    ID = (request.match_info['job_id'])
-    LOG.debug('ID is : {} '.format(ID))
-    if ID in jobs.keys():
-        #return web.Response(text="Job attributes : {}".format(jobs[ID]))
-        return web.json_response(jobs[ID])
+    id = (request.match_info['job_id'])
+    LOG.debug('id is : {} '.format(id))
+    if id in jobs.keys():
+        return web.json_response({id:jobs[id]})
     else:
-        return web.Response(text="ERROR : Job is not present!")
+        return web.json_response({'Response' : 'ERROR : Job is not present!'})
 
 @routes.put('/jobs')
 async def add_jobs(request):
-    """
-    add_jobs add jobs
+    """Add job in the queue
 
     Handler to add jobs to the queue
+
     """
     entries = await request.json()
     LOG.debug(entries)
     jobs.update(entries)
-    return web.Response(text="Present jobs are : {}".format(jobs))
+    return web.json_response({'jobs': jobs})
 
 @routes.post('/jobs/{job_id}')
 async def abort_job(request):
-    """
-    abort_job abort job
+    """Abort a job
 
     Handler to abort a job with given job_id
+
     """
-    ID = (request.match_info['job_id'])
-    LOG.debug("ID is {}".format(ID))
-    if ID in jobs.keys():
-        jobs_inprogress.remove(ID)
-        del jobs[ID]
-        # do fini if required
-        return web.Response(text="Job Aborted")
+    id = (request.match_info['job_id'])
+    LOG.debug("id is {}".format(id))
+    if id in jobs.keys():
+        try:
+            jobs_inprogress.remove(id)
+        except:
+            return web.json_response({'Response' : 'ERROR : Job is not present!'})
+        del jobs[id]
+        return web.json_response({'Response' : 'Job Aborted'})
     else:
-        return web.Response(text="ERROR : No such job present!")
+        return web.json_response({'Response' : 'ERROR : Job is not present!'})
 
 
 if __name__ == '__main__':
 
-    #setup logging
+    confReplicator = config()
+
+    HOST=confReplicator.host
+    PORT=confReplicator.port
+
+    # setup logging
     setup_logging()
+
+    LOG.debug(confReplicator.rep_conf.get("version_config"))
+    LOG.debug("HOST is : {}".format(HOST))
+    LOG.debug("PORT is : {}".format(PORT))
 
     app = web.Application()
     app.add_routes(routes)
-    web.run_app(app)
+    web.run_app(app, host=HOST, port=PORT)
