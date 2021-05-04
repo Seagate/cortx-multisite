@@ -21,8 +21,8 @@ please email opensource@seagate.com or cortx-questions@seagate.com.
 CORTX S3 Multisite feature provides ability to Asynchronous replication of S3 objects across CORTX clusters or S3 regions or to any S3 compatible object storages.
 
 This project has 2 modules that help with S3 replication:
-1. S3 replication manager (Provides ability to queue replication jobs and distribute to one or more replicators)
-2. S3 replicator (Provides ability to replication objects from one S3 endpoint to another)
+1. S3 replication manager (Provides ability to queue replication jobs and distribute to one or more replicators). See [replication-manager readme](s3/replication/manager/README.md)
+2. S3 replicator (Provides ability to replication objects from one S3 endpoint to another). See [replicator readme](s3/replication/replicator/README.md)
 
 ## CORTX Community
 
