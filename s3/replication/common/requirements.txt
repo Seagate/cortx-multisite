@@ -1,0 +1,3 @@
+#:runtime-requirements:
+
+flake8==3.9.1
