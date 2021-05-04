@@ -9,7 +9,7 @@ This module performs following
 2. Persist replication jobs in distributed Motr KVS. (Queue)
 3. Distribute jobs to subscribers.
 4. Updates S3 metadata to reflect replication status once jobs are acknowledged by subscribers.
-5. Main a list of inprogress jobs and queued jobs and return on query.
+5. Maintain a list of inprogress jobs and queued jobs and return on query.
 
 # Quickstart
 

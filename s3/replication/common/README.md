@@ -2,7 +2,7 @@
 Common modules for CORTX cross cluster/region replication for S3 objects.
 
 # Modules
-Following modules are defined in common package to be used by relication manager and replicator.
+Following modules are defined in common package to be used by replication manager and replicator.
 
 ## Logging
 TBD
