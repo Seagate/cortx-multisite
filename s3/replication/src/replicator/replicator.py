@@ -5,14 +5,12 @@
 # Replicator script which host different end points
 
 import sys
+import argparse
 import json
 from aiohttp import web
 import logging
-from log import setup_logging
+from common.log import setup_logging
 from replicator_conf_init import Config
-
-# logging.basicConfig(filename="replicator.log",
-#             format='%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s', filemode='w')
 
 LOG = logging.getLogger('replicator_proc')
 
@@ -89,7 +87,17 @@ async def abort_job(request):
 
 if __name__ == '__main__':
 
-    confReplicator = Config()
+    # create parser object
+    parser = argparse.ArgumentParser(description='''Replicator server help''')
+
+    #adding an arguments
+    parser.add_argument('--configfile', type=str, metavar='path',
+    help='config yaml file with  absolutepath')
+
+    # parsing arguments
+    args = parser.parse_args()
+
+    confReplicator = Config(args.configfile)
 
     HOST=confReplicator.host
     PORT=confReplicator.port

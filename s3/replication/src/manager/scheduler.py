@@ -5,15 +5,15 @@
 # This file contains scheduler sever
 # which exposes various REST endpoints
 import sys
+import argparse
 import json
 from aiohttp import web
 from urllib.parse import urlparse, parse_qs
 import logging
-sys.path.append("../../common")
-from log import setup_logging
+from common.log import setup_logging
 from replicator_conf_init import Config
 
-LOG = logging.getLogger('manager_proc')
+LOG = logging.getLogger('multisite')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -154,7 +154,17 @@ async def update_job_attr(request):
 
 if __name__ == '__main__':
 
-    confReplicator = Config()
+    # create parser object
+    parser = argparse.ArgumentParser(description='''Replication manager help ''')
+
+    # adding an arguments
+    parser.add_argument('--configfile', type=str, metavar='path',
+    help='config yaml file with  absolutepath')
+
+    # parsing arguments
+    args = parser.parse_args()
+
+    confReplicator = Config(args.configfile)
 
     HOST=confReplicator.host
     PORT=confReplicator.port

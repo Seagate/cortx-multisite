@@ -12,7 +12,7 @@ import logging
 sys.path.append("../../common")
 from log import setup_logging
 
-LOG = logging.getLogger('multisite')#TBD
+LOG = logging.getLogger('multisite')
 
 async def main():
     """Main function

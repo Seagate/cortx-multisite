@@ -14,21 +14,26 @@ import uuid
 import glob
 import logging.handlers
 
-class Config():
+class Config:
     """ configuratio for manager """
 
     rep_conf = {}
     logfile_name = 'default.log'
-    logfile_size = 5242880 #5
+    logfile_size = 5242880 # default 5MB
     rotation = 5
     location = './'
     host = '127.0.0.0'
     port = 8080
+    configfile = './config.yaml'
 
-    def __init__(self):
+    def __init__(self, userconfig='manager_conf.yaml'):
         """config class constructor"""
         self.logger = logging.getLogger('manager_proc')
         self.logger.setLevel(logging.DEBUG)
+
+        if userconfig != None:
+            self.configfile = userconfig
+
         self.load_config()
         self.set_config()
 
@@ -44,9 +49,7 @@ class Config():
 
     def load_config(self):
         """Get configuration data."""
-        self._conf_file = os.path.join(
-            os.path.dirname(__file__), 'manager_conf.yaml')#TODO : palcement
-        with open(self._conf_file, 'r') as file_config:
+        with open(self.configfile, 'r') as file_config:
             self.rep_conf = yaml.safe_load(file_config)
 
     def set_config(self):
