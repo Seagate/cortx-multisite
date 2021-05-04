@@ -14,16 +14,16 @@ import uuid
 import glob
 import logging.handlers
 
-class config():
+class Config():
     """ configuratio for replicator """
 
-    rep_conf = None
+    rep_conf = {}
     logfile_name = 'default.log'
-    logfile_size = None
-    rotation = None
-    location = None
-    host = None
-    port = None
+    logfile_size = 5242880 #5
+    rotation = 5
+    location = './'
+    host = '127.0.0.0'
+    port = 8080
 
     def __init__(self):
         """config class constructor"""
@@ -34,13 +34,14 @@ class config():
 
         # Add the log message handler to the logger
         formatter=logging.Formatter('%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
+        if not os.path.exists(self.location):
+            os.makedirs(self.location)
         logfile = str(self.location)+str(self.logfile_name)
         handler = logging.handlers.RotatingFileHandler(
             logfile ,maxBytes=self.logfile_size, backupCount=self.rotation)
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
-    @staticmethod
     def load_config(self):
         """Get configuration data."""
         self._conf_file = os.path.join(

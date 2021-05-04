@@ -11,6 +11,7 @@ from urllib.parse import urlparse, parse_qs
 import logging
 sys.path.append("../../common")
 from log import setup_logging
+from replicator_conf_init import Config
 
 LOG = logging.getLogger('manager_proc')
 
@@ -76,13 +77,13 @@ async def list_jobs(request):
         return web.json_response({'jobs': list(jobs.keys())})
 
 @routes.get('/jobs/{job_id}')
-async def get_job_attr(request):
+async def get_job(request):
     """Get job attribute
 
     Handler api to fetch job attributes
 
     """
-    id = (request.match_info['job_id'])
+    id = request.match_info['job_id']
 
     # Get job's attribute
     if id in jobs.keys():
@@ -91,7 +92,7 @@ async def get_job_attr(request):
         return web.json_response({'Response':'ERROR : Job is not present!'})
 
 @routes.post('/jobs')
-async def add_jobs(request):
+async def add_job(request):
     """Add jobs
 
     Handler to add jobs to the job queue
@@ -153,9 +154,17 @@ async def update_job_attr(request):
 
 if __name__ == '__main__':
 
-    # Setup logging
+    confReplicator = Config()
+
+    HOST=confReplicator.host
+    PORT=confReplicator.port
+
+    # setup logging
     setup_logging()
+
+    LOG.debug("HOST is : {}".format(HOST))
+    LOG.debug("PORT is : {}".format(PORT))
 
     app = web.Application()
     app.add_routes(routes)
-    web.run_app(app)
+    web.run_app(app, host=HOST, port=PORT)
