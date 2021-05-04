@@ -4,3 +4,4 @@
 # don't ignore some of dotfiles
 !.gitignore
 !.gitmodules
+s3env
