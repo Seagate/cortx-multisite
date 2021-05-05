@@ -1,0 +1,7 @@
+# ignore dotfiles by default
+.*
+
+# don't ignore some of dotfiles
+!.gitignore
+!.gitmodules
+s3env
