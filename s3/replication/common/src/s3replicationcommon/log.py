@@ -1,5 +1,4 @@
-#
-# Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
+# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +16,35 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-class Logger:
-  def print(self, msg):
-    print(msg)
+import logging
+import sys
+
+"""Custom log level which is more verbose than DEBUG"""
+TRACE: int = 5
+
+LOG = logging.getLogger('multisite')
+
+__all__ = ['TRACE', 'setup_logging']
+
+def setup_logging(log_level: int = logging.DEBUG):
+    """
+    Initializes the logging for the whole application.
+    Registers special 'multisite' named logger, configures the logging format and
+    sets the verbosity level to `log_level`.
+    Register custom verbosity level called TRACE. Here is the example
+    how tracing can be done:
+            LOG.log(TRACE, 'This is a trace message')
+    Note: This function must be invoked before any logging happens.
+    """
+    # INFO = 20, DEBUG = 10, so trace is less than DEBUG
+    logging.addLevelName(TRACE, 'TRACE')
+    multisite_logger = LOG
+    multisite_logger.setLevel(log_level)
+
+    formatter = logging.Formatter(
+        '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
+    console = logging.StreamHandler(sys.stdout)
+    console.setFormatter(formatter)
+
+    logging.getLogger('').addHandler(console)
+    logging.getLogger('consul').setLevel(logging.WARN)

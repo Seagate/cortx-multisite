@@ -17,7 +17,17 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import argparse
 from s3replicator.app import ReplicatorApp
 
 if __name__ == '__main__':
-    ReplicatorApp().run()
+    # create parser object
+    parser = argparse.ArgumentParser(description='''Replicator server help''')
+
+    # adding an arguments
+    parser.add_argument('--configfile', type=str, metavar='path', help='config yaml file with  absolutepath')
+
+    # parsing arguments
+    args = parser.parse_args()
+
+    ReplicatorApp(args.configfile).run()
