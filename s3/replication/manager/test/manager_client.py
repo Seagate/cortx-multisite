@@ -70,7 +70,7 @@ async def main():
             LOG.info('Body: {}'.format(html))
 
         # Get prefetch count
-        async with session.get('http://0.0.0.0:8080/jobs' params={"prefetch": fetch_cnt, "subscriber_id": "sub1"}) as response:
+        async with session.get('http://0.0.0.0:8080/jobs',params={"prefetch": fetch_cnt, "subscriber_id": "sub1"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))

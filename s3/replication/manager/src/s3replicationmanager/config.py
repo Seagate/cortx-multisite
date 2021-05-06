@@ -50,7 +50,7 @@ class Config:
         self.logger = logging.getLogger('manager_proc')
         self.logger.setLevel(logging.DEBUG)
 
-        if configfile is not None:  # TODO
+        if configfile is not None:
             self.configfile = configfile
 
         self.load_config()

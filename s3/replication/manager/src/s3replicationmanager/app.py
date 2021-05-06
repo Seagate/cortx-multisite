@@ -23,10 +23,10 @@
 from aiohttp import web
 import logging
 from urllib.parse import urlparse, parse_qs
-from config import Config
+from .config import Config
 from s3replicationcommon.log import setup_logging
 
-LOG = logging.getlogger('manager_proc')
+LOG = logging.getLogger('manager_proc')
 
 HOST = '127.0.0.1'
 PORT = 8080
@@ -68,22 +68,26 @@ async def list_jobs(request):
         pf_cnt = req_list1[0]
         req_list2 = query['subscriber_id']
         sub_id = req_list2[0]
-        LOG.debug("sub_id is : {}".format(sub_id))
-        LOG.debug("subscribers are : {}".format(subscribers))
+        LOG.debug('sub_id is : {}'.format(sub_id))
+        LOG.debug('subscribers are : {}'.format(subscribers))
 
         if sub_id in subscribers:
-            LOG.debug(" jobs' keys : {}".format(list(jobs.keys())))
-            LOG.debug(" jobs in progress : {}".format(jobs_inprogress))
-            unscheduled_jobs = list(set(jobs.keys()) - set(jobs_inprogress))
-            LOG.debug("Unscheduled keys : {}".format(unscheduled_jobs))
+            LOG.debug('jobs keys : {}'.format(list(jobs.keys())))
+            LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
             if int(pf_cnt) <= len(jobs):
-                response = unscheduled_jobs[:int(pf_cnt)]
-                LOG.debug('would be response : {}'.format(response))
-                jobs_inprogress.extend(unscheduled_jobs[:int(pf_cnt)])
+                job_ids = jobs.keys()
+                for key in job_ids[:pf_cnt]:
+                    add_inprogress = dict([(k, v) for k, v in jobs.items()])
+                    LOG.debug('add inprogress jobs : {}'.format(add_inprogress))
+                    jobs_inprogress.update(add_inprogress)
+                    LOG.debug('in progress jobs : {}'.format(jobs_inprogress))
+                    response = jobs_inprogress.keys()
+                    LOG.debug('inprogress jobs : {}'.format(add_inprogress))
             else:
-                response = unscheduled_jobs[:len(jobs)]
-                jobs_inprogress.extend(unscheduled_jobs[:len(jobs)])
-                LOG.debug('would be response : {}'.format(response))
+                jobs_inprogress.update(jobs)
+                LOG.debug('in progress jobs : {}'.format(jobs_inprogress))
+                jobs.clear()
+                response = jobs_inprogress.keys()
             return web.json_response({'Response': response})
         else:
             return web.json_response({'Response': 'INVALID subscriber'})
@@ -168,7 +172,7 @@ async def update_job_attr(request):
         return web.json_response({'jobs': jobs})
 
 class ReplicationManagerApp:
-    def __init__(self, configfile='/root/config.yaml'):  # TODO
+    def __init__(self, configfile):
         """Initialise logger and configuration."""
 
         confReplicator = Config(configfile)
@@ -179,8 +183,8 @@ class ReplicationManagerApp:
         # setup logging
         setup_logging()
 
-        LOG.debug("HOST is : {}".format(HOST))
-        LOG.debug("PORT is : {}".format(PORT))
+        LOG.debug('HOST is : {}'.format(HOST))
+        LOG.debug('PORT is : {}'.format(PORT))
 
     def run(self):
         app = web.Application()
