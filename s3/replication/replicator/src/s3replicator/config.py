@@ -32,21 +32,22 @@ import logging.handlers
 class Config:
     """ configuration for replicator """
 
-    rep_conf = {}
-    logfile_name = 'default.log'
-    logfile_size = 5242880  # default 5MB
-    rotation = 5
-    location = './'
-    host = '127.0.0.0'
-    port = 8080
-    configfile = os.path.join(os.path.dirname(__file__), '../config/config.yaml')
-
     def __init__(self, configfile):
         """config class constructor"""
+
+        self.rep_conf = {}
+        self.logfile_name = 'default.log'
+        self.logfile_size = 5242880  # default 5MB
+        self.rotation = 5
+        self.location = './'
+        self.host = '127.0.0.0'
+        self.port = 8080
+        self.configfile = os.path.join(os.path.dirname(__file__), '../config/config.yaml')
+
         self.logger = logging.getLogger('replicator_proc')
         self.logger.setLevel(logging.DEBUG)
 
-        if configfile is not None:  # TODO
+        if configfile is not None:
             self.configfile = configfile
 
         self.load_config()

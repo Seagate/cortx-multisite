@@ -73,9 +73,9 @@ async def add_job(request):
     Handler to add jobs to the job queue
 
     """
-    entries = await request.json()
+    job_record = await request.json()
     # Add job to the list
-    jobs.update(entries)
+    jobs.update(job_record)
     LOG.debug('Job count : {}'.format(len(jobs)))
     return web.json_response({'Response': 'job added!'})
 
@@ -114,7 +114,7 @@ async def list_jobs(request):
     # Return total job counts
     elif 'count' in query:
         '''Returns total jobs'''
-        return web.json_response({'Number of jobs present': len(jobs)+len(jobs_inprogress)})
+        return web.json_response({'count': len(jobs)+len(jobs_inprogress)})
     # Return requested jobs
     elif 'prefetch' in query:
         '''Return requested jobs'''
@@ -123,17 +123,21 @@ async def list_jobs(request):
         LOG.debug('sub_id is : {}'.format(sub_id))
         LOG.debug('subscribers are : {}'.format(subscribers))
 
+        #validate subscriber and server request
         if sub_id in subscribers:
-            if int(prefetch_count) <= len(jobs):
+            if int(prefetch_count) < len(jobs):
+                '''remove prefetch_count entries from jobs and add to inprogress'''
                 add_inprogress=dict(list(jobs.items())[:prefetch_count])
                 jobs=dict(list(jobs.items())[prefetch_count:])
                 jobs_inprogress.update(add_inprogress)
             else:
+                '''add all jobs to inprogress'''
                 jobs_inprogress.update(jobs)
                 jobs.clear()
             LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
             return web.json_response({'Response': list(jobs_inprogress.keys())})
         else:
+            '''subscriber is not in the list'''
             return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
         return web.json_response({'Response': list(jobs.keys())})
@@ -160,15 +164,15 @@ class ReplicationManagerApp:
     def __init__(self, configfile):
         """Initialise logger and configuration."""
 
-        self.conf = Config(configfile)
+        self.config = Config(configfile)
 
         # setup logging
         setup_logging()
 
-        LOG.debug('HOST is : {}'.format(self.conf.host))
-        LOG.debug('PORT is : {}'.format(self.conf.port))
+        LOG.debug('HOST is : {}'.format(self.config.host))
+        LOG.debug('PORT is : {}'.format(self.config.port))
 
     def run(self):
         app = web.Application()
         app.add_routes(routes)
-        web.run_app(app, host=self.conf.host, port=self.conf.port)
+        web.run_app(app, host=self.config.host, port=self.config.port)
