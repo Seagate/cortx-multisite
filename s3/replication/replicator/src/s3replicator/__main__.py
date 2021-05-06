@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='''Replicator server help''')
 
     # adding an arguments
-    parser.add_argument('--configfile', type=str, metavar='path', help='config yaml file with  absolutepath')
+    parser.add_argument('--configfile', type=str, metavar='path', help='Path to replication manager configuration file(format: yaml)')
 
     # parsing arguments
     args = parser.parse_args()

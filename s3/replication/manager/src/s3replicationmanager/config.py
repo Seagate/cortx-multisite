@@ -24,13 +24,9 @@
 # This file contains config class and
 # functions to apply config
 
-# import sys
 import os
-# import shutil
 import logging
 import yaml
-# import uuid
-# import glob
 import logging.handlers
 
 class Config:

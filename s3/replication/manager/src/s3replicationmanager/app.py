@@ -17,9 +17,6 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-# import sys
-# import argparse
-# import json
 from aiohttp import web
 import logging
 from urllib.parse import urlparse, parse_qs
@@ -27,9 +24,6 @@ from .config import Config
 from s3replicationcommon.log import setup_logging
 
 LOG = logging.getLogger('manager_proc')
-
-HOST = '127.0.0.1'
-PORT = 8080
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -44,86 +38,7 @@ jobs_inprogress = {}
 # Route table declaration
 routes = web.RouteTableDef()
 
-@routes.get('/jobs')
-async def list_jobs(request):
-    """List active jobs
-
-    Handler api to handle multiple query
-
-    """
-    url = request.path_qs
-    url_ob = urlparse(url)
-    query = parse_qs(url_ob.query)
-
-    # Return in progress jobs
-    if 'inProgress' in query:
-        LOG.debug('InProgress query param: {}'.format(query['inProgress']))
-        return web.json_response({'inProgress': jobs_inprogress})
-    # Return job counts
-    elif 'count' in query:
-        return web.json_response({'Number of jobs present': len(jobs)})
-    # Return requested jobs
-    elif 'prefetch' in query:
-        req_list1 = query['prefetch']
-        pf_cnt = req_list1[0]
-        req_list2 = query['subscriber_id']
-        sub_id = req_list2[0]
-        LOG.debug('sub_id is : {}'.format(sub_id))
-        LOG.debug('subscribers are : {}'.format(subscribers))
-
-        if sub_id in subscribers:
-            LOG.debug('jobs keys : {}'.format(list(jobs.keys())))
-            LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
-            if int(pf_cnt) <= len(jobs):
-                job_ids = jobs.keys()
-                for key in job_ids[:pf_cnt]:
-                    add_inprogress = dict([(k, v) for k, v in jobs.items()])
-                    LOG.debug('add inprogress jobs : {}'.format(add_inprogress))
-                    jobs_inprogress.update(add_inprogress)
-                    LOG.debug('in progress jobs : {}'.format(jobs_inprogress))
-                    response = jobs_inprogress.keys()
-                    LOG.debug('inprogress jobs : {}'.format(add_inprogress))
-            else:
-                jobs_inprogress.update(jobs)
-                LOG.debug('in progress jobs : {}'.format(jobs_inprogress))
-                jobs.clear()
-                response = jobs_inprogress.keys()
-            return web.json_response({'Response': response})
-        else:
-            return web.json_response({'Response': 'INVALID subscriber'})
-
-    else:
-        return web.json_response({'jobs': list(jobs.keys())})
-
-@routes.get('/jobs/{job_id}')
-async def get_job(request):
-    """Get job attribute
-
-    Handler api to fetch job attributes
-
-    """
-    id = request.match_info['job_id']
-
-    # Get job's attribute
-    if id in jobs.keys():
-        return web.json_response(jobs[id])
-    else:
-        return web.json_response({'Response': 'ERROR : Job is not present!'})
-
-@routes.post('/jobs')
-async def add_job(request):
-    """Add jobs
-
-    Handler to add jobs to the job queue
-
-    """
-    entries = await request.json()
-    # Add job to the list
-    jobs.update(entries)
-    LOG.debug('Job list : {}'.format(jobs))
-    return web.json_response({'Response': 'jobs added!'})
-
-@routes.post('/subscribers')
+@routes.post('/subscribers')  # noqa: E302
 async def add_subscriber(request):
     """Add subscriber
 
@@ -140,9 +55,9 @@ async def add_subscriber(request):
     else:
         subscribers.append(subscriber.get('sub_id'))
         LOG.debug(subscribers)
-        return web.json_response({'subscribers': subscribers})
+        return web.json_response({'Response': 'subscriber added!'})
 
-@routes.get('/subscribers')
+@routes.get('/subscribers')  # noqa: E302
 async def list_subscribers(request):
     """List subscriber
 
@@ -151,7 +66,79 @@ async def list_subscribers(request):
     """
     return web.json_response({'subscribers': subscribers})
 
-@routes.put('/jobs/{job_id}')
+@routes.post('/jobs')  # noqa: E302
+async def add_job(request):
+    """Add jobs
+
+    Handler to add jobs to the job queue
+
+    """
+    entries = await request.json()
+    # Add job to the list
+    jobs.update(entries)
+    LOG.debug('Job count : {}'.format(len(jobs)))
+    return web.json_response({'Response': 'job added!'})
+
+@routes.get('/jobs/{job_id}')  # noqa: E302
+async def get_job(request):
+    """Get job attribute
+
+    Handler api to fetch job attributes
+
+    """
+    id = request.match_info['job_id']
+
+    # Get job's attribute
+    if id in jobs.keys():
+        return web.json_response({id: jobs[id]})
+    else:
+        return web.json_response({'ErrorResponse': 'Job is not present!'})
+
+@routes.get('/jobs')  # noqa: E302
+async def list_jobs(request):
+    """List active jobs
+
+    Handler api to handle multiple query
+
+    """
+    global jobs
+    url = request.path_qs
+    url_ob = urlparse(url)
+    query = parse_qs(url_ob.query)
+
+    # Return in progress jobs
+    if 'inprogress' in query:
+        '''Returns inprogress jobs'''
+        LOG.debug('InProgress query param: {}'.format(query['inprogress']))
+        return web.json_response({'inprogress': list(jobs_inprogress.keys())})
+    # Return total job counts
+    elif 'count' in query:
+        '''Returns total jobs'''
+        return web.json_response({'Number of jobs present': len(jobs)+len(jobs_inprogress)})
+    # Return requested jobs
+    elif 'prefetch' in query:
+        '''Return requested jobs'''
+        prefetch_count = int(query['prefetch'][0])
+        sub_id = query['subscriber_id'][0]
+        LOG.debug('sub_id is : {}'.format(sub_id))
+        LOG.debug('subscribers are : {}'.format(subscribers))
+
+        if sub_id in subscribers:
+            if int(prefetch_count) <= len(jobs):
+                add_inprogress=dict(list(jobs.items())[:prefetch_count])
+                jobs=dict(list(jobs.items())[prefetch_count:])
+                jobs_inprogress.update(add_inprogress)
+            else:
+                jobs_inprogress.update(jobs)
+                jobs.clear()
+            LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
+            return web.json_response({'Response': list(jobs_inprogress.keys())})
+        else:
+            return web.json_response({'ErrorResponse': 'Invalid subscriber'})
+    else:
+        return web.json_response({'Response': list(jobs.keys())})
+
+@routes.put('/jobs/{job_id}')  # noqa: E302
 async def update_job_attr(request):
     """Update job attributes
 
@@ -162,31 +149,26 @@ async def update_job_attr(request):
     id = (request.match_info['job_id'])
     LOG.debug('id is {}'.format(id))
 
-    # Check if key is present
+    # Check and update if job_id is present
     if id in jobs.keys():
         jobs[id] = val
-        return web.json_response({id: jobs[id]})
+        return web.json_response({'Response': 'Requested job updated'})
     else:
-        jobs.update({id: val})
-        # jobs_inprogress.append(id)
-        return web.json_response({'jobs': jobs})
+        return web.json_response({'ErrorResponse': 'Job is not present'})
 
 class ReplicationManagerApp:
     def __init__(self, configfile):
         """Initialise logger and configuration."""
 
-        confReplicator = Config(configfile)
-
-        HOST = confReplicator.host
-        PORT = confReplicator.port
+        self.conf = Config(configfile)
 
         # setup logging
         setup_logging()
 
-        LOG.debug('HOST is : {}'.format(HOST))
-        LOG.debug('PORT is : {}'.format(PORT))
+        LOG.debug('HOST is : {}'.format(self.conf.host))
+        LOG.debug('PORT is : {}'.format(self.conf.port))
 
     def run(self):
         app = web.Application()
         app.add_routes(routes)
-        web.run_app(app, host=HOST, port=PORT)
+        web.run_app(app, host=self.conf.host, port=self.conf.port)

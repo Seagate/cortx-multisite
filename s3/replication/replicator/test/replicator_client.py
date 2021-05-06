@@ -62,13 +62,6 @@ async def main():
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
-        # Get job attributes
-        async with session.get(
-        'http://0.0.0.0:8080/jobs/job2') as response:
-            LOG.info('Status: {}'.format(response.status))
-            html = await response.json()
-            LOG.info('Body: {}'.format(html))
-
         # Abort job with given job_id
         async with session.post(
         'http://0.0.0.0:8080/jobs/' + sys.argv[1]) as response:

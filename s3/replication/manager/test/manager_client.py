@@ -23,6 +23,9 @@
 #
 # This file contains replicator-manager client source
 # which makes various REST api calls.
+#
+# Run as : python3 ./manager_client.py [job_id] [subscriber_id] [prefetch_cnt]
+#
 
 import sys
 import aiohttp
@@ -40,43 +43,53 @@ async def main():
     """
     setup_logging()
 
-    fetch_cnt = 2  # Added default count for pre-fetch request
-
     async with aiohttp.ClientSession() as session:
+
+        # Add Job
+        async with session.post('http://127.0.0.1:8080/jobs', json={sys.argv[1]: {"K1": "V1"}}) as response:
+            LOG.info('Status: {}'.format(response.status))
+            html = await response.json()
+            LOG.info('Body: {}'.format(html))
 
         # Get Jobs in Progress
         async with session.get(
-            'http://0.0.0.0:8080/jobs', params={"inprogress": "true"}) as response:
+            'http://127.0.0.1:8080/jobs', params={"inprogress": "true"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get jobs list
-        async with session.get('http://0.0.0.0:8080/jobs')as response:
+        async with session.get('http://127.0.0.1:8080/jobs')as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get subscriber list
-        async with session.get('http://0.0.0.0:8080/subscribers') as response:
+        async with session.get('http://127.0.0.1:8080/subscribers') as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
-        # Update subscriber list
-        async with session.post('http://0.0.0.0:8080/subscribers', json={'sub_id': sys.argv[2] }) as response:
+        # Add subscriber
+        async with session.post('http://127.0.0.1:8080/subscribers', json={'sub_id': sys.argv[2] }) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
-        # Get prefetch count
-        async with session.get('http://0.0.0.0:8080/jobs',params={"prefetch": fetch_cnt, "subscriber_id": "sub1"}) as response:
+        # Prefetch jobs
+        async with session.get('http://127.0.0.1:8080/jobs',params={"prefetch": int(sys.argv[3]), "subscriber_id": sys.argv[2]}) as response:
+            LOG.info('Status: {}'.format(response.status))
+            html = await response.json()
+            LOG.info('Body: {}'.format(html))
+
+        # Get total job count
+        async with session.get('http://127.0.0.1:8080/jobs',params={"count": "true"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Update Job's attributes
-        async with session.put('http://0.0.0.0:8080/jobs/' + sys.argv[1], json={"K2": "V2"}) as response:
+        async with session.put('http://127.0.0.1:8080/jobs/' + sys.argv[1], json={"K2": "V2"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
