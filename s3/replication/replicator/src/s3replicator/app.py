@@ -18,11 +18,11 @@
 #
 
 from aiohttp import web
-import logging
 from .config import Config
 from s3replicationcommon.log import setup_logging
 
-LOG = logging.getLogger('replicator_proc')
+# Setup log
+LOG = setup_logging('replicator_proc')
 
 # Dictionary holding job_id and fdmi record
 # e.g. : jobs = {"job1": {"obj_name": "foo"}}
@@ -92,20 +92,18 @@ async def abort_job(request):
     else:
         return web.json_response({'ErrorResponse': 'Job is not present!'})
 
+
 class ReplicatorApp:
     def __init__(self, configfile):
         """Initialise logger and configuration"""
 
-        self.conf = Config(configfile)
+        self.config = Config(configfile)
 
-        # setup logging
-        setup_logging()
-
-        LOG.debug('HOST is : {}'.format(self.conf.host))
-        LOG.debug('PORT is : {}'.format(self.conf.port))
+        LOG.debug('HOST is : {}'.format(self.config.host))
+        LOG.debug('PORT is : {}'.format(self.config.port))
 
     def run(self):
         """Start replicator"""
         app = web.Application()
         app.add_routes(routes)
-        web.run_app(app, host=self.conf.host, port=self.conf.port)
+        web.run_app(app, host=self.config.host, port=self.config.port)
