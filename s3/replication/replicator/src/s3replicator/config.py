@@ -40,17 +40,20 @@ class Config:
         self.logfile_size = 5242880  # default 5MB
         self.rotation = 5
         self.location = './'
-        self.host = '127.0.0.0'
-        self.port = 8080
+        self.host = '127.0.0.1'
+        self.port = 8081
         self.configfile = os.path.join(os.path.dirname(__file__), '../config/config.yaml')
 
+        # Get 'replicator_proc' logger object
         self.logger = logging.getLogger('replicator_proc')
-        self.logger.setLevel(logging.DEBUG)
 
         if configfile is not None:
             self.configfile = configfile
 
+        # Load configuration
         self.load_config()
+
+        # Set configuration to instance variable
         self.set_config()
 
         # Add the log message handler to the logger
@@ -58,9 +61,15 @@ class Config:
         if not os.path.exists(self.location):
             os.makedirs(self.location)
         logfile = str(self.location)+str(self.logfile_name)
+
+        # Create handler for logfile rotation
         handler = logging.handlers.RotatingFileHandler(
             logfile, maxBytes=self.logfile_size, backupCount=self.rotation)
+
+        # Set formatter for handler
         handler.setFormatter(formatter)
+
+        # Register handler with logger
         self.logger.addHandler(handler)
 
     def load_config(self):

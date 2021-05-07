@@ -18,12 +18,11 @@
 #
 
 from aiohttp import web
-import logging
 from urllib.parse import urlparse, parse_qs
 from .config import Config
 from s3replicationcommon.log import setup_logging
 
-LOG = logging.getLogger('manager_proc')
+LOG = setup_logging('manager_proc')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -108,36 +107,34 @@ async def list_jobs(request):
 
     # Return in progress jobs
     if 'inprogress' in query:
-        '''Returns inprogress jobs'''
         LOG.debug('InProgress query param: {}'.format(query['inprogress']))
         return web.json_response({'inprogress': list(jobs_inprogress.keys())})
     # Return total job counts
     elif 'count' in query:
-        '''Returns total jobs'''
         return web.json_response({'count': len(jobs)+len(jobs_inprogress)})
     # Return requested jobs
     elif 'prefetch' in query:
-        '''Return requested jobs'''
         prefetch_count = int(query['prefetch'][0])
         sub_id = query['subscriber_id'][0]
         LOG.debug('sub_id is : {}'.format(sub_id))
         LOG.debug('subscribers are : {}'.format(subscribers))
 
-        #validate subscriber and server request
+        # Validate subscriber and server request
         if sub_id in subscribers:
-            if int(prefetch_count) < len(jobs):
-                '''remove prefetch_count entries from jobs and add to inprogress'''
-                add_inprogress=dict(list(jobs.items())[:prefetch_count])
+            # Remove prefetch_count entries from jobs and add to inprogress
+            if prefetch_count < len(jobs):
+                add_inprogress = dict(list(jobs.items())[:prefetch_count])
                 jobs=dict(list(jobs.items())[prefetch_count:])
                 jobs_inprogress.update(add_inprogress)
+            # Add all jobs to inprogress
             else:
-                '''add all jobs to inprogress'''
                 jobs_inprogress.update(jobs)
                 jobs.clear()
             LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
             return web.json_response({'Response': list(jobs_inprogress.keys())})
+        # Subscriber is not in the list
         else:
-            '''subscriber is not in the list'''
+
             return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
         return web.json_response({'Response': list(jobs.keys())})
@@ -165,9 +162,6 @@ class ReplicationManagerApp:
         """Initialise logger and configuration."""
 
         self.config = Config(configfile)
-
-        # setup logging
-        setup_logging()
 
         LOG.debug('HOST is : {}'.format(self.config.host))
         LOG.debug('PORT is : {}'.format(self.config.port))

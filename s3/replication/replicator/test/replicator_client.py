@@ -24,13 +24,11 @@
 # This file contains replicator client
 # with various REST requests.
 
-import sys
 import aiohttp
 import asyncio
-import logging
+import argparse
+import yaml
 from s3replicationcommon.log import setup_logging
-
-LOG = logging.getLogger('multisite')
 
 async def main():
     """"main function
@@ -38,33 +36,58 @@ async def main():
     Main function for calling various REST requests.
 
     """
-    setup_logging()
+    host = '127.0.0.1'
+    port = '8081'
 
+    # Setup logging and get logger
+    LOG = setup_logging('replicator_client')
+
+    # Create parser object
+    parser = argparse.ArgumentParser(description='''Replicator server help''')
+
+    # Adding an arguments
+    parser.add_argument('--configfile', type=str, metavar='path', help='Path to replication manager configuration file(format: yaml)')
+    parser.add_argument('job', type=str, metavar='job', help='job id')
+
+    # Parsing arguments
+    args = parser.parse_args()
+    job = args.job
+
+    # Read input config file and get host, port
+    if args.configfile is not None:
+        with open(args.configfile, 'r') as file_config:
+            config = yaml.safe_load(file_config)
+            host = config['replicator'].get('host')
+            port = str(config['replicator'].get('port'))
+
+    # URL for non-secure http endpoint
+    url = 'http://'+host+':'+port
+
+    # Start client session
     async with aiohttp.ClientSession() as session:
 
-        # Get inprogress list
-        async with session.get('http://127.0.0.1:8080/jobs')as response:
+        # Add job and attributes
+        async with session.put(
+        url+'/jobs', json={"job2": "bar"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get job attributes
         async with session.get(
-        'http://0.0.0.0:8080/jobs/' + sys.argv[1]) as response:
+        url+'/jobs/' + job) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
-        # Add job and attributes
-        async with session.put(
-        'http://0.0.0.0:8080/jobs', json={"job2": "bar"}) as response:
+        # Get inprogress list
+        async with session.get(url+'/jobs')as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Abort job with given job_id
-        async with session.post(
-        'http://0.0.0.0:8080/jobs/' + sys.argv[1]) as response:
+        async with session.post(url+'/jobs/' + job) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
