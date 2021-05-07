@@ -68,9 +68,9 @@ async def add_job(request):
     Handler to add jobs to the queue
 
     """
-    entries = await request.json()
-    LOG.debug(entries)
-    jobs.update(entries)
+    job_record = await request.json()
+    LOG.debug(job_record)
+    jobs.update(job_record)
     return web.json_response({'Response': 'Job updated!'})
 
 @routes.post('/jobs/{job_id}')  # noqa: E302
