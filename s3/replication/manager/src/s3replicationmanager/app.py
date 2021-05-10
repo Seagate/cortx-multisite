@@ -22,7 +22,7 @@ from urllib.parse import urlparse, parse_qs
 from .config import Config
 from s3replicationcommon.log import setup_logging
 
-LOG = setup_logging('manager_proc')
+LOG = setup_logging('manager')
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}

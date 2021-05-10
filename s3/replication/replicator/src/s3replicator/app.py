@@ -22,7 +22,7 @@ from .config import Config
 from s3replicationcommon.log import setup_logging
 
 # Setup log
-LOG = setup_logging('replicator_proc')
+LOG = setup_logging('replicator')
 
 # Dictionary holding job_id and fdmi record
 # e.g. : jobs = {"job1": {"obj_name": "foo"}}

@@ -47,8 +47,8 @@ class Config:
             os.path.dirname(__file__),
             '../config/config.yaml')
 
-        # Get 'manager_proc' logger object
-        self.logger = logging.getLogger('manager_proc')
+        # Get 'manager' logger object
+        self.logger = logging.getLogger('manager')
 
         if configfile is not None:
             self.configfile = configfile
@@ -61,7 +61,8 @@ class Config:
 
         # Add the log message handler to the logger
         formatter = logging.Formatter(
-            '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
+            '%(asctime)s [%(levelname)s] [%(filename)s: '
+            '%(lineno)d] %(message)s')
         if not os.path.exists(self.location):
             os.makedirs(self.location)
         logfile = str(self.location) + str(self.logfile_name)

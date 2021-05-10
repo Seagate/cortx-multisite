@@ -1,7 +1,10 @@
 # Makefile for static analysis and formatting fix
 
 PYTHON_SCRIPTS :=
-FLAKE8_OPTS := --exit-zero # By default search for --filename=*.py 
+
+# By default, search for --filename=*.py
+# Add --exit-zero to ignore flake8 exit status
+FLAKE8_OPTS :=
 AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive 
 
 check: flake8

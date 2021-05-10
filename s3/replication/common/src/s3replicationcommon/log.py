@@ -28,8 +28,8 @@ __all__ = ['TRACE', 'setup_logging']
 def setup_logging(logger_name: str, log_level: int = logging.DEBUG):
     """
     Initializes the logging for the whole application.
-    Registers special 'multisite' named logger, configures the logging format and
-    sets the verbosity level to `log_level`.
+    Registers special 'multisite' named logger, configures the
+    logging format and sets the verbosity level to `log_level`.
     Register custom verbosity level called TRACE. Here is the example
     how tracing can be done:
             LOG.log(TRACE, 'This is a trace message')
