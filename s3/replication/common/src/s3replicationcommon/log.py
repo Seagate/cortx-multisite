@@ -24,6 +24,7 @@ TRACE: int = 5
 
 __all__ = ['TRACE', 'setup_logging']
 
+
 def setup_logging(logger_name: str, log_level: int = logging.DEBUG):
     """
     Initializes the logging for the whole application.

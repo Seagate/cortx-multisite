@@ -37,6 +37,7 @@ jobs_inprogress = {}
 # Route table declaration
 routes = web.RouteTableDef()
 
+
 @routes.post('/subscribers')  # noqa: E302
 async def add_subscriber(request):
     """Add subscriber
@@ -50,11 +51,13 @@ async def add_subscriber(request):
 
     # Check if subscriber is already present
     if sub_id in subscribers:
-        return web.json_response({'Response': 'Replicator is Already subscribed!'})
+        return web.json_response(
+            {'Response': 'Replicator is Already subscribed!'})
     else:
         subscribers.append(subscriber.get('sub_id'))
         LOG.debug(subscribers)
         return web.json_response({'Response': 'subscriber added!'})
+
 
 @routes.get('/subscribers')  # noqa: E302
 async def list_subscribers(request):
@@ -64,6 +67,7 @@ async def list_subscribers(request):
 
     """
     return web.json_response({'subscribers': subscribers})
+
 
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
@@ -77,6 +81,7 @@ async def add_job(request):
     jobs.update(job_record)
     LOG.debug('Job count : {}'.format(len(jobs)))
     return web.json_response({'Response': 'job added!'})
+
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
@@ -92,6 +97,7 @@ async def get_job(request):
         return web.json_response({id: jobs[id]})
     else:
         return web.json_response({'ErrorResponse': 'Job is not present!'})
+
 
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
@@ -111,7 +117,7 @@ async def list_jobs(request):
         return web.json_response({'inprogress': list(jobs_inprogress.keys())})
     # Return total job counts
     elif 'count' in query:
-        return web.json_response({'count': len(jobs)+len(jobs_inprogress)})
+        return web.json_response({'count': len(jobs) + len(jobs_inprogress)})
     # Return requested jobs
     elif 'prefetch' in query:
         prefetch_count = int(query['prefetch'][0])
@@ -124,20 +130,22 @@ async def list_jobs(request):
             # Remove prefetch_count entries from jobs and add to inprogress
             if prefetch_count < len(jobs):
                 add_inprogress = dict(list(jobs.items())[:prefetch_count])
-                jobs=dict(list(jobs.items())[prefetch_count:])
+                jobs = dict(list(jobs.items())[prefetch_count:])
                 jobs_inprogress.update(add_inprogress)
             # Add all jobs to inprogress
             else:
                 jobs_inprogress.update(jobs)
                 jobs.clear()
             LOG.debug('jobs in progress : {}'.format(jobs_inprogress))
-            return web.json_response({'Response': list(jobs_inprogress.keys())})
+            return web.json_response(
+                {'Response': list(jobs_inprogress.keys())})
         # Subscriber is not in the list
         else:
 
             return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
         return web.json_response({'Response': list(jobs.keys())})
+
 
 @routes.put('/jobs/{job_id}')  # noqa: E302
 async def update_job_attr(request):
@@ -156,6 +164,7 @@ async def update_job_attr(request):
         return web.json_response({'Response': 'Requested job updated'})
     else:
         return web.json_response({'ErrorResponse': 'Job is not present'})
+
 
 class ReplicationManagerApp:
     def __init__(self, configfile):

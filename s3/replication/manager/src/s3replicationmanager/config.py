@@ -29,6 +29,7 @@ import logging
 import yaml
 import logging.handlers
 
+
 class Config:
     """ configuration for manager """
 
@@ -42,7 +43,9 @@ class Config:
         self.location = './'
         self.host = '127.0.0.1'
         self.port = 8080
-        self.configfile = os.path.join(os.path.dirname(__file__), '../config/config.yaml')
+        self.configfile = os.path.join(
+            os.path.dirname(__file__),
+            '../config/config.yaml')
 
         # Get 'manager_proc' logger object
         self.logger = logging.getLogger('manager_proc')
@@ -57,10 +60,11 @@ class Config:
         self.set_config()
 
         # Add the log message handler to the logger
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
+        formatter = logging.Formatter(
+            '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
         if not os.path.exists(self.location):
             os.makedirs(self.location)
-        logfile = str(self.location)+str(self.logfile_name)
+        logfile = str(self.location) + str(self.logfile_name)
 
         # Create handler for logfile rotation
         handler = logging.handlers.RotatingFileHandler(

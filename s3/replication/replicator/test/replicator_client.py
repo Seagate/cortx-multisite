@@ -30,6 +30,7 @@ import argparse
 import yaml
 from s3replicationcommon.log import setup_logging
 
+
 async def main():
     """"main function
 
@@ -46,7 +47,11 @@ async def main():
     parser = argparse.ArgumentParser(description='''Replicator server help''')
 
     # Adding an arguments
-    parser.add_argument('--configfile', type=str, metavar='path', help='Path to replication manager configuration file(format: yaml)')
+    parser.add_argument(
+        '--configfile',
+        type=str,
+        metavar='path',
+        help='Path to replication manager configuration file(format: yaml)')
     parser.add_argument('job', type=str, metavar='job', help='job id')
 
     # Parsing arguments
@@ -61,33 +66,33 @@ async def main():
             port = str(config['replicator'].get('port'))
 
     # URL for non-secure http endpoint
-    url = 'http://'+host+':'+port
+    url = 'http://' + host + ':' + port
 
     # Start client session
     async with aiohttp.ClientSession() as session:
 
         # Add job and attributes
         async with session.put(
-        url+'/jobs', json={"job2": "bar"}) as response:
+                url + '/jobs', json={"job2": "bar"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get job attributes
         async with session.get(
-        url+'/jobs/' + job) as response:
+                url + '/jobs/' + job) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get inprogress list
-        async with session.get(url+'/jobs')as response:
+        async with session.get(url + '/jobs')as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Abort job with given job_id
-        async with session.post(url+'/jobs/' + job) as response:
+        async with session.post(url + '/jobs/' + job) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))

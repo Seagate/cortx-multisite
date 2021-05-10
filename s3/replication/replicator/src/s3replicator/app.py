@@ -37,6 +37,7 @@ jobs_inprogress = []
 # Route table declaration
 routes = web.RouteTableDef()
 
+
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
     """List_jobs
@@ -46,6 +47,7 @@ async def list_jobs(request):
     """
     LOG.debug('Number of jobs in progress {}'.format(len(jobs_inprogress)))
     return web.json_response({'jobs': jobs_inprogress})
+
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
@@ -61,6 +63,7 @@ async def get_job(request):
     else:
         return web.json_response({'ErrorResponse': 'Job is not present!'})
 
+
 @routes.put('/jobs')  # noqa: E302
 async def add_job(request):
     """Add job in the queue
@@ -72,6 +75,7 @@ async def add_job(request):
     LOG.debug(job_record)
     jobs.update(job_record)
     return web.json_response({'Response': 'Job updated!'})
+
 
 @routes.post('/jobs/{job_id}')  # noqa: E302
 async def abort_job(request):

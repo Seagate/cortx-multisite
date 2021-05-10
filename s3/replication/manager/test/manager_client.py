@@ -31,6 +31,7 @@ import argparse
 import yaml
 from s3replicationcommon.log import setup_logging
 
+
 async def main():
     """main function
 
@@ -47,10 +48,22 @@ async def main():
     parser = argparse.ArgumentParser(description='''Replicator server help''')
 
     # Adding arguments
-    parser.add_argument('--configfile', type=str, metavar='path', help='Path to replication manager configuration file(format: yaml)')
+    parser.add_argument(
+        '--configfile',
+        type=str,
+        metavar='path',
+        help='Path to replication manager configuration file(format: yaml)')
     parser.add_argument('job', type=str, metavar='job', help='job id')
-    parser.add_argument('subscriber', type=str, metavar='subscriber', help='subscriber id')
-    parser.add_argument('prefetch_count', type=str, metavar='prefetch_count', help='prefetch count')
+    parser.add_argument(
+        'subscriber',
+        type=str,
+        metavar='subscriber',
+        help='subscriber id')
+    parser.add_argument(
+        'prefetch_count',
+        type=str,
+        metavar='prefetch_count',
+        help='prefetch count')
 
     # Parsing arguments
     args = parser.parse_args()
@@ -65,56 +78,56 @@ async def main():
             host = config['manager'].get('host')
             port = str(config['manager'].get('port'))
 
-    url = 'http://'+host+':'+port
+    url = 'http://' + host + ':' + port
 
     # Start client session
     async with aiohttp.ClientSession() as session:
 
         # Add Job
-        async with session.post(url+'/jobs', json={job: {"K1": "V1"}}) as response:
+        async with session.post(url + '/jobs', json={job: {"K1": "V1"}}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get Jobs in Progress
         async with session.get(
-            url+'/jobs', params={"inprogress": "true"}) as response:
+                url + '/jobs', params={"inprogress": "true"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get jobs list
-        async with session.get(url+'/jobs')as response:
+        async with session.get(url + '/jobs')as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get subscriber list
-        async with session.get(url+'/subscribers') as response:
+        async with session.get(url + '/subscribers') as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Add subscriber
-        async with session.post(url+'/subscribers', json={'sub_id': subscriber}) as response:
+        async with session.post(url + '/subscribers', json={'sub_id': subscriber}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Prefetch jobs
-        async with session.get(url+'/jobs', params={"prefetch": int(prefetch_count), "subscriber_id": subscriber}) as response:
+        async with session.get(url + '/jobs', params={"prefetch": int(prefetch_count), "subscriber_id": subscriber}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get total job count
-        async with session.get(url+'/jobs', params={"count": "true"}) as response:
+        async with session.get(url + '/jobs', params={"count": "true"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Update Job's attributes
-        async with session.put(url+'/jobs/' + job, json={"K2": "V2"}) as response:
+        async with session.put(url + '/jobs/' + job, json={"K2": "V2"}) as response:
             LOG.info('Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))

@@ -19,14 +19,14 @@
 
 # Job model to be used across both replication manager and replicator
 class Job:
-  def __init__(self):
-    """Initialise Job."""
+    def __init__(self):
+        """Initialise Job."""
 
-  def from_json(self, json_string):
-    """Loads Job attributes from json."""
+    def from_json(self, json_string):
+        """Loads Job attributes from json."""
 
-  def to_json(self):
-    """Converts Job attributes to json."""
+    def to_json(self):
+        """Converts Job attributes to json."""
 
-  def load_from_s3metadata(self, s3_md_json):
-    """Loads Job attributes from S3 metadata json entry."""
+    def load_from_s3metadata(self, s3_md_json):
+        """Loads Job attributes from S3 metadata json entry."""
