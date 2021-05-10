@@ -57,17 +57,19 @@ async def main():
         'job',
         type=str,
         metavar='job',
-        help='job id',
-        default='default_job')
+        default='default_job'
+        help='job id')
     parser.add_argument(
         'subscriber',
         type=str,
-        metavar='subscriber', default='default_subscriber',
+        metavar='subscriber',
+        default='default_subscriber',
         help='subscriber id')
     parser.add_argument(
         'prefetch_count',
         type=str,
-        metavar='prefetch_count', default=2,
+        metavar='prefetch_count',
+        default=2,
         help='prefetch count')
 
     # Parsing arguments
