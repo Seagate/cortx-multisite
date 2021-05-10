@@ -57,7 +57,7 @@ async def main():
         'job',
         type=str,
         metavar='job',
-        default='default_job'
+        default='default_job',
         help='job id')
     parser.add_argument(
         'subscriber',
