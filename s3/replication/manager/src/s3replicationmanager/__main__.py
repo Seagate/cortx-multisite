@@ -17,7 +17,21 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import argparse
 from s3replicationmanager.app import ReplicationManagerApp
 
 if __name__ == '__main__':
-    ReplicationManagerApp().run()
+    # create parser object
+    parser = argparse.ArgumentParser(description='''Replicator server help''')
+
+    # adding an arguments
+    parser.add_argument(
+        '--configfile',
+        type=str,
+        metavar='path',
+        help='Path to replication manager configuration file(format: yaml)')
+
+    # parsing arguments
+    args = parser.parse_args()
+
+    ReplicationManagerApp(args.configfile).run()

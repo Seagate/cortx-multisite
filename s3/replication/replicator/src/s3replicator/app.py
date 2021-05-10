@@ -17,11 +17,97 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-from s3replicationcommon.log import Logger
+from aiohttp import web
+from .config import Config
+from s3replicationcommon.log import setup_logging
+
+# Setup log
+LOG = setup_logging('replicator')
+
+# Dictionary holding job_id and fdmi record
+# e.g. : jobs = {"job1": {"obj_name": "foo"}}
+jobs = {}
+
+# List of active subscriber
+schedulers = []
+
+# List of jobs in progress
+jobs_inprogress = []
+
+# Route table declaration
+routes = web.RouteTableDef()
+
+
+@routes.get('/jobs')  # noqa: E302
+async def list_jobs(request):
+    """List_jobs
+
+    Handler to list in-progress jobs
+
+    """
+    LOG.debug('Number of jobs in progress {}'.format(len(jobs_inprogress)))
+    return web.json_response({'jobs': jobs_inprogress})
+
+
+@routes.get('/jobs/{job_id}')  # noqa: E302
+async def get_job(request):
+    """Get job attribute
+
+    Handler to get job attributes for given job_id
+
+    """
+    id = request.match_info['job_id']
+    LOG.debug('id is : {} '.format(id))
+    if id in jobs.keys():
+        return web.json_response({id: jobs[id]})
+    else:
+        return web.json_response({'ErrorResponse': 'Job is not present!'})
+
+
+@routes.put('/jobs')  # noqa: E302
+async def add_job(request):
+    """Add job in the queue
+
+    Handler to add jobs to the queue
+
+    """
+    job_record = await request.json()
+    LOG.debug(job_record)
+    jobs.update(job_record)
+    return web.json_response({'Response': 'Job updated!'})
+
+
+@routes.post('/jobs/{job_id}')  # noqa: E302
+async def abort_job(request):
+    """Abort a job
+
+    Handler to abort a job with given job_id
+
+    """
+    id = (request.match_info['job_id'])
+    LOG.debug('id is {}'.format(id))
+    if id in jobs.keys():
+        try:
+            jobs_inprogress.remove(id)
+        except id is not None:
+            return web.json_response({'ErrorResponse': 'Job is not present!'})
+        del jobs[id]
+        return web.json_response({'Response': 'Job Aborted'})
+    else:
+        return web.json_response({'ErrorResponse': 'Job is not present!'})
+
 
 class ReplicatorApp:
-  def __init__(self):
-    """Initialise logger and configuration."""
+    def __init__(self, configfile):
+        """Initialise logger and configuration"""
 
-  def run(self):
-    Logger().print("Started replicator using common logger...")
+        self.config = Config(configfile)
+
+        LOG.debug('HOST is : {}'.format(self.config.host))
+        LOG.debug('PORT is : {}'.format(self.config.port))
+
+    def run(self):
+        """Start replicator"""
+        app = web.Application()
+        app.add_routes(routes)
+        web.run_app(app, host=self.config.host, port=self.config.port)
