@@ -166,7 +166,7 @@ Ballpark estimates:
         initial cluster bootstrap.
       - N
       - We need to do the same as for the previous requirement.
-      - -
+      - 0
     * - TBD
       - It MUST be possible to determine the outcome of a DIX PUT operation if
         multiple DIX PUT operations were executed for the same key in the same
