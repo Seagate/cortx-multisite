@@ -65,7 +65,7 @@ async def main():
         '--job',
         type=str,
         metavar='job',
-        default='foo',
+        default='testjobid',
         help='job id')
 
     # Parsing arguments
