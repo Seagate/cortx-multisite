@@ -23,14 +23,19 @@ Activate virtualenv s3env.
 $ source s3env/bin/activate
 ```
 
+Clean earlier install.
+```sh
+python3 setup.py clean --all
+```
+
 Install dependencies in active virtualenv.
 ```sh
 $ pip3 install -r requirements.txt
 ```
 
-Clean earlier install.
+Install the development/test dependencies from devel-requirements.txt
 ```sh
-python3 setup.py clean --all
+pip3 install  -e .[development]
 ```
 
 Install the package.
