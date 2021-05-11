@@ -46,6 +46,17 @@ TBD == to be defined
       - Done?
       - How and what else is needed?
     * - TBD
+      - FDMI source MUST NOT send FDMI record to FDMI plugins before FDMI
+        record becomes persistent on the source side
+      - It's required to be able to handle crash/restart of CAS correctly. If
+        FDMI record is sent before it becomes persistent then it might be a
+        case when it's not persisted and FDMI plugin will get a KV pair that
+        hasn't been inserted into the catalogue.
+      - N
+      - Currently a generic fom phase posts FDMI record before BE transaction
+        is logged. The solution to this is to defer posting up until BE
+        transaction is logged.
+    * - TBD
       - It MUST be possible to get DIX PUT kv pairs in a Motr process which
         doesn't have CAS service that received CAS PUT request for the DIX PUT
         request.
