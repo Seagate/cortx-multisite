@@ -18,7 +18,7 @@ autopep8:
 test: check
   # Quick run for build and test.
 	# Deactivate any old virtualenv and create new one, activate
-	deactivate | true
+	deactivate || true
 	python3 -m venv s3env; source s3env/bin/activate
 	# For each package, clean, build and test.
 	# Clean all
@@ -35,4 +35,4 @@ test: check
 	cd replicator && pip3 install  -e .[development] && \
 	python3 setup.py install && \
 	timeout --preserve-status 1s python3 -m s3replicator && cd ..
-	deactivate | true
+	deactivate || true

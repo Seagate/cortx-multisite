@@ -54,19 +54,19 @@ async def main():
         metavar='path',
         help='Path to replication manager configuration file(format: yaml)')
     parser.add_argument(
-        'job',
+        '--job',
         type=str,
         metavar='job',
-        default='default_job',
+        default='testjobid',
         help='job id')
     parser.add_argument(
-        'subscriber',
+        '--subscriber',
         type=str,
         metavar='subscriber',
-        default='default_subscriber',
+        default='testsubscriberid',
         help='subscriber id')
     parser.add_argument(
-        'prefetch_count',
+        '--prefetch_count',
         type=str,
         metavar='prefetch_count',
         default=2,

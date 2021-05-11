@@ -47,3 +47,8 @@ Start the replicator.
 ```sh
 $ python3 -m s3replicationmanager
 ```
+
+Run system tests after starting the replicator.
+```sh
+$ python3 manager/tests/system/manager_client.py
+```

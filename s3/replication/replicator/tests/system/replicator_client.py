@@ -53,10 +53,10 @@ async def main():
         metavar='path',
         help='Path to replication manager configuration file(format: yaml)')
     parser.add_argument(
-        'job',
+        '--job',
         type=str,
         metavar='job',
-        default='default_job',
+        default='testjobid',
         help='job id')
 
     # Parsing arguments
