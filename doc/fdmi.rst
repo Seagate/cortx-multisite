@@ -51,7 +51,7 @@ Ballpark estimates:
 - depend on my level of motivation. Current estimates are for high level.
 
 .. list-table::
-    :widths: 5 30 30 5 30
+    :widths: 5 30 30 5 25 5
     :header-rows: 1
 
     * - ID
@@ -59,7 +59,7 @@ Ballpark estimates:
       - Comment
       - Done?
       - How and what else is needed?
-      - ballpark estimate
+      - A ballpark estimate
     * - TBD
       - FDMI source MUST NOT send FDMI record to FDMI plugins before FDMI
         record becomes persistent on the source side
