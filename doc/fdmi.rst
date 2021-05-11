@@ -36,6 +36,20 @@ TODO assign stable IDs
 
 TBD == to be defined
 
+Ballpark estimates:
+
+- are in assumption that I could run a cluster (VM or hardware) and I could
+  build & install a new version of Motr with a single command in 10 minutes. If
+  this is not the case then the estimates could be doubled, tripled etc.;
+- I get support for the issues with existing code (especially outside of Motr)
+  in timely manner. If it's not the case then the consequences are the same as
+  for the previous item;
+- are without code reviews;
+- are without landings to ``main`` and/or ``stable`` and/or some similar
+  branch;
+- are for me;
+- depend on my level of motivation. Current estimates are for high level.
+
 .. list-table::
     :widths: 5 30 30 5 30
     :header-rows: 1
@@ -45,6 +59,7 @@ TBD == to be defined
       - Comment
       - Done?
       - How and what else is needed?
+      - ballpark estimate
     * - TBD
       - FDMI source MUST NOT send FDMI record to FDMI plugins before FDMI
         record becomes persistent on the source side
@@ -56,6 +71,8 @@ TBD == to be defined
       - Currently a generic fom phase posts FDMI record before BE transaction
         is logged. The solution to this is to defer posting up until BE
         transaction is logged.
+      - 2h if everything is smooth, a few days if not. Unlikely to take more,
+        depends on the stability of existing code.
     * - TBD
       - It MUST be possible to get DIX PUT kv pairs in a Motr process which
         doesn't have CAS service that received CAS PUT request for the DIX PUT
@@ -69,12 +86,15 @@ TBD == to be defined
         they are not beint sent nor logged to BE log as FOL records. Fix for
         this issue: `cortx-motr/pull/588
         <https://github.com/Seagate/cortx-motr/pull/588>`_.
+      - 0d
     * - TBD
       - It MUST be possible to get CAS kv pairs even after FDMI plugin restart.
       - It's needed to handle Scheduler restarts.
       - N
       - Hare MUST notify Motr about Scheduler restart. RPC connections need to
         be re-established after Scheduler restart.
+      - Hare work has to be done by Hare team. Motr RPC work is in FDMI and in
+        RPC: a week to several weeks.
     * - TBD
       - It MUST be possible to get CAS kv pair even if CAS was not running at
         the time DIX PUT execution was initiated.
@@ -83,6 +103,8 @@ TBD == to be defined
       - N
       - DTM0 is required for this. Some integration work may or may not be
         required. It will not be known before DTM0 is landed.
+      - Not clear without seeing DTM0 changes. Likely to be done automatically
+        or with a very few changes.
     * - TBD
       - It MUST be possible to get CAS kv pair even if a Motr process with the
         CAS inside crashes during DIX PUT execution: after CAS PUT is executed,
@@ -93,6 +115,10 @@ TBD == to be defined
       - N
       - It requires sending FDMI records sometime around or after BE
         recovery.
+      - No code for doing even something close to this is present in Motr right
+        now. If we can get away with simply pushing FOL records to FDMI during
+        BE recovery then it's a few days (I think it's the case). If no then it
+        might be weeks.
     * - TBD
       - It MUST be possible to determine when FDMI records are never going to
         be resent from FDMI source.
@@ -108,6 +134,7 @@ TBD == to be defined
 
         Each CAS would provide such position, and it would be possible to do
         per- storage device pruning.
+      - 2d - 2w
     * - TBD
       - It MUST be possible to adjust FDMI filters in runtime.
       - This is needed to adjust replication configuration (what to replicate,
@@ -125,12 +152,21 @@ TBD == to be defined
         only one endpoint where to send FDMI records to (this may not enough
         for multisite). Currently there is no code in Motr/Hare to add filters
         to the configuration or to change the filter configuration.
+      - Depends on compexity of FDMI filters. If they are like they are now,
+        then it's weeks, month or even more. We have no code to read Motr DIX
+        from server, it may take a lot of time. Adjusting filter configuration
+        in runtime also requires RM locks, which, in turn, requires code to
+        work when principal RM changes. It must also be some kind of
+        synchronisation between RM locks and DTM operations (to handle crash of
+        the code that writes FDMI filter configuration). My estimate is from a
+        few weeks to months.
     * - TBD
       - It MUST be possible to adjust FDMI filter targets in runtime.
       - This is needed to configure or reconfigure sets of Schedulers after
         initial cluster bootstrap.
       - N
       - We need to do the same as for the previous requirement.
+      - -
     * - TBD
       - It MUST be possible to determine the outcome of a DIX PUT operation if
         multiple DIX PUT operations were executed for the same key in the same
@@ -140,6 +176,8 @@ TBD == to be defined
       - N
       - DTM0 design is required to figure out how to do this and DTM0 landing
         is required to implement this.
+      - If DTM0 has the features that are needed and exports the functions then
+        it may take 1w-4w.
 
 
 Prototype
