@@ -22,9 +22,6 @@ import json
 
 # Job model to be used across both replication manager and replicator
 class Job:
-    """A Job class to store replication job attributes.
-       Provides methods to serialise/deserialise as json."""
-
     def __init__(self, obj):
         """Initialise Job."""
         if obj is not None:

@@ -50,6 +50,7 @@ class ReplicatorApp:
         app = web.Application()
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
+<<<<<<< HEAD
 
         # Each site (source or target) will have one session instance which
         # will be reused for each request for that site.
@@ -57,6 +58,8 @@ class ReplicatorApp:
         # aiohttp.ClientSession()}
         app["sessions"] = {}
 
+=======
+>>>>>>> Move s3replicator routes to separate module, fix tests, implement basic job.
         app['all_jobs'] = self._jobs
         app['replication-managers'] = []  # TBD
 
