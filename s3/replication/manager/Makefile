@@ -18,9 +18,9 @@ autopep8:
 clean:
 	python3 setup.py clean --all
 
-install:
+install: setups3env
 	pip3 install  -e .[development]
 	python3 setup.py install
 
-test: install
+test: clean install
 	timeout --preserve-status 1s python3 -m s3replicationmanager
