@@ -19,7 +19,7 @@
 
 from aiohttp import web
 import logging
-from .jobs import Jobs
+from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
 import json
 
@@ -27,6 +27,7 @@ LOG = logging.getLogger('replicator')
 
 # Route table declaration
 routes = web.RouteTableDef()
+
 
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
@@ -38,7 +39,7 @@ async def list_jobs(request):
     jobs = request.app['all_jobs']
 
     LOG.debug('Number of jobs in-progress {}'.format(jobs.count()))
-    LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
+    # LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 
@@ -57,7 +58,8 @@ async def get_job(request):
         return web.json_response({"job": job.get_dict()}, status=200)
     else:
         LOG.debug('Job missing with job_id : {} '.format(job_id))
-        return web.json_response({'ErrorResponse': 'Job Not Found!'}, status=404)
+        return web.json_response(
+            {'ErrorResponse': 'Job Not Found!'}, status=404)
 
 
 @routes.post('/jobs')  # noqa: E302
@@ -91,5 +93,5 @@ async def abort_job(request):
         return web.json_response({'job_id': job_id}, status=204)
     else:
         LOG.debug('Missing Job with job_id {}'.format(job_id))
-        return web.json_response({'ErrorResponse': 'Job Not Found!'}, status=404)
-
+        return web.json_response(
+            {'ErrorResponse': 'Job Not Found!'}, status=404)

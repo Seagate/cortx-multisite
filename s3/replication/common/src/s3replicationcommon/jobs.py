@@ -17,9 +17,10 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-from s3replicationcommon.job import Job
-from s3replicationcommon.job import JobJsonEncoder
+from .job import Job
+from .job import JobJsonEncoder
 import json
+
 
 class Jobs:
     def dumps(obj):
@@ -48,8 +49,6 @@ class Jobs:
 
     def add_job(self, job):
         """Adds job to the dictionary"""
-        job = Job()
-        job.from_json(job_json)
         self._jobs[job.get_job_id()] = job
 
     def get_job(self, job_id):

@@ -22,10 +22,11 @@ from .config import Config
 import logging
 from s3replicationcommon.log import setup_logging
 from .replicator_routes import routes
-from .jobs import Jobs
+from s3replicationcommon.jobs import Jobs
 
 # Setup log
 LOG = logging.getLogger('replicator')
+
 
 class ReplicatorApp:
     def __init__(self, configfile):
