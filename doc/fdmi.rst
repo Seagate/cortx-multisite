@@ -71,7 +71,8 @@ Ballpark estimates:
       - Currently a generic fom phase posts FDMI record before BE transaction
         is logged. The solution to this is to defer posting up until BE
         transaction is logged.
-      - 2h if everything is smooth, a few days if not. Unlikely to take more,
+      - 1w.
+        2h if everything is smooth, a few days if not. Unlikely to take more,
         depends on the stability of existing code.
     * - TBD
       - It MUST be possible to get DIX PUT kv pairs in a Motr process which
@@ -93,8 +94,8 @@ Ballpark estimates:
       - N
       - Hare MUST notify Motr about Scheduler restart. RPC connections need to
         be re-established after Scheduler restart.
-      - Hare work has to be done by Hare team. Motr RPC work is in FDMI and in
-        RPC: a week to several weeks.
+      - 3w-6w. Hare work has to be done by Hare team. Motr RPC work is in FDMI
+        and in RPC: a week to several weeks.
     * - TBD
       - It MUST be possible to get CAS kv pair even if CAS was not running at
         the time DIX PUT execution was initiated.
@@ -115,7 +116,8 @@ Ballpark estimates:
       - N
       - It requires sending FDMI records sometime around or after BE
         recovery.
-      - No code for doing even something close to this is present in Motr right
+      - 2w - 3months+.
+        No code for doing even something close to this is present in Motr right
         now. If we can get away with simply pushing FOL records to FDMI during
         BE recovery then it's a few days (I think it's the case). If no then it
         might be weeks.
