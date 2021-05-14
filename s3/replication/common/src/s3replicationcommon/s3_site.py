@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -19,24 +17,10 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import os
-import yaml
 
-
-class Config:
-    """ Configuration for S3 tests """
-
-    def __init__(self):
-        """constructor"""
-
-        # Read the config file.
-        with open(os.path.join(os.path.dirname(__file__),
-                  'config/config.yaml'), 'r') as config:
-            self._config = yaml.safe_load(config)
-
-        self.endpoint = self._config["endpoint"]
-        self.s3_service_name = self._config["s3_service_name"]
-        self.s3_region = self._config["s3_region"]
-        self.access_key = self._config["access_key"]
-        self.secret_key = self._config["secret_key"]
-        self.transfer_size = self._config["transfer_size"]
+class S3Site:
+    def __init__(self, endpoint, service_name, region):
+        """Initialise S3 session."""
+        self.endpoint = endpoint
+        self.service_name = service_name
+        self.region = region

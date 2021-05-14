@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -19,24 +17,23 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import os
-import yaml
+import aiohttp
 
 
-class Config:
-    """ Configuration for S3 tests """
+class S3Session:
+    def __init__(self, s3_site, access_key, secret_key):
+        """Initialise S3 session."""
+        self.endpoint = s3_site.endpoint
+        self.service_name = s3_site.service_name
+        self.region = s3_site.region
 
-    def __init__(self):
-        """constructor"""
+        self.access_key = access_key
+        self.secret_key = secret_key
 
-        # Read the config file.
-        with open(os.path.join(os.path.dirname(__file__),
-                  'config/config.yaml'), 'r') as config:
-            self._config = yaml.safe_load(config)
+        self._client_session = aiohttp.ClientSession()
 
-        self.endpoint = self._config["endpoint"]
-        self.s3_service_name = self._config["s3_service_name"]
-        self.s3_region = self._config["s3_region"]
-        self.access_key = self._config["access_key"]
-        self.secret_key = self._config["secret_key"]
-        self.transfer_size = self._config["transfer_size"]
+    def get_client_session(self):
+        return self._client_session
+
+    async def close(self):
+        await self._client_session.close()

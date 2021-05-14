@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -19,31 +17,31 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import aiohttp
-import asyncio
 import sys
-from config import Config
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 
-async def main():
-    async with aiohttp.ClientSession() as session:
+class S3AsyncGetObject:
+    def __init__(self, session, bucket_name, object_name):
+        """Initialise."""
+        self._session = session
+        self._bucket_name = bucket_name
+        self._object_name = object_name
 
-        config = Config()
+    # yields data chunk for given size
+    async def fetch(self, chunk_size):
+        request_uri = AWSV4Signer.fmt_s3_request_uri(
+            self._bucket_name, self._object_name)
 
-        bucket_name = 'kdtest'
-        object_name = 'creds'
-
-        request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
         query_params = ""
         body = ""
 
         headers = AWSV4Signer(
-            config.endpoint,
-            config.s3_service_name,
-            config.s3_region,
-            config.access_key,
-            config.secret_key).prepare_signed_header(
+            self._session.endpoint,
+            self._session.service_name,
+            self._session.region,
+            self._session.access_key,
+            self._session.secret_key).prepare_signed_header(
             'GET',
             request_uri,
             query_params,
@@ -53,15 +51,13 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        print('GET on {}'.format(config.endpoint + request_uri))
-        async with session.get(config.endpoint + request_uri,
-                               headers=headers) as resp:
+        print('GET on {}'.format(self._session.endpoint + request_uri))
+        async with self._session.get_client_session().get(
+                self._session.endpoint + request_uri, headers=headers) as resp:
             while True:
-                chunk = await resp.content.read(1024)
-                if not chunk:
+                data_chunk = await resp.content.read(chunk_size)
+                if not data_chunk:
                     break
-                print(chunk)
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+                print(data_chunk)
+                yield data_chunk
+            print('GET Object http status: {}'.format(resp.status))
