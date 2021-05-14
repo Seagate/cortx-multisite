@@ -9,8 +9,10 @@ AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
 
 check: flake8
 
-flake8: */src/**/*.py */test/*.py
-	flake8 $(FLAKE8_OPTS) $^
+flake8:
+	cd common; make flake8; cd ..
+	cd manager; make flake8; cd ..
+	cd replicator; make flake8; cd ..
 
 autopep8:
 	autopep8 $(AUTOPEP8_OPTS) common manager replicator

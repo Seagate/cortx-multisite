@@ -64,8 +64,9 @@ class AWSV4Signer(object):
                 key.lower(), headers[key].strip())
 
         signed_headers = "{}".format(";".join(sorted_headers))
-        canonical_request = method + '\n' + canonical_uri + '\n' + canonical_query_string + \
-            '\n' + canonical_headers + '\n' + signed_headers + '\n' + body_256sha_hex
+        canonical_request = method + '\n' + canonical_uri + '\n' + \
+            canonical_query_string + '\n' + canonical_headers + '\n' + \
+            signed_headers + '\n' + body_256sha_hex
         return canonical_request
 
     def _sign(self, key, msg):
@@ -73,7 +74,10 @@ class AWSV4Signer(object):
         return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
     def _getV4SignatureKey(self, key, dateStamp, regionName, serviceName):
-        """Generate v4SignatureKey based on key, datestamp, region and service name."""
+        """
+        Generate v4SignatureKey based on key, datestamp, region and
+        service name.
+        """
         kDate = self._sign(('AWS4' + key).encode('utf-8'), dateStamp)
         kRegion = self._sign(kDate, regionName)
         kService = self._sign(kRegion, serviceName)
@@ -98,8 +102,11 @@ class AWSV4Signer(object):
         credential_scope = self._get_date(epoch_t) + '/' + \
             region + '/' + service + '/' + 'aws4_request'
 
-        string_to_sign = algorithm + '\n' + self._get_amz_timestamp(epoch_t) + '\n' + credential_scope \
-            + '\n' + hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
+        string_to_sign = algorithm + '\n' + \
+            self._get_amz_timestamp(epoch_t) + '\n' + \
+            credential_scope + '\n' + \
+            hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
+
         return string_to_sign
 
     def _get_date(self, epoch_t):
@@ -109,6 +116,21 @@ class AWSV4Signer(object):
     def _get_amz_timestamp(self, epoch_t):
         """Return timestamp in YMDTHMSZ format."""
         return epoch_t.strftime('%Y%m%dT%H%M%SZ')
+
+    # Helper class method for generating request_uri for v4 signing.
+    def fmt_s3_request_uri(bucket_name, object_name):
+        # The URL quoting functions focus on taking program data and making
+        # it safe for use as URL components by quoting special characters
+        # and appropriately encoding non-ASCII text.
+        # urllib.parse.urlencode converts a mapping object or a sequence of
+        # two-element tuples, which may contain str or bytes objects,
+        # to a percent-encoded ASCII text string.
+        # https://docs.python.org/3/library/urllib.parse.html
+
+        request_uri = '/' + urllib.parse.quote(bucket_name, safe='') + '/' + \
+            urllib.parse.quote(object_name, safe='')
+
+        return request_uri
 
     # generating AWS v4 Authorization signature
     def sign_request_v4(
@@ -153,8 +175,9 @@ class AWSV4Signer(object):
             (string_to_sign).encode('utf-8'),
             hashlib.sha256).hexdigest()
 
-        authorization_header = algorithm + ' ' + 'Credential=' + self._access_key + '/' + \
-            credential_scope + ', ' + 'SignedHeaders=' + signed_headers + \
+        authorization_header = algorithm + ' ' + 'Credential=' + \
+            self._access_key + '/' + credential_scope + ', ' + \
+            'SignedHeaders=' + signed_headers + \
             ', ' + 'Signature=' + signature
         return authorization_header
 
@@ -171,17 +194,20 @@ class AWSV4Signer(object):
         Parameters:
 
         http_request - Any of http verbs: GET, PUT, DELETE, POST
-        request_uri - URL safe resource string, example /bucket_name/object_name
-        query_params - URL safe query param string, example param1=abc&param2=somevalue
+        request_uri - URL safe resource string,
+                      example /bucket_name/object_name
+        query_params - URL safe query param string,
+                      example param1=abc&param2=somevalue
         body - content
 
         Returns:
-            headers dictionary with following header keys: Authorization, x-amz-date,
-            and x-amz-content-sha256
+            headers dictionary with following header keys: Authorization,
+            x-amz-date, and x-amz-content-sha256
 
-        Sample usage: headers = AWSV4Signer("http://s3.seagate.com", "cortxs3", 'us-west2',
-                                            access_key, secret_key).prepare_signed_header(
-                                                'PUT', request_uri, query_params, body)
+        Sample usage: headers =
+            AWSV4Signer("http://s3.seagate.com", "cortxs3", 'us-west2',
+                        access_key, secret_key).prepare_signed_header(
+                                'PUT', request_uri, query_params, body)
         """
         url_parse_result = urllib.parse.urlparse(self._endpoint)
         epoch_t = datetime.datetime.utcnow()
