@@ -45,6 +45,13 @@ class ReplicatorApp:
         app = web.Application()
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
+
+        # Each site (source or target) will have one session instance which
+        # will be reused for each request for that site.
+        # Example {"site-1": aiohttp.ClientSession(), "site-2":
+        # aiohttp.ClientSession()}
+        app["sessions"] = {}
+
         app['all_jobs'] = self._jobs
         app['replication-managers'] = []  # TBD
 
