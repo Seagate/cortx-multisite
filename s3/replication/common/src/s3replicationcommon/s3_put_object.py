@@ -22,11 +22,12 @@ from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 
 class S3AsyncPutObject:
-    def __init__(self, session, bucket_name, object_name):
+    def __init__(self, session, bucket_name, object_name, object_size):
         """Initialise."""
         self._session = session
         self._bucket_name = bucket_name
         self._object_name = object_name
+        self._object_size = object_size
 
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
@@ -51,12 +52,13 @@ class S3AsyncPutObject:
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        # XXX Figure out content-length
-        headers["Content-Length"] = "329"
+        headers["Content-Length"] = str(self._object_size)
         print('PUT on {}'.format(self._session.endpoint + request_uri))
         async with self._session.get_client_session().put(
                 self._session.endpoint + request_uri,
                 headers=headers,
+                # Read all data from data_reader
                 data=data_reader.fetch(transfer_size)) as resp:
-            print('PUT Object http status: {}'.format(resp.status))
+            print('PUT Object completed with http status: {}'.format(
+                  resp.status))
             print(await resp.text())

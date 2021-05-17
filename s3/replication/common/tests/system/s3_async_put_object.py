@@ -21,9 +21,17 @@
 
 import aiohttp
 import asyncio
+import os
 import sys
 from config import Config
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+
+
+async def data_generator(object_sz, chunk_size):
+    total_chunks = int(object_sz / chunk_size)
+    for _ in range(0, total_chunks):
+        await asyncio.sleep(0.01)
+        yield os.urandom(chunk_size)
 
 
 async def main():
@@ -31,8 +39,8 @@ async def main():
 
         config = Config()
 
-        bucket_name = 'kdtest'
-        object_name = 'helloworld'
+        bucket_name = config.source_bucket_name
+        object_name = config.object_name_prefix + "test"
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
         query_params = ""
@@ -53,8 +61,15 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
+        headers["Content-Length"] = str(config.object_size)
+
+        print('PUT on {} for object size {} bytes.'.format(
+            config.endpoint + request_uri, config.object_size))
         async with session.put(config.endpoint + request_uri,
-                               headers=headers, data=b'Hello world!!') as resp:
+                               headers=headers,
+                               data=data_generator(
+                                   config.object_size,
+                                   config.transfer_chunk_size)) as resp:
             print(resp.status)
             print(await resp.text())
 

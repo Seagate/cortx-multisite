@@ -35,11 +35,17 @@ async def main():
 
     session = S3Session(s3_site, config.access_key, config.secret_key)
 
-    object_reader = S3AsyncGetObject(session, "kdtest", "creds")
-    object_writer = S3AsyncPutObject(session, "kdtest", "creds-copy")
+    # Generate object names
+    source_object_name = config.object_name_prefix + "test"
+    target_object_name = config.object_name_prefix + "copy"
+
+    object_reader = S3AsyncGetObject(session, config.source_bucket_name,
+                                     source_object_name, config.object_size)
+    object_writer = S3AsyncPutObject(session, config.target_bucket_name,
+                                     target_object_name, config.object_size)
 
     # Start transfer
-    await object_writer.send(object_reader, config.transfer_size)
+    await object_writer.send(object_reader, config.transfer_chunk_size)
     await session.close()
 
 

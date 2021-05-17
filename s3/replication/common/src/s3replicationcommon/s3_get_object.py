@@ -22,11 +22,12 @@ from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 
 class S3AsyncGetObject:
-    def __init__(self, session, bucket_name, object_name):
+    def __init__(self, session, bucket_name, object_name, object_size):
         """Initialise."""
         self._session = session
         self._bucket_name = bucket_name
         self._object_name = object_name
+        self._object_size = object_size
 
     # yields data chunk for given size
     async def fetch(self, chunk_size):
@@ -51,6 +52,9 @@ class S3AsyncGetObject:
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
+        # Maximum to fetch so we dont keep reading indefinitely.
+        total_to_fetch = self._object_size
+
         print('GET on {}'.format(self._session.endpoint + request_uri))
         async with self._session.get_client_session().get(
                 self._session.endpoint + request_uri, headers=headers) as resp:
@@ -58,6 +62,26 @@ class S3AsyncGetObject:
                 data_chunk = await resp.content.read(chunk_size)
                 if not data_chunk:
                     break
-                print(data_chunk)
+                print("Received data_chunk of size {} bytes.".format(
+                    len(data_chunk)))
                 yield data_chunk
-            print('GET Object http status: {}'.format(resp.status))
+
+                total_to_fetch = total_to_fetch - len(data_chunk)
+                if total_to_fetch == 0:
+                    # Completed reading all expected data.
+                    break
+                elif total_to_fetch < 0:
+                    print(
+                        "Received %d more bytes than"
+                        "expected object size of %d",
+                        (total_to_fetch * -1,
+                         self._object_size))
+            if total_to_fetch > 0:
+                print(
+                    "Received partial object. Expected object size (%d), "
+                    "Actual received size (%d)",
+                    self._object_size,
+                    self._object_size - total_to_fetch)
+
+            print('GET Object completed with http status: {}'.format(
+                resp.status))

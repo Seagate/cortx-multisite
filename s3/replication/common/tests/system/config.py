@@ -39,4 +39,9 @@ class Config:
         self.s3_region = self._config["s3_region"]
         self.access_key = self._config["access_key"]
         self.secret_key = self._config["secret_key"]
-        self.transfer_size = self._config["transfer_size"]
+
+        self.source_bucket_name = self._config["source_bucket_name"]
+        self.target_bucket_name = self._config["target_bucket_name"]
+        self.object_name_prefix = self._config["object_name_prefix"]
+        self.object_size = self._config["object_size"]
+        self.transfer_chunk_size = self._config["transfer_chunk_size"]

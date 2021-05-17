@@ -31,8 +31,9 @@ async def main():
 
         config = Config()
 
-        bucket_name = 'kdtest'
-        object_name = 'creds'
+        # Ensure bucket and object exists before test.
+        bucket_name = config.source_bucket_name
+        object_name = config.object_name_prefix + "test"
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
         query_params = ""
@@ -53,6 +54,8 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
+        total_received = 0
+
         print('GET on {}'.format(config.endpoint + request_uri))
         async with session.get(config.endpoint + request_uri,
                                headers=headers) as resp:
@@ -60,8 +63,11 @@ async def main():
                 chunk = await resp.content.read(1024)
                 if not chunk:
                     break
-                print(chunk)
+                total_received += len(chunk)
+                print("Received chunk of size {} bytes.".format(len(chunk)))
 
+            print("Total object size received {} bytes.".format(
+                total_received))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

@@ -25,4 +25,11 @@ install: setups3env
 	python3 setup.py install
 
 test: clean install
-	echo "Tests TBD for common"
+	@(printf "\n\nRunning tests...\n")
+	@(printf "_________________\n\n")
+	@(printf "\n\nTest case: Create test object\n")
+	python tests/system/s3_async_put_object.py
+	@(printf "\n\nTest case: Reads test object\n")
+	python tests/system/s3_async_get_object.py
+	@(printf "\n\nTest case: Transfers test object\n")
+	python tests/system/s3_async_transfer_object.py

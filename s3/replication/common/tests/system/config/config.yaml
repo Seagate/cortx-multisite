@@ -3,4 +3,8 @@ s3_service_name: cortxs3
 s3_region: us-west2
 access_key: '<your access_key>'
 secret_key: '<your secret_key>'
-transfer_size: 10
+source_bucket_name: sourcebucket
+target_bucket_name: targetbucket
+object_name_prefix: foo_
+object_size: 1024
+transfer_chunk_size: 128
