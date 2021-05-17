@@ -3,4 +3,3 @@ manager:
    port: 8080
    ssl: false
    service_name: "s3replicationmanager"
-                                            

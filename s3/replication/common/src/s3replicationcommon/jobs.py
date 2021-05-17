@@ -23,19 +23,23 @@ import json
 
 
 class Jobs:
-    def dumps(obj):
-        """json """
-        return json.dumps(obj._jobs, cls=JobJsonEncoder)
-
     def __init__(self):
         """Initialise jobs collection"""
         # Dictionary holding job_id and fdmi record
         # e.g. : jobs = {"job1": Job({"obj_name": "foo"})}
         self._jobs = {}
 
+    def dumps(obj):
+        """json """
+        return json.dumps(obj._jobs, cls=JobJsonEncoder)
+
     def to_json(self):
         """Converts to json."""
         return Jobs.to_json(self)
+
+    def get_all_jobs(self):
+        """Returns all progressing jobs"""
+        return self._jobs
 
     def count(self):
         """Returns total jobs in collection."""

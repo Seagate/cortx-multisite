@@ -39,7 +39,7 @@ async def list_jobs(request):
     jobs = request.app['all_jobs']
 
     LOG.debug('Number of jobs in-progress {}'.format(jobs.count()))
-    # LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
+    LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 
@@ -85,8 +85,7 @@ async def abort_job(request):
 
     """
     job_id = request.match_info['job_id']
-    LOG.debug('Aborting Job with job_id {}'.format(job_id))
-    # XXX Perform real abort...
+    # Perform abort...
     job = request.app['all_jobs'].remove_job(job_id)
     if job is not None:
         LOG.debug('Aborted Job with job_id {}'.format(job_id))
