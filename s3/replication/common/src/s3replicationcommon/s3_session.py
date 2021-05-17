@@ -21,8 +21,9 @@ import aiohttp
 
 
 class S3Session:
-    def __init__(self, s3_site, access_key, secret_key):
+    def __init__(self, logger, s3_site, access_key, secret_key):
         """Initialise S3 session."""
+        self.logger = logger
         self.endpoint = s3_site.endpoint
         self.service_name = s3_site.service_name
         self.region = s3_site.region

@@ -25,6 +25,7 @@ class S3AsyncPutObject:
     def __init__(self, session, bucket_name, object_name, object_size):
         """Initialise."""
         self._session = session
+        self._logger = session.logger
         self._bucket_name = bucket_name
         self._object_name = object_name
         self._object_size = object_size
@@ -49,16 +50,18 @@ class S3AsyncPutObject:
             body)
 
         if (headers['Authorization'] is None):
-            print("Failed to generate v4 signature")
+            self._logger.error("Failed to generate v4 signature")
             sys.exit(-1)
 
         headers["Content-Length"] = str(self._object_size)
-        print('PUT on {}'.format(self._session.endpoint + request_uri))
+
+        self._logger.info('PUT on {}'.format(
+            self._session.endpoint + request_uri))
         async with self._session.get_client_session().put(
                 self._session.endpoint + request_uri,
                 headers=headers,
                 # Read all data from data_reader
                 data=data_reader.fetch(transfer_size)) as resp:
-            print('PUT Object completed with http status: {}'.format(
-                  resp.status))
-            print(await resp.text())
+            self._logger.info(
+                'PUT Object completed with http status: {}'.format(
+                    resp.status))

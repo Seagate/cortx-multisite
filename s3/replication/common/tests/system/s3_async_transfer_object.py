@@ -21,6 +21,8 @@
 
 import asyncio
 from config import Config
+import logging
+from s3replicationcommon.log import setup_logging
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
@@ -31,9 +33,12 @@ async def main():
 
     config = Config()
 
+    setup_logging('transfer_test')
+    logger = logging.getLogger('transfer_test')
+
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
 
-    session = S3Session(s3_site, config.access_key, config.secret_key)
+    session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate object names
     source_object_name = config.object_name_prefix + "test"
