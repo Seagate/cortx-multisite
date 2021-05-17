@@ -30,7 +30,6 @@ from s3replicationcommon.aws_v4_signer import AWSV4Signer
 async def data_generator(object_sz, chunk_size):
     total_chunks = int(object_sz / chunk_size)
     for _ in range(0, total_chunks):
-        await asyncio.sleep(0.01)
         yield os.urandom(chunk_size)
 
 

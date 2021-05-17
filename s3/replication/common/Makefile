@@ -22,9 +22,10 @@ clean: setups3env
 	python3 setup.py clean --all
 
 install: setups3env
+	pip3 install  -e .[development]
 	python3 setup.py install
 
-test: clean install
+test: setups3env
 	@(printf "\n\nRunning tests...\n")
 	@(printf "_________________\n\n")
 	@(printf "\n\nTest case: Create test object\n")

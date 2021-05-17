@@ -25,5 +25,5 @@ install: setups3env
 	pip3 install  -e .[development]
 	python3 setup.py install
 
-test: clean install
+test: install
 	timeout --preserve-status 1s python3 -m s3replicationmanager
