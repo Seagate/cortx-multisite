@@ -10,6 +10,7 @@ AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
 check: flake8
 
 flake8:
+	python3 -m pip install --upgrade pip
 	cd common; make flake8; cd ..
 	cd manager; make flake8; cd ..
 	cd replicator; make flake8; cd ..

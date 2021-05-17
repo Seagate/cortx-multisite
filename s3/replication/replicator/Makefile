@@ -10,18 +10,15 @@ AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
 check: flake8
 
 flake8: src/**/*.py tests/**/*.py
-	flake8 $(FLAKE8_OPTS) $^
+	python3 -m flake8 $(FLAKE8_OPTS) $^
 
 autopep8:
-	autopep8 $(AUTOPEP8_OPTS) src tests
-
-setups3env:
-	python3 -m venv ../s3env; source ../s3env/bin/activate
+	python3 -m autopep8 $(AUTOPEP8_OPTS) src tests
 
 clean:
 	python3 setup.py clean --all
 
-install: setups3env
+install:
 	pip3 install  -e .[development]
 	python3 setup.py install
 
