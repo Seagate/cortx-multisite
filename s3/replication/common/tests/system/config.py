@@ -34,11 +34,20 @@ class Config:
                   'config/config.yaml'), 'r') as config:
             self._config = yaml.safe_load(config)
 
+        # File with credentials. ~/.cortxs3/credentials.yaml
+        creds_home = os.path.join(os.path.expanduser('~'), '.cortxs3')
+        creds_file_path = os.path.join(creds_home, 'credentials.yaml')
+
+        credentials_config = None
+        with open(creds_file_path, 'r') as config:
+            credentials_config = yaml.safe_load(config)
+
         self.endpoint = self._config["endpoint"]
         self.s3_service_name = self._config["s3_service_name"]
         self.s3_region = self._config["s3_region"]
-        self.access_key = self._config["access_key"]
-        self.secret_key = self._config["secret_key"]
+
+        self.access_key = credentials_config["access_key"]
+        self.secret_key = credentials_config["secret_key"]
 
         self.source_bucket_name = self._config["source_bucket_name"]
         self.target_bucket_name = self._config["target_bucket_name"]
