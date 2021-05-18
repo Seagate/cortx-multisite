@@ -53,10 +53,10 @@ async def main():
         metavar='path',
         help='Path to replication manager configuration file(format: yaml)')
     parser.add_argument(
-        'job',
+        '--job',
         type=str,
         metavar='job',
-        default='default_job',
+        default='foo',
         help='job id')
 
     # Parsing arguments
@@ -77,28 +77,28 @@ async def main():
     async with aiohttp.ClientSession() as session:
 
         # Add job and attributes
-        async with session.put(
-                url + '/jobs', json={"job2": "bar"}) as response:
-            LOG.info('Status: {}'.format(response.status))
+        async with session.post(
+                url + '/jobs', json={"Object-Name": "foo"}) as response:
+            LOG.info('POST jobs Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get job attributes
         async with session.get(
                 url + '/jobs/' + job) as response:
-            LOG.info('Status: {}'.format(response.status))
+            LOG.info('GET jobs Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Get inprogress list
-        async with session.get(url + '/jobs')as response:
-            LOG.info('Status: {}'.format(response.status))
+        async with session.get(url + '/jobs') as response:
+            LOG.info('List jobs Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
         # Abort job with given job_id
-        async with session.post(url + '/jobs/' + job) as response:
-            LOG.info('Status: {}'.format(response.status))
+        async with session.delete(url + '/jobs/' + job) as response:
+            LOG.info('Abort job Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))
 
