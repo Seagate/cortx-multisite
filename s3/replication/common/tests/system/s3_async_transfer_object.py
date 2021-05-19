@@ -21,8 +21,9 @@
 
 import asyncio
 from config import Config
-import logging
-from s3replicationcommon.log import setup_logging
+import os
+import sys
+from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
@@ -33,8 +34,15 @@ async def main():
 
     config = Config()
 
-    setup_logging('transfer_test')
-    logger = logging.getLogger('transfer_test')
+    # Setup logging and get logger
+    log_config_file = os.path.join(os.path.dirname(__file__),
+                                   'config', 'logger_config.yaml')
+
+    print("Using log config {}".format(log_config_file))
+    logger = setup_logger('client_tests', log_config_file)
+    if logger is None:
+        print("Failed to configure logging.\n")
+        sys.exit(-1)
 
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
 
