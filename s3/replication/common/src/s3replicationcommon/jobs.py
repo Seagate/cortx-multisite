@@ -23,6 +23,10 @@ import json
 
 
 class Jobs:
+    def to_json(self):
+        """Converts to json."""
+        return Jobs.to_json(self)
+
     def __init__(self):
         """Initialise jobs collection"""
         # Dictionary holding job_id and fdmi record
@@ -33,17 +37,25 @@ class Jobs:
         """json """
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
-    def to_json(self):
-        """Converts to json."""
-        return Jobs.to_json(self)
+    def get_keys(self):
+        """Returns all jobs"""
+        return self._jobs.keys()
 
     def get_all_jobs(self):
-        """Returns all progressing jobs"""
-        return self._jobs
+        """Returns all jobs with attributes"""
+        return self._jobs.items()
+
+    def clear_jobs(self):
+        """Clear all jobs"""
+        self._jobs.clear()
 
     def count(self):
         """Returns total jobs in collection."""
         return len(self._jobs)
+
+    def update_jobs(self, jobs_dict):
+        """Populdate _jobs dict with another dictionary"""
+        self._jobs.update(jobs_dict)
 
     def add_job_using_json(self, job_json):
         """Validate the job and add to the dictionary"""

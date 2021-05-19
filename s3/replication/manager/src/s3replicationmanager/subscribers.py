@@ -19,26 +19,32 @@
 
 class Subscribers:
     def __init__(self):
-        """Initialise jobs collection"""
-        # List holding subscriber id
-        # e.g. : Subscriber = ['first_subscriber', 'second_subscriber']
-        self._subscribers = []
+        """Initialise Subscribers collection"""
+        # Dictionary holding subscriber_id and attributes
+        # e.g. : Subscriber = {'testsubscriber': {'foo':'bar'}}
+        self._subscribers = {}
 
-    def get_subscribers(self):
-        """Returns subscribers list"""
-        return self._subscribers
+    def get_keys(self):
+        """Returns subscribers ids"""
+        return self._subscribers.keys()
 
-    def add_subscriber(self, sub_id):
-        """Adds subscriber to the list"""
-        self._subscribers.append(sub_id)
+    def add_subscriber(self, subscriber):
+        """Adds subscriber to the subscribers dict"""
+        self._subscribers.update(subscriber)
 
     def check_presence(self, sub_id):
         """Check if sub_id exist in the list"""
-        if sub_id in self._subscribers:
+        if sub_id in self._subscribers.keys():
             return True
         else:
             return False
 
     def remove_subscriber(self, sub_id):
-        """Adds subscriber to the list"""
-        self._subscribers.remove(sub_id)
+        """Remove subscriber from the list"""
+        subscriber_attr = None
+        if sub_id in self._subscribers:
+            subscriber_attr = self._subscribers.pop(sub_id)
+        else:
+            # Subscriber with sub_id not found.
+            subscriber_attr = None
+        return subscriber_attr

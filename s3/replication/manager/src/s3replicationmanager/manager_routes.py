@@ -20,9 +20,7 @@
 from aiohttp import web
 from urllib.parse import urlparse, parse_qs
 import logging
-# from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
-# from .subscribers import Subscribers
 import json
 
 
@@ -37,19 +35,22 @@ async def add_subscriber(request):
     """Add subscriber
 
     Handler for Subscriber
-
     """
+    # Get subscriber
     subscriber = await request.json()
-    LOG.debug('subscriber is : {}'.format(subscriber.get('sub_id')))
-    sub_id = subscriber.get('sub_id')
+    LOG.debug('subscriber args are  : {}'.format(subscriber))
+
+    # Get subscriber id
+    sub_id = next(iter(subscriber))
+    subscriber_obj = request.app['subscribers']
 
     # Check if subscriber is already present
-    if request.app['subscribers'].check_presence(sub_id):
+    if subscriber_obj.check_presence(sub_id):
         return web.json_response(
             {'Response': 'Replicator is Already subscribed!'})
     else:
-        request.app['subscribers'].add_subscriber(sub_id)
-        LOG.debug(request.app['subscribers'].get_subscribers())
+        subscriber_obj.add_subscriber(subscriber)
+        LOG.debug(subscriber_obj.get_keys())
         return web.json_response({'Response': 'subscriber added!'})
 
 
@@ -61,7 +62,8 @@ async def list_subscribers(request):
 
     """
     return web.json_response(
-        {'subscribers': request.app['subscribers'].get_subscribers()})
+        {'subscribers': str(request.app['subscribers'].get_keys())},
+        status=200)
 
 
 @routes.delete('/subscribers/{sub_id}')  # noqa: E302
@@ -167,16 +169,15 @@ async def list_jobs(request):
     progressing_jobs_obj = request.app['jobs_in_progress']
     all_jobs_obj = request.app['all_jobs']
 
-    all_jobs = request.app['all_jobs'].get_all_jobs()
-    progressing_jobs = request.app['jobs_in_progress'].get_all_jobs()
+    # LOG.debug(
+    #        'progressing jobs : {}'.format(list(progressing_jobs_obj.keys())))
+    # LOG.debug('all jobs : {}'.format(list(all_jobs_obj.keys())))
 
-    LOG.debug('progressing jobs are : {}'.format(list(progressing_jobs)))
-    LOG.debug('all jobs are : {}'.format(list(all_jobs)))
     # Return in progress jobs
     if 'inprogress' in query:
         LOG.debug('InProgress query param: {}'.format(query['inprogress']))
         return web.json_response(
-            {'inprogress jobs': list(progressing_jobs.keys())})
+            {'inprogress jobs': str(progressing_jobs_obj.get_keys())})
 
     # Return total job counts
     elif 'count' in query:
@@ -194,20 +195,29 @@ async def list_jobs(request):
 
             # Remove prefetch_count entries from jobs and add to inprogress
             if prefetch_count < all_jobs_obj.count():
-                add_inprogress = dict(list(all_jobs.items())[:prefetch_count])
-                all_jobs = dict(list(all_jobs.items())[prefetch_count:])
-                progressing_jobs.update(add_inprogress)
+                add_inprogress = dict(
+                    list(
+                        all_jobs_obj.get_all_jobs())[
+                        :prefetch_count])
+                trimmed_all_jobs = dict(
+                    list(
+                        all_jobs_obj.get_all_jobs())[
+                        prefetch_count:])
+                progressing_jobs_obj.update_jobs(add_inprogress)
+                all_jobs_obj.update_jobs(trimmed_all_jobs)
             # Add all jobs to inprogress
             else:
-                progressing_jobs.update(all_jobs)
-                all_jobs.clear()
+                all_jobs = dict(list(all_jobs_obj.get_all_jobs()))
+                progressing_jobs_obj.update_jobs(all_jobs)
+                all_jobs_obj.clear_jobs()
 
-            LOG.debug('jobs in progress : {}'.format(list(progressing_jobs)))
+            LOG.debug('jobs in progress : {}'.format(
+                list(progressing_jobs_obj.get_keys())))
             return web.json_response(
-                {'Response': list(progressing_jobs.keys())})
+                {'Response': str(progressing_jobs_obj.get_keys())})
 
         # Subscriber is not in the list
         else:
             return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
-        return web.json_response({'Response': list(all_jobs.keys())})
+        return web.json_response({'Response': str(all_jobs_obj.get_keys())})
