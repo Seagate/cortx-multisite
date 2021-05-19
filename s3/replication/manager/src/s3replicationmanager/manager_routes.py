@@ -61,9 +61,8 @@ async def list_subscribers(request):
     Handler to get subscriber list
 
     """
-    return web.json_response(
-        {'subscribers': str(request.app['subscribers'].get_keys())},
-        status=200)
+    return web.json_response({'subscribers': json.dumps(
+        list(request.app['subscribers'].get_keys()))}, status=200)
 
 
 @routes.delete('/subscribers/{sub_id}')  # noqa: E302
@@ -177,7 +176,8 @@ async def list_jobs(request):
     if 'inprogress' in query:
         LOG.debug('InProgress query param: {}'.format(query['inprogress']))
         return web.json_response(
-            {'inprogress jobs': str(progressing_jobs_obj.get_keys())})
+            {'inprogress jobs': json.dumps(
+                list(progressing_jobs_obj.get_keys()))})
 
     # Return total job counts
     elif 'count' in query:
@@ -214,10 +214,12 @@ async def list_jobs(request):
             LOG.debug('jobs in progress : {}'.format(
                 list(progressing_jobs_obj.get_keys())))
             return web.json_response(
-                {'Response': str(progressing_jobs_obj.get_keys())})
+                {'Response': json.dumps(
+                    list(progressing_jobs_obj.get_keys()))})
 
         # Subscriber is not in the list
         else:
             return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
-        return web.json_response({'Response': str(all_jobs_obj.get_keys())})
+        return web.json_response(
+            {'Response': json.dumps(list(all_jobs_obj.get_keys()))})
