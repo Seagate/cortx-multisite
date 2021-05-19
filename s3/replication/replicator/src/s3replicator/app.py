@@ -17,28 +17,33 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import sys
 from aiohttp import web
 from .config import Config
-import logging
-from s3replicationcommon.log import setup_logging
+from s3replicationcommon.log import setup_logger
 from .replicator_routes import routes
 from s3replicationcommon.jobs import Jobs
 
-# Setup log
-LOG = logging.getLogger('replicator')
-
 
 class ReplicatorApp:
-    def __init__(self, configfile):
+    def __init__(self, config_file, log_config_file):
         """Initialise logger and configuration"""
 
-        self._config = Config(configfile)
-        setup_logging('replicator')
+        self._config = Config(config_file)
+        if self._config.load() is None:
+            print("Failed to load configuration.\n")
+            sys.exit(-1)
+
+        # Setup logging.
+        self._logger = setup_logger('s3replicator', log_config_file)
+        if self._logger is None:
+            print("Failed to configure logging.\n")
+            sys.exit(-1)
+
         self._jobs = Jobs()
         self._jobs_in_progress = Jobs()
 
-        LOG.debug('HOST is : {}'.format(self._config.host))
-        LOG.debug('PORT is : {}'.format(self._config.port))
+        self._config.print_with(self._logger)
 
     def run(self):
         """Start replicator"""
