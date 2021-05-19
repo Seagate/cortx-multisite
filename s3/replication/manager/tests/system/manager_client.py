@@ -28,8 +28,10 @@
 import aiohttp
 import asyncio
 import argparse
+import os
+import sys
 import yaml
-from s3replicationcommon.log import setup_logging
+from s3replicationcommon.log import setup_logger
 
 
 async def main():
@@ -42,7 +44,14 @@ async def main():
     port = '8080'
 
     # Setup logging and get logger
-    LOG = setup_logging('manager_client')
+    log_config_file = os.path.join(os.path.dirname(__file__),
+                                   'config', 'logger_config.yaml')
+
+    print("Using log config {}".format(log_config_file))
+    logger = setup_logger('client_tests', log_config_file)
+    if logger is None:
+        print("Failed to configure logging.\n")
+        sys.exit(-1)
 
     # Create parser object
     parser = argparse.ArgumentParser(description='''Replicator server help''')
@@ -93,35 +102,35 @@ async def main():
         # Add Job
         async with session.post(
                 url + '/jobs', json={job: {"K1": "V1"}}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get Jobs in Progress
         async with session.get(
                 url + '/jobs', params={"inprogress": "true"}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get jobs list
         async with session.get(url + '/jobs')as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get subscriber list
         async with session.get(url + '/subscribers') as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Add subscriber
         async with session.post(
                 url + '/subscribers', json={'sub_id': subscriber}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Prefetch jobs
         async with session.get(
@@ -129,23 +138,23 @@ async def main():
                 params={
                     "prefetch": int(prefetch_count),
                     "subscriber_id": subscriber}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get total job count
         async with session.get(
                 url + '/jobs', params={"count": "true"}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Update Job's attributes
         async with session.put(
                 url + '/jobs/' + job, json={"K2": "V2"}) as response:
-            LOG.info('Status: {}'.format(response.status))
+            logger.info('Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

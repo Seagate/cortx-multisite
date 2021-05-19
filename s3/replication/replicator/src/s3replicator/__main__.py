@@ -54,6 +54,6 @@ if __name__ == '__main__':
         args.logconfig = os.path.join(os.path.dirname(__file__),
                                       '..', 'config', 'logger_config.yaml')
 
-    print("Using Configuration from {}.".format(args.logconfig))
-    print("Using log configuration from {}.".format(args.logconfig))
+    print("Using Configuration from {}".format(args.logconfig))
+    print("Using log configuration from {}".format(args.logconfig))
     ReplicatorApp(args.configfile, args.logconfig).run()
