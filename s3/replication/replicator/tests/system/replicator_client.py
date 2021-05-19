@@ -27,8 +27,10 @@
 import aiohttp
 import asyncio
 import argparse
+import os
+import sys
 import yaml
-from s3replicationcommon.log import setup_logging
+from s3replicationcommon.log import setup_logger
 
 
 async def main():
@@ -41,7 +43,14 @@ async def main():
     port = '8081'
 
     # Setup logging and get logger
-    LOG = setup_logging('replicator_client')
+    log_config_file = os.path.join(os.path.dirname(__file__),
+                                   'config', 'logger_config.yaml')
+
+    print("Using log config {}".format(log_config_file))
+    logger = setup_logger('client_tests', log_config_file)
+    if logger is None:
+        print("Failed to configure logging.\n")
+        sys.exit(-1)
 
     # Create parser object
     parser = argparse.ArgumentParser(description='''Replicator server help''')
@@ -79,28 +88,28 @@ async def main():
         # Add job and attributes
         async with session.post(
                 url + '/jobs', json={"Object-Name": "foo"}) as response:
-            LOG.info('POST jobs Status: {}'.format(response.status))
+            logger.info('POST jobs Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get job attributes
         async with session.get(
                 url + '/jobs/' + job) as response:
-            LOG.info('GET jobs Status: {}'.format(response.status))
+            logger.info('GET jobs Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get inprogress list
         async with session.get(url + '/jobs') as response:
-            LOG.info('List jobs Status: {}'.format(response.status))
+            logger.info('List jobs Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Abort job with given job_id
         async with session.delete(url + '/jobs/' + job) as response:
-            LOG.info('Abort job Status: {}'.format(response.status))
+            logger.info('Abort job Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

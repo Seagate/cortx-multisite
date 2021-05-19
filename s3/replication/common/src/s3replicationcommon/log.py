@@ -17,38 +17,77 @@
 #
 
 import logging
+import logging.handlers
+import os
 import sys
-
-"""Custom log level which is more verbose than DEBUG"""
-TRACE: int = 5
-
-__all__ = ['TRACE', 'setup_logging']
+import yaml
 
 
-def setup_logging(logger_name: str, log_level: int = logging.DEBUG):
+def setup_logger(logger_name: str, log_config_file: str):
     """
-    Initializes the logging for the whole application.
-    Registers special 'multisite' named logger, configures the
-    logging format and sets the verbosity level to `log_level`.
-    Register custom verbosity level called TRACE. Here is the example
-    how tracing can be done:
-            LOG.log(TRACE, 'This is a trace message')
-    Note: This function must be invoked before any logging happens.
+    Sets up a logger with given name and log properties defined in
+    log_config_file yaml.
+
+    Returns:
+        None on failure
+        logger on success
     """
-    # INFO = 20, DEBUG = 10, so trace is less than DEBUG
-    logging.addLevelName(TRACE, 'TRACE')
 
-    # Get logger name from user and register
-    LOG = logging.getLogger(logger_name)
-    LOG.setLevel(log_level)
+    logger = logging.getLogger(logger_name)
 
-    # Create formatter for console handler
-    formatter = logging.Formatter(
-        '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s')
-    console = logging.StreamHandler(sys.stdout)
-    console.setFormatter(formatter)
+    log_props = None
+    with open(log_config_file, 'r') as file_config:
+        # Load yaml
+        log_props = yaml.safe_load(file_config)
 
-    # Register handler to logger
-    LOG.addHandler(console)
+        if logger_name != log_props["logger_name"]:
+            print("logger_name {} does not match {} in log config file."
+                  .format(logger_name, log_props["logger_name"]))
+            return None
 
-    return LOG
+        # Setup the File logger
+        # Setup default logger to debug so specific handlers can filter
+        # as per handler specific log level
+        logger.setLevel(logging.DEBUG)
+
+        file_formatter = logging.Formatter(log_props["file"]["log_format"])
+
+        log_dir = log_props["file"]["path"]
+        # Create log directory if not present
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        # Create handler for logfile rotation
+        file_handler = logging.handlers.RotatingFileHandler(
+            os.path.join(log_dir, log_props["file"]["log_filename"]),
+            maxBytes=log_props["file"]["max_size_in_bytes"],
+            backupCount=log_props["file"]["backup_count"])
+
+        # setup the file logging level
+        file_handler.setLevel(
+            logging.getLevelName(
+                log_props["file"]["log_level"]))
+
+        # Set formatter for file log handler
+        file_handler.setFormatter(file_formatter)
+
+        # Register handler with file logger
+        logger.addHandler(file_handler)
+
+        # Setup the Console logger if enabled
+        if log_props["console"]["enabled"]:
+            print(("Setting up console handler..."))
+            console_formatter = logging.Formatter(
+                log_props["console"]["log_format"])
+
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setFormatter(console_formatter)
+
+            # setup the console logging level
+            console_handler.setLevel(
+                logging.getLevelName(
+                    log_props["console"]["log_level"]))
+
+            # Register handler to logger
+            logger.addHandler(console_handler)
+    return logger

@@ -23,7 +23,7 @@ from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
 import json
 
-LOG = logging.getLogger('replicator')
+LOG = logging.getLogger('s3replicator')
 
 # Route table declaration
 routes = web.RouteTableDef()
