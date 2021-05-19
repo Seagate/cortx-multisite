@@ -18,11 +18,13 @@
 #
 
 from aiohttp import web
+import logging
+import sys
 from urllib.parse import urlparse, parse_qs
 from .config import Config
-from s3replicationcommon.log import setup_logging
+from s3replicationcommon.log import setup_logger
 
-LOG = setup_logging('manager')
+LOG = logging.getLogger("s3replicationmanager")
 
 # Dictionary holding job_id and fdmi record
 #  e.g. jobs = {'jobA': {'K1': 'V1'}}
@@ -167,15 +169,23 @@ async def update_job_attr(request):
 
 
 class ReplicationManagerApp:
-    def __init__(self, configfile):
+    def __init__(self, config_file, log_config_file):
         """Initialise logger and configuration."""
 
-        self.config = Config(configfile)
+        self._config = Config(config_file)
+        if self._config.load() is None:
+            print("Failed to load configuration.\n")
+            sys.exit(-1)
 
-        LOG.debug('HOST is : {}'.format(self.config.host))
-        LOG.debug('PORT is : {}'.format(self.config.port))
+        # Setup logging.
+        self._logger = setup_logger('s3replicationmanager', log_config_file)
+        if self._logger is None:
+            print("Failed to configure logging.\n")
+            sys.exit(-1)
+
+        self._config.print_with(self._logger)
 
     def run(self):
         app = web.Application()
         app.add_routes(routes)
-        web.run_app(app, host=self.config.host, port=self.config.port)
+        web.run_app(app, host=self._config.host, port=self._config.port)
