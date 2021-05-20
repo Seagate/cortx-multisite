@@ -30,7 +30,8 @@ class Subscribers:
 
     def add_subscriber(self, subscriber):
         """Adds subscriber to the subscribers dict"""
-        self._subscribers.update(subscriber)
+        sub_id = subscriber['id']
+        self._subscribers[sub_id] = subscriber
 
     def check_presence(self, sub_id):
         """Check if sub_id exist in the list"""

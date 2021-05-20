@@ -103,7 +103,7 @@ async def main():
         # Add subscriber
         async with session.post(
                 url + '/subscribers',
-                json={subscriber: "testsubscriber"}) as response:
+                json={'id': subscriber, 'foo': 'bar'}) as response:
             LOG.info('POST subscriber Status: {}'.format(response.status))
             html = await response.json()
             LOG.info('Body: {}'.format(html))

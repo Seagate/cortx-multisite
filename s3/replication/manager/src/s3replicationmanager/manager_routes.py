@@ -41,7 +41,7 @@ async def add_subscriber(request):
     LOG.debug('subscriber args are  : {}'.format(subscriber))
 
     # Get subscriber id
-    sub_id = next(iter(subscriber))
+    sub_id = subscriber['id']
     subscriber_obj = request.app['subscribers']
 
     # Check if subscriber is already present
@@ -197,7 +197,6 @@ async def list_jobs(request):
 
             add_inprogress = all_jobs_obj.remove_jobs(prefetch_count)
             progressing_jobs_obj.update_jobs(add_inprogress)
-            LOG.debug('add_inprogress : {}'.format(add_inprogress))
 
             LOG.debug('jobs in progress : {}'.format(
                 list(progressing_jobs_obj.get_keys())))
