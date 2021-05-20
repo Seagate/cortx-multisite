@@ -23,9 +23,9 @@ import json
 
 
 class Jobs:
-    def to_json(self):
-        """Converts to json."""
-        return Jobs.to_json(self)
+    def dumps(obj):
+        """json """
+        return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
     def __init__(self):
         """Initialise jobs collection"""
@@ -33,19 +33,15 @@ class Jobs:
         # e.g. : jobs = {"job1": Job({"obj_name": "foo"})}
         self._jobs = {}
 
-    def dumps(obj):
-        """json """
-        return json.dumps(obj._jobs, cls=JobJsonEncoder)
+    def to_json(self):
+        """Converts to json."""
+        return Jobs.to_json(self)
 
     def get_keys(self):
         """Returns all jobs"""
         return self._jobs.keys()
 
-    def get_all_jobs(self):
-        """Returns all jobs with attributes"""
-        return self._jobs.items()
-
-    def clear_jobs(self):
+    def reset(self):
         """Clear all jobs"""
         self._jobs.clear()
 
@@ -76,6 +72,21 @@ class Jobs:
             # Job with job_id not found.
             job = None
         return job
+
+    def remove_jobs(self, nr_entry):
+        """Remove number of jobs, return and update dict
+        This function will compare nr_entry with available
+        job count and will use count whichever is lesser
+        to remove and return jobs and update the _jobs"""
+        if nr_entry < self.count():
+            rm_count = nr_entry
+        else:
+            rm_count = self.count()
+
+        ret_entries = dict(list(self._jobs.items())[:rm_count])
+        self._jobs = dict(list(self._jobs.items())[rm_count:])
+
+        return ret_entries
 
     def remove_job(self, job_id):
         """Remove a job the dictionary and return remove Job entry"""

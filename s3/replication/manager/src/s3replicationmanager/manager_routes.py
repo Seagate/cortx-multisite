@@ -193,23 +193,11 @@ async def list_jobs(request):
         # Validate subscriber and server request
         if request.app['subscribers'].check_presence(sub_id):
 
-            # Remove prefetch_count entries from jobs and add to inprogress
-            if prefetch_count < all_jobs_obj.count():
-                add_inprogress = dict(
-                    list(
-                        all_jobs_obj.get_all_jobs())[
-                        :prefetch_count])
-                trimmed_all_jobs = dict(
-                    list(
-                        all_jobs_obj.get_all_jobs())[
-                        prefetch_count:])
-                progressing_jobs_obj.update_jobs(add_inprogress)
-                all_jobs_obj.update_jobs(trimmed_all_jobs)
-            # Add all jobs to inprogress
-            else:
-                all_jobs = dict(list(all_jobs_obj.get_all_jobs()))
-                progressing_jobs_obj.update_jobs(all_jobs)
-                all_jobs_obj.clear_jobs()
+            # Remove prefetch_count jobs from all_jobs and add to inprogress
+
+            add_inprogress = all_jobs_obj.remove_jobs(prefetch_count)
+            progressing_jobs_obj.update_jobs(add_inprogress)
+            LOG.debug('add_inprogress : {}'.format(add_inprogress))
 
             LOG.debug('jobs in progress : {}'.format(
                 list(progressing_jobs_obj.get_keys())))
