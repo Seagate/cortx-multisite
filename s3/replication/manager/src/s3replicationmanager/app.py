@@ -25,7 +25,7 @@ from .manager_routes import routes
 from s3replicationcommon.jobs import Jobs
 from .subscribers import Subscribers
 
-# LOG = logging.getLogger("s3replicationmanager") #XXX
+LOG = logging.getLogger("s3replicationmanager")
 
 
 class ReplicationManagerApp:
@@ -48,9 +48,6 @@ class ReplicationManagerApp:
         self._jobs = Jobs()
         self._jobs_in_progress = Jobs()
         self._subscribers = Subscribers()
-
-        # logger.debug('HOST is : {}'.format(self._config.host))
-        # logger.debug('PORT is : {}'.format(self._config.port))
 
     def run(self):
         app = web.Application()

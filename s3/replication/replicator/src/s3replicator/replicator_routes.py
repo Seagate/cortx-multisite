@@ -37,7 +37,6 @@ async def list_jobs(request):
     jobs = request.app['all_jobs']
 
     LOG.debug('Number of jobs in-progress {}'.format(jobs.count()))
-    # LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 

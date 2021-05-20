@@ -104,15 +104,17 @@ async def main():
         async with session.post(
                 url + '/subscribers',
                 json={'id': subscriber, 'foo': 'bar'}) as response:
-            LOG.info('POST subscriber Status: {}'.format(response.status))
+            logger.info('POST subscriber Status: {}'.format(response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Get subscriber list
         async with session.get(url + '/subscribers') as response:
-            LOG.info('GET subscriber list Status: {}'.format(response.status))
+            logger.info(
+                'GET subscriber list Status: {}'.format(
+                    response.status))
             html = await response.json()
-            LOG.info('Body: {}'.format(html))
+            logger.info('Body: {}'.format(html))
 
         # Add Job
         async with session.post(
@@ -161,7 +163,7 @@ async def main():
         # Remove subscriber
         async with session.delete(
                 url + '/subscribers/' + subscriber)as response:
-            LOG.info('DELETE subscriber Status: {}'.format(response.status))
+            logger.info('DELETE subscriber Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 

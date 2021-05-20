@@ -24,7 +24,7 @@ from s3replicationcommon.job import JobJsonEncoder
 import json
 
 
-LOG = logging.getLogger('manager')
+LOG = logging.getLogger('s3replicationmanager')
 
 # Route table declaration
 routes = web.RouteTableDef()

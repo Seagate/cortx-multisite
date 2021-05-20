@@ -83,7 +83,10 @@ class Jobs:
         else:
             rm_count = self.count()
 
-        ret_entries = dict(list(self._jobs.items())[:rm_count])
+        # Fetch first rm_count entires to return
+        ret_entries = dict(list(self._jobs.items())[0:rm_count])
+
+        # Update _jobs collection after removing entries
         self._jobs = dict(list(self._jobs.items())[rm_count:])
 
         return ret_entries
