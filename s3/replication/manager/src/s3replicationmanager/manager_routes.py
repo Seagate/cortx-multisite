@@ -92,7 +92,7 @@ async def add_job(request):
     job_record = await request.json()
 
     # Get first key and find if already present
-    job_id = next(iter(job_record))
+    job_id = job_record['Object-Name']
     job = request.app['all_jobs'].get_job(job_id)
 
     if job is not None:
@@ -138,7 +138,7 @@ async def update_job_attr(request):
     job_record = await request.json()
 
     # Get key
-    job_id = next(iter(job_record))
+    job_id = request.match_info['job_id']
     job = request.app['all_jobs'].get_job(job_id)
 
     if job is None:
@@ -196,7 +196,7 @@ async def list_jobs(request):
             # Remove prefetch_count jobs from all_jobs and add to inprogress
 
             add_inprogress = all_jobs_obj.remove_jobs(prefetch_count)
-            progressing_jobs_obj.update_jobs(add_inprogress)
+            progressing_jobs_obj.add_jobs(add_inprogress)
 
             LOG.debug('jobs in progress : {}'.format(
                 list(progressing_jobs_obj.get_keys())))

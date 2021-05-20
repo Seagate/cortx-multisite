@@ -21,7 +21,8 @@ class Subscribers:
     def __init__(self):
         """Initialise Subscribers collection"""
         # Dictionary holding subscriber_id and attributes
-        # e.g. : Subscriber = {'testsubscriber': {'foo':'bar'}}
+        # E.g. :
+        # _Subscribers = {testsubscriber': {'id':'testsubscriber','foo':'bar'}}
         self._subscribers = {}
 
     def get_keys(self):

@@ -49,8 +49,8 @@ class Jobs:
         """Returns total jobs in collection."""
         return len(self._jobs)
 
-    def update_jobs(self, jobs_dict):
-        """Populdate _jobs dict with another dictionary"""
+    def add_jobs(self, jobs_dict):
+        """Populdate _jobs dict with multiple entries"""
         self._jobs.update(jobs_dict)
 
     def add_job_using_json(self, job_json):
@@ -60,7 +60,7 @@ class Jobs:
         return job
 
     def add_job(self, job):
-        """Adds job to the dictionary"""
+        """Adds a single job entry to the dictionary"""
         self._jobs[job.get_job_id()] = job
 
     def get_job(self, job_id):
