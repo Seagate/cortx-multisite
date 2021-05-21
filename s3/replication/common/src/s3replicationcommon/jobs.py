@@ -50,7 +50,7 @@ class Jobs:
         return len(self._jobs)
 
     def add_jobs(self, jobs_dict):
-        """Populdate _jobs dict with multiple entries"""
+        """Populate _jobs dict with multiple job entries"""
         self._jobs.update(jobs_dict)
 
     def add_job_using_json(self, job_json):
