@@ -56,6 +56,7 @@ class ReplicatorApp:
         # Example {"site-1": aiohttp.ClientSession(), "site-2":
         # aiohttp.ClientSession()}
         app["sessions"] = {}
+        app["config"] = self._config
 
         app['all_jobs'] = self._jobs
         app['replication-managers'] = []  # TBD

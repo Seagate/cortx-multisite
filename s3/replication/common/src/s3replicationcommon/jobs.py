@@ -29,8 +29,8 @@ class Jobs:
 
     def __init__(self):
         """Initialise jobs collection"""
-        # Dictionary holding job_id and fdmi record
-        # e.g. : jobs = {"job1": Job({"obj_name": "foo"})}
+        # Dictionary holding replication_id and replication record
+        # e.g. : jobs = {"replication-id": Job({"attribute-1": "foo"})}
         self._jobs = {}
 
     def to_json(self):
@@ -46,32 +46,63 @@ class Jobs:
         self._jobs.clear()
 
     def count(self):
-        """Returns total jobs in collection."""
+        """Returns total jobs in collection.
+
+        Returns:
+            int: Count of jobs in collection.
+        """
         return len(self._jobs)
+
 
     def add_jobs(self, jobs_dict):
         """Populate _jobs dict with multiple job entries"""
         self._jobs.update(jobs_dict)
 
+    def is_job_present(self, replication_id):
+        """Checks if given replication id is present.
+
+        Args:
+            replication_id (str): Replication identifier.
+        """
+        if replication_id in self._jobs:
+            return True
+        return False
+
     def add_job_using_json(self, job_json):
-        """Validate the job and add to the dictionary"""
+        """Validate json, create and add job to job list.
+
+        Args:
+            job_json (json): Job json record to be inserted in list.
+
+        Returns:
+            [job]: JOb if successfully added, else None if already exists.
+        """
         job = Job(job_json)
-        self._jobs[job.get_job_id()] = job
-        return job
+        if self.add_job(job):
+            return job
+        return None
 
     def add_job(self, job):
-        """Adds a single job entry to the dictionary"""
-        self._jobs[job.get_job_id()] = job
+        """Add job to job list.
 
-    def get_job(self, job_id):
-        """Search jobs list and return job with job_id"""
-        job = None
-        if job_id in self._jobs:
-            job = self._jobs[job_id]
-        else:
-            # Job with job_id not found.
-            job = None
-        return job
+        Args:
+            job (Job): Job to be inserted in list.
+
+        Returns:
+            [bool]: True if successfully added, else false if already exists.
+        """
+        if self.is_job_present(job.get_replication_id()):
+            return False
+        # Job not present add it and return success=True
+        self._jobs[job.get_job_id()] = job
+        self._jobs[job.get_replication_id()] = job
+        return True
+
+    def get_job(self, replication_id):
+        """Search jobs list and return job with replication_id.
+
+        Args:
+            replication_id (str): Job identifier.
 
     def remove_jobs(self, nr_entry):
         """Remove number of jobs, return and update dict
@@ -93,10 +124,22 @@ class Jobs:
 
     def remove_job(self, job_id):
         """Remove a job the dictionary and return remove Job entry"""
+        Returns:
+            [Job]: Job instance for give id.
+        """
         job = None
-        if job_id in self._jobs:
-            job = self._jobs.pop(job_id)
-        else:
-            # Job with job_id not found.
-            job = None
+        if replication_id in self._jobs:
+            job = self._jobs[replication_id]
         return job
+
+    def remove_job(self, replication_id):
+        """Removes a given job from collection and returns a reference.
+        to removed Job entry.
+
+        Args:
+            replication_id (str): Job identifier.
+
+        Returns:
+            Job: Removed job record, None if job not present.
+        """
+        return self._jobs.pop(replication_id, None)
