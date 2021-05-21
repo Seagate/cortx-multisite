@@ -32,23 +32,18 @@ routes = web.RouteTableDef()
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
     """List_jobs
-
     Handler to list in-progress jobs
-
     """
     jobs = request.app['all_jobs']
 
     LOG.debug('Number of jobs in-progress {}'.format(jobs.count()))
-    # LOG.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
     """Get job attribute
-
     Handler to get job attributes for given job_id
-
     """
     job_id = request.match_info['job_id']
     job = request.app['all_jobs'].get_job(job_id)
@@ -65,9 +60,7 @@ async def get_job(request):
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
     """Add job in the queue
-
     Handler to add jobs to the queue
-
     """
     job_record = await request.json()
     # XXX deduplicate?
@@ -80,9 +73,7 @@ async def add_job(request):
 @routes.delete('/jobs/{job_id}')  # noqa: E302
 async def abort_job(request):
     """Abort a job
-
     Handler to abort a job with given job_id
-
     """
     job_id = request.match_info['job_id']
     LOG.debug('Aborting Job with job_id {}'.format(job_id))

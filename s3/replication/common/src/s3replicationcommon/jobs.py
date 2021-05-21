@@ -37,9 +37,21 @@ class Jobs:
         """Converts to json."""
         return Jobs.to_json(self)
 
+    def get_keys(self):
+        """Returns all jobs"""
+        return self._jobs.keys()
+
+    def reset(self):
+        """Clear all jobs"""
+        self._jobs.clear()
+
     def count(self):
         """Returns total jobs in collection."""
         return len(self._jobs)
+
+    def add_jobs(self, jobs_dict):
+        """Populate _jobs dict with multiple job entries"""
+        self._jobs.update(jobs_dict)
 
     def add_job_using_json(self, job_json):
         """Validate the job and add to the dictionary"""
@@ -48,7 +60,7 @@ class Jobs:
         return job
 
     def add_job(self, job):
-        """Adds job to the dictionary"""
+        """Adds a single job entry to the dictionary"""
         self._jobs[job.get_job_id()] = job
 
     def get_job(self, job_id):
@@ -60,6 +72,24 @@ class Jobs:
             # Job with job_id not found.
             job = None
         return job
+
+    def remove_jobs(self, nr_entry):
+        """Remove number of jobs, return and update dict
+        This function will compare nr_entry with available
+        job count and will use count whichever is lesser
+        to remove and return jobs and update the _jobs"""
+        if nr_entry < self.count():
+            rm_count = nr_entry
+        else:
+            rm_count = self.count()
+
+        # Fetch first rm_count entires to return
+        ret_entries = dict(list(self._jobs.items())[0:rm_count])
+
+        # Update _jobs collection after removing entries
+        self._jobs = dict(list(self._jobs.items())[rm_count:])
+
+        return ret_entries
 
     def remove_job(self, job_id):
         """Remove a job the dictionary and return remove Job entry"""

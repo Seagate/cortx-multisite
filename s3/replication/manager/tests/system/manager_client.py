@@ -54,7 +54,8 @@ async def main():
         sys.exit(-1)
 
     # Create parser object
-    parser = argparse.ArgumentParser(description='''Replicator server help''')
+    parser = argparse.ArgumentParser(
+        description='''Replication manager help''')
 
     # Adding arguments
     parser.add_argument(
@@ -84,7 +85,7 @@ async def main():
     # Parsing arguments
     args = parser.parse_args()
     job = args.job
-    subscriber = args.subscriber
+    subscriber = str(args.subscriber)
     prefetch_count = args.prefetch_count
 
     # Read input config file and get host, port
@@ -99,36 +100,39 @@ async def main():
     # Start client session
     async with aiohttp.ClientSession() as session:
 
-        # Add Job
+        # Add subscriber
         async with session.post(
-                url + '/jobs', json={job: {"K1": "V1"}}) as response:
-            logger.info('Status: {}'.format(response.status))
-            html = await response.json()
-            logger.info('Body: {}'.format(html))
-
-        # Get Jobs in Progress
-        async with session.get(
-                url + '/jobs', params={"inprogress": "true"}) as response:
-            logger.info('Status: {}'.format(response.status))
-            html = await response.json()
-            logger.info('Body: {}'.format(html))
-
-        # Get jobs list
-        async with session.get(url + '/jobs')as response:
-            logger.info('Status: {}'.format(response.status))
+                url + '/subscribers',
+                json={'id': subscriber, 'foo': 'bar'}) as response:
+            logger.info('POST subscriber Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
         # Get subscriber list
         async with session.get(url + '/subscribers') as response:
-            logger.info('Status: {}'.format(response.status))
+            logger.info(
+                'GET subscriber list Status: {}'.format(
+                    response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
-        # Add subscriber
+        # Add Job
         async with session.post(
-                url + '/subscribers', json={'sub_id': subscriber}) as response:
-            logger.info('Status: {}'.format(response.status))
+                url + '/jobs', json={"Object-Name": "foo"}) as response:
+            logger.info('POST job Status: {}'.format(response.status))
+            html = await response.json()
+            logger.info('Body: {}'.format(html))
+
+        # Get jobs in progress
+        async with session.get(
+                url + '/jobs', params={"inprogress": "true"}) as response:
+            logger.info('GET job Status: {}'.format(response.status))
+            html = await response.json()
+            logger.info('Body: {}'.format(html))
+
+        # Get jobs list
+        async with session.get(url + '/jobs')as response:
+            logger.info('GET job list Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
@@ -138,21 +142,28 @@ async def main():
                 params={
                     "prefetch": int(prefetch_count),
                     "subscriber_id": subscriber}) as response:
-            logger.info('Status: {}'.format(response.status))
+            logger.info('GET prefetch-job Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
         # Get total job count
         async with session.get(
                 url + '/jobs', params={"count": "true"}) as response:
-            logger.info('Status: {}'.format(response.status))
+            logger.info('GET count Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
-        # Update Job's attributes
+        # Update job's attributes
         async with session.put(
                 url + '/jobs/' + job, json={"K2": "V2"}) as response:
-            logger.info('Status: {}'.format(response.status))
+            logger.info('PUT job Status: {}'.format(response.status))
+            html = await response.json()
+            logger.info('Body: {}'.format(html))
+
+        # Remove subscriber
+        async with session.delete(
+                url + '/subscribers/' + subscriber)as response:
+            logger.info('DELETE subscriber Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
 

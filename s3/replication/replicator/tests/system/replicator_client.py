@@ -53,7 +53,8 @@ async def main():
         sys.exit(-1)
 
     # Create parser object
-    parser = argparse.ArgumentParser(description='''Replicator server help''')
+    parser = argparse.ArgumentParser(
+        description='''s3replicator client help''')
 
     # Adding an arguments
     parser.add_argument(
