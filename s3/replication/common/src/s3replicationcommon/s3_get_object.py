@@ -30,6 +30,8 @@ class S3AsyncGetObject:
         self._object_name = object_name
         self._object_size = object_size
 
+        self._http_status = None
+
     # yields data chunk for given size
     async def fetch(self, chunk_size):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
@@ -86,6 +88,7 @@ class S3AsyncGetObject:
                     self._object_size,
                     self._object_size - total_to_fetch)
 
+            self._http_status = resp.status
             self._logger.info(
                 'GET Object completed with http status: {}'.format(
                     resp.status))

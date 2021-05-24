@@ -29,6 +29,6 @@
     "endpoint": "http://s3.seagate.com",
     "accesss_key": "accesss_key value",
     "secret_key": "secret_key value",
-    "bucket-name": "targetbucket"
+    "Bucket-Name": "targetbucket"
   }
 }

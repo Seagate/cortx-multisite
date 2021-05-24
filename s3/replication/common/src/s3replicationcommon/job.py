@@ -19,6 +19,7 @@
 
 import json
 import uuid
+from enum import Enum
 
 
 class ReplicationJobType:
@@ -30,6 +31,15 @@ class ReplicationJobType:
 class ReplicationJobRecordKey:
     ID = "replication-id"
     CREATE_TIME = "replication-event-create-time"
+
+
+# Following job events can be observed by job observers.
+class JobEvents(Enum):
+    UNKNOWN = 1
+    STARTED = 2  # start or resume
+    STOPPED = 4  # pause
+    COMPLETED = 5  # after successful/failed processing
+    ABORTED = 6  # explicitly aborted
 
 # Job model to be used across both replication manager and replicator
 
@@ -48,12 +58,26 @@ class Job:
             self._obj = obj
         else:
             self._obj = {}
+        # There are 2 identifiers, job_id which is generated
+        # and replication id that is sent by job creator.
         self._id = uuid.uuid4()
         self._replicator = None
 
     def set_replicator(self, replicator):
-        """Sets a reference to replicator for future signals"""
+        """Sets a reference to replicator for future signals (pause/abort)"""
         self._replicator = replicator
+
+    def pause(self):
+        """Request replicator to pause"""
+        self._replicator.pause()
+
+    def resume(self):
+        """Request replicator to resume"""
+        self._replicator.resume()
+
+    def abort(self):
+        """Request replicator to abort"""
+        self._replicator.abort()
 
     def get_dict(self):
         return self._obj
@@ -61,16 +85,11 @@ class Job:
     def from_json(self, json_string):
         """Loads Job attributes from json."""
         self._obj = json.loads(json_string)
+        self._replication_id = self._obj["replication-id"]
 
     def to_json(self):
         """Converts Job to json."""
         return json.dumps(self._obj)
-
-    def load_from_s3metadata(self, s3_md_json):
-        """Loads Job attributes from S3 metadata json entry."""
-        s3_md = json.loads(s3_md_json)
-        # TBD Only capture interesting attributes, for now use as is.
-        self._obj = s3_md
 
     def get_replication_id(self):
         return self._obj["replication-id"]
@@ -113,7 +132,7 @@ class Job:
     # Target attribute accessors
     def get_target_bucket_name(self):
         """Returns target bucket name"""
-        return self._obj["target"]["bucket-name"]
+        return self._obj["target"]["Bucket-Name"]
 
     def get_target_endpoint(self):
         return self._obj["target"]["endpoint"]

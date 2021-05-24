@@ -18,6 +18,7 @@
 #
 
 import logging
+from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
@@ -31,31 +32,62 @@ class ReplicateObject:
         """Initialise"""
 
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
+        self._job_id = job.get_job_id()
 
-        self._s3_site = S3Site(
+        # A set of observers to watch for varius notifications.
+        # To start with job completed (success/failure)
+        self._observers = {}
+
+        # Setup source site info
+        self._s3_source_site = S3Site(
             job.get_source_endpoint(),
             job.get_source_s3_service_name(),
             job.get_source_s3_region())
 
-        self._session = S3Session(
+        self._s3_source_session = S3Session(
             _logger,
-            self._s3_site,
+            self._s3_source_site,
             job.get_source_access_key(),
             job.get_source_secret_key())
 
         self._object_reader = S3AsyncGetObject(
-            self._session,
+            self._s3_source_session,
             job.get_source_bucket_name(),
             job.get_source_object_name(),
             int(job.get_source_object_size()))
 
+        # Setup target site info
+        self._s3_target_site = S3Site(
+            job.get_target_endpoint(),
+            job.get_target_s3_service_name(),
+            job.get_target_s3_region())
+
+        self._s3_target_session = S3Session(
+            _logger,
+            self._s3_target_site,
+            job.get_target_access_key(),
+            job.get_target_secret_key())
+
         self._object_writer = S3AsyncPutObject(
-            self._session,
+            self._s3_target_session,
             job.get_target_bucket_name(),
             job.get_source_object_name(),
             int(job.get_source_object_size()))
+
+    def setup_observers(self, label, observer):
+        self._observers[label] = observer
 
     async def start(self):
         # Start transfer
         await self._object_writer.send(self._object_reader,
                                        self._transfer_chunk_size_bytes)
+        # Once the job is complete, notify job completion and release.
+        for label, observer in self._observers.items():
+            _logger.debug(
+                "Notify completion to observer with label[{}]".format(label))
+            observer.notify(JobEvents.COMPLETED, self._job_id)
+
+        # Once the replication is complete, close session.
+        # XXX Extend to reuse sessions for multiple replications.
+        await self._s3_source_session.close()
+        await self._s3_target_session.close()

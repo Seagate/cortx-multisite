@@ -50,7 +50,7 @@ async def get_job(request):
     Handler to get job attributes for given job_id
     """
     job_id = request.match_info['job_id']
-    job = request.app['all_jobs'].get_job(job_id)
+    job = request.app['all_jobs'].get_job_by_job_id(job_id)
 
     if job is not None:
         _logger.debug('Job found with job_id : {} '.format(job_id))
@@ -74,7 +74,7 @@ async def add_job(request):
             json.dumps(job, cls=JobJsonEncoder)))
         asyncio.create_task(
             TransferInitiator.start(
-                job, request.app["config"]))
+                job, request.app))
 
         _logger.debug('Started Replication Job with job_id : {} '.format(
             job.get_job_id()))
@@ -97,7 +97,7 @@ async def abort_job(request):
     job_id = request.match_info['job_id']
     _logger.debug('Aborting Job with job_id {}'.format(job_id))
     # XXX Perform real abort...
-    job = request.app['all_jobs'].remove_job(job_id)
+    job = request.app['all_jobs'].remove_job_by_job_id(job_id)
     if job is not None:
         _logger.debug('Aborted Job with job_id {}'.format(job_id))
         return web.json_response({'job_id': job_id}, status=204)

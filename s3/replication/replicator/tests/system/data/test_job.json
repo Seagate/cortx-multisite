@@ -5,8 +5,8 @@
     "endpoint": "http://s3.seagate.com:8090",
     "service_name": "cortxs3",
     "region": "us-west2",
-    "access_key": "access_key value",
-    "secret_key": "secret_key value",
+    "access_key": "<your key>",
+    "secret_key": "<your key>",
     "operation": {
       "type": "replicate_object",
       "attributes": {
@@ -31,8 +31,8 @@
     "endpoint": "http://s3.seagate.com:8090",
     "service_name": "cortxs3",
     "region": "us-west2",
-    "access_key": "access_key value",
-    "secret_key": "secret_key value",
-    "bucket-name": "targetbucket"
+    "access_key": "<your key>",
+    "secret_key": "<your key>",
+    "Bucket-Name": "targetbucket"
   }
 }

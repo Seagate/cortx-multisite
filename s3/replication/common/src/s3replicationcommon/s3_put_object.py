@@ -30,6 +30,8 @@ class S3AsyncPutObject:
         self._object_name = object_name
         self._object_size = object_size
 
+        self._http_status = None
+
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
@@ -62,6 +64,7 @@ class S3AsyncPutObject:
                 headers=headers,
                 # Read all data from data_reader
                 data=data_reader.fetch(transfer_size)) as resp:
+            self._http_status = resp.status
             self._logger.info(
                 'PUT Object completed with http status: {}'.format(
                     resp.status))

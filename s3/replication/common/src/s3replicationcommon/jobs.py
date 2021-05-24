@@ -33,6 +33,9 @@ class Jobs:
         # e.g. : jobs = {"replication-id": Job({"attribute-1": "foo"})}
         self._jobs = {}
 
+        # Additionally store job_id and replication_id mapping
+        self._job_id_to_replication_id_map = {}
+
     def to_json(self):
         """Converts to json."""
         return Jobs.to_json(self)
@@ -96,6 +99,8 @@ class Jobs:
         # Job not present add it and return success=True
         self._jobs[job.get_job_id()] = job
         self._jobs[job.get_replication_id()] = job
+        self._job_id_to_replication_id_map[job.get_job_id(
+            )] = job.get_replication_id()
         return True
 
     def get_job(self, replication_id):
@@ -132,6 +137,14 @@ class Jobs:
             job = self._jobs[replication_id]
         return job
 
+    def get_job_by_job_id(self, job_id):
+        """Find a job for given job id.
+
+        Args:
+            job_id (str): Job ID generated locally
+        """
+        return self.get_job(self._job_id_to_replication_id_map[job_id])
+
     def remove_job(self, replication_id):
         """Removes a given job from collection and returns a reference.
         to removed Job entry.
@@ -143,3 +156,11 @@ class Jobs:
             Job: Removed job record, None if job not present.
         """
         return self._jobs.pop(replication_id, None)
+
+    def remove_job_by_job_id(self, job_id):
+        """Remove a job for given job id.
+
+        Args:
+            job_id (str): Job ID generated locally
+        """
+        return self.remove_job(self._job_id_to_replication_id_map[job_id])
