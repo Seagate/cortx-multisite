@@ -56,7 +56,6 @@ class Jobs:
         """
         return len(self._jobs)
 
-
     def add_jobs(self, jobs_dict):
         """Populate _jobs dict with multiple job entries"""
         self._jobs.update(jobs_dict)
@@ -97,7 +96,6 @@ class Jobs:
         if self.is_job_present(job.get_replication_id()):
             return False
         # Job not present add it and return success=True
-        self._jobs[job.get_job_id()] = job
         self._jobs[job.get_replication_id()] = job
         self._job_id_to_replication_id_map[job.get_job_id()] = \
             job.get_replication_id()
@@ -105,15 +103,27 @@ class Jobs:
 
     def get_job(self, replication_id):
         """Search jobs list and return job with replication_id.
-
         Args:
             replication_id (str): Job identifier.
+        Returns:
+            [Job]: Job instance for give id.
+        """
+        job = None
+        if replication_id in self._jobs:
+            job = self._jobs[replication_id]
+        return job
+
+    def get_job_by_job_id(self, job_id):
+        """Find a job for given job id.
+        Args:
+            job_id (str): Job ID generated locally
+        """
+        return self.get_job(self._job_id_to_replication_id_map[job_id])
 
     def remove_jobs(self, nr_entry):
-        """Remove number of jobs, return and update dict
-        This function will compare nr_entry with available
-        job count and will use count whichever is lesser
-        to remove and return jobs and update the _jobs"""
+        """
+        Remove number of jobs and return the removed items.
+        """
         if nr_entry < self.count():
             rm_count = nr_entry
         else:
@@ -126,24 +136,6 @@ class Jobs:
         self._jobs = dict(list(self._jobs.items())[rm_count:])
 
         return ret_entries
-
-    def remove_job(self, job_id):
-        """Remove a job the dictionary and return remove Job entry"""
-        Returns:
-            [Job]: Job instance for give id.
-        """
-        job = None
-        if replication_id in self._jobs:
-            job = self._jobs[replication_id]
-        return job
-
-    def get_job_by_job_id(self, job_id):
-        """Find a job for given job id.
-
-        Args:
-            job_id (str): Job ID generated locally
-        """
-        return self.get_job(self._job_id_to_replication_id_map[job_id])
 
     def remove_job(self, replication_id):
         """Removes a given job from collection and returns a reference.
