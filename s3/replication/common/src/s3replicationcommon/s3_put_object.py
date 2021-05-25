@@ -18,7 +18,9 @@
 #
 
 import sys
+
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+from s3replicationcommon.s3_common import S3RequestState
 
 
 class S3AsyncPutObject:
@@ -30,8 +32,19 @@ class S3AsyncPutObject:
         self._object_name = object_name
         self._object_size = object_size
 
+        self._http_status = None
+
+        self._state = S3RequestState.INITIALISED
+
+    def get_state(self):
+        """Returns current request state"""
+        return self._state
+
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
+        self._state = S3RequestState.RUNNING
+        self._data_reader = data_reader
+
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
@@ -62,6 +75,26 @@ class S3AsyncPutObject:
                 headers=headers,
                 # Read all data from data_reader
                 data=data_reader.fetch(transfer_size)) as resp:
-            self._logger.info(
-                'PUT Object completed with http status: {}'.format(
-                    resp.status))
+
+            if data_reader.get_state() != S3RequestState.ABORTED:
+                self._http_status = resp.status
+                self._logger.info(
+                    'PUT Object completed with http status: {}'.format(
+                        resp.status))
+                if resp.status == 201:
+                    self._state = S3RequestState.COMPLETED
+                else:
+                    self._state = S3RequestState.FAILED
+
+    def pause(self):
+        self._state = S3RequestState.PAUSED
+        # XXX Take real pause action
+
+    def resume(self):
+        self._state = S3RequestState.PAUSED
+        # XXX Take real resume action
+
+    def abort(self):
+        self._state = S3RequestState.ABORTED
+        # Abort the reader so that PUT can stop.
+        self._data_reader.abort()

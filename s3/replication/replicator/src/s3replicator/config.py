@@ -57,6 +57,8 @@ class Config:
             self.port = config_props['replicator']['port']
             self.ssl = config_props['replicator']['ssl']
             self.service_name = config_props['replicator']['service_name']
+            self.transfer_chunk_size_bytes = \
+                config_props['transfer']["transfer_chunk_size_bytes"]
         return self
 
     def print_with(self, logger):
