@@ -17,21 +17,24 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-from setuptools import setup
+import aiohttp
 
-with open("VERSION", "r", encoding="utf-8") as ver_file:
-    version = ver_file.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as requires_file:
-    requires_list = requires_file.read()
+class S3Session:
+    def __init__(self, logger, s3_site, access_key, secret_key):
+        """Initialise S3 session."""
+        self.logger = logger
+        self.endpoint = s3_site.endpoint
+        self.service_name = s3_site.service_name
+        self.region = s3_site.region
 
-with open("devel-requirements.txt", "r", encoding="utf-8") as dev_requires_file:
-    dev_requires_list = dev_requires_file.read()
+        self.access_key = access_key
+        self.secret_key = secret_key
 
-setup(
-    version=version,
-    install_requires=requires_list,
-    extras_require={
-        'development': dev_requires_list
-    },
-)
+        self._client_session = aiohttp.ClientSession()
+
+    def get_client_session(self):
+        return self._client_session
+
+    async def close(self):
+        await self._client_session.close()

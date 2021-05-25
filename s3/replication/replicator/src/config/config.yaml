@@ -1,0 +1,5 @@
+replicator:
+   host: "127.0.0.1"
+   port: 8081
+   ssl: false
+   service_name: "s3replicator"

@@ -16,12 +16,50 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+from aiohttp import web
+import logging
+import sys
+from .config import Config
+from s3replicationcommon.log import setup_logger
+from .manager_routes import routes
+from s3replicationcommon.jobs import Jobs
+from .subscribers import Subscribers
 
-from s3replicationcommon.log import Logger
+LOG = logging.getLogger("s3replicationmanager")
+
 
 class ReplicationManagerApp:
-  def __init__(self):
-    """Initialise logger and configuration."""
+    def __init__(self, config_file, log_config_file):
+        """Initialise logger and configuration."""
 
-  def run(self):
-    Logger().print("Started replication manager using common logger...")
+        self._config = Config(config_file)
+        if self._config.load() is None:
+            print("Failed to load configuration.\n")
+            sys.exit(-1)
+
+        # Setup logging.
+        self._logger = setup_logger('s3replicationmanager', log_config_file)
+        if self._logger is None:
+            print("Failed to configure logging.\n")
+            sys.exit(-1)
+
+        self._config.print_with(self._logger)
+
+        self._jobs = Jobs()
+        self._jobs_in_progress = Jobs()
+        self._subscribers = Subscribers()
+
+    def run(self):
+        app = web.Application()
+
+        # Setup the global context store.
+        # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
+        app['all_jobs'] = self._jobs
+        app['jobs_in_progress'] = self._jobs_in_progress
+        app['subscribers'] = self._subscribers
+
+        # Setup application routes.
+        app.add_routes(routes)
+
+        # Start the REST server.
+        web.run_app(app, host=self._config.host, port=self._config.port)

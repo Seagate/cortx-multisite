@@ -1,3 +1,5 @@
 #:runtime-requirements:
 
 flake8==3.9.1
+autopep8==1.5.7
+aiohttp==3.7.4.post0

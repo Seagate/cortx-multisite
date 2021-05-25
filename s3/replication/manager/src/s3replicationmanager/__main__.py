@@ -17,7 +17,44 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import argparse
+import os
 from s3replicationmanager.app import ReplicationManagerApp
 
+
+def setup_args(parser):
+    """Defines program arguments."""
+
+    # adding an arguments
+    parser.add_argument(
+        '--configfile',
+        type=str,
+        metavar='path',
+        help='Path to configuration file(format: yaml)')
+
+    parser.add_argument(
+        '--logconfig',
+        type=str,
+        metavar='path',
+        help='Path to log config properties file(format: yaml)')
+
+
 if __name__ == '__main__':
-    ReplicationManagerApp().run()
+    # create parser object
+    parser = argparse.ArgumentParser(
+        description='''Replication manager help''')
+
+    # Define the args
+    setup_args(parser)
+
+    # parsing arguments
+    args = parser.parse_args()
+
+    # Setup default log file path if not specified.
+    if args.logconfig is None:
+        args.logconfig = os.path.join(os.path.dirname(__file__),
+                                      '..', 'config', 'logger_config.yaml')
+
+    print("Using Configuration from {}".format(args.logconfig))
+    print("Using log configuration from {}".format(args.logconfig))
+    ReplicationManagerApp(args.configfile, args.logconfig).run()

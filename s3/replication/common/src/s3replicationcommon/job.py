@@ -17,16 +17,50 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import json
+
+
 # Job model to be used across both replication manager and replicator
 class Job:
-  def __init__(self):
-    """Initialise Job."""
+    """A Job class to store replication job attributes.
+       Provides methods to serialise/deserialise as json."""
 
-  def from_json(self, json_string):
-    """Loads Job attributes from json."""
+    def __init__(self, obj):
+        """Initialise Job."""
+        if obj is not None:
+            self._obj = obj
+        else:
+            self._obj = {}
 
-  def to_json(self):
-    """Converts Job attributes to json."""
+    def get_dict(self):
+        return self._obj
 
-  def load_from_s3metadata(self, s3_md_json):
-    """Loads Job attributes from S3 metadata json entry."""
+    def from_json(self, json_string):
+        """Loads Job attributes from json."""
+        self._obj = json.loads(json_string)
+
+    def to_json(self):
+        """Converts Job to json."""
+        return json.dumps(self._obj)
+
+    def load_from_s3metadata(self, s3_md_json):
+        """Loads Job attributes from S3 metadata json entry."""
+        s3_md = json.loads(s3_md_json)
+        # TBD Only capture interesting attributes, for now use as is.
+        self._obj = s3_md
+
+    def get_job_id(self):
+        """Returns job id"""
+        # XXX generate job id format.
+        return self.get_src_object_name()
+
+    def get_src_object_name(self):
+        """Returns source object name"""
+        return self._obj["Object-Name"]
+
+
+class JobJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Job):
+            return obj._obj
+        return super().default(obj)

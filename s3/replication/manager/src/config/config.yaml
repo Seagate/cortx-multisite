@@ -1,0 +1,5 @@
+manager:
+   host: "127.0.0.1"
+   port: 8080
+   ssl: false
+   service_name: "s3replicationmanager"
