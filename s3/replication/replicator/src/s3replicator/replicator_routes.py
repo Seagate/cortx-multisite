@@ -69,23 +69,25 @@ async def add_job(request):
     job_record = await request.json()
     job = request.app['all_jobs'].add_job_using_json(job_record)
     if job is not None:
-        # Start the replication
+        # Start the async replication
         _logger.debug('Starting Replication Job : {} '.format(
             json.dumps(job, cls=JobJsonEncoder)))
         asyncio.create_task(
             TransferInitiator.start(
                 job, request.app))
 
-        _logger.debug('Started Replication Job with job_id : {} '.format(
+        _logger.info('Started Replication Job with job_id : {} '.format(
             job.get_job_id()))
         _logger.debug('Started Replication Job : {} '.format(
             json.dumps(job, cls=JobJsonEncoder)))
+
         return web.json_response({'job': job.get_dict()}, status=201)
     else:
         # Job is already posted and its duplicate. Discard the duplicate.
         msg = 'Replication Job already exists! Replication id : {} '.\
             format(job_record[ReplicationJobRecordKey.ID])
         _logger.debug(msg)
+
         return web.json_response({'ErrorResponse': msg}, status=409)
 
 
@@ -99,6 +101,8 @@ async def abort_job(request):
     # XXX Perform real abort...
     job = request.app['all_jobs'].remove_job_by_job_id(job_id)
     if job is not None:
+        # Perform the abort
+        job.abort()
         _logger.debug('Aborted Job with job_id {}'.format(job_id))
         return web.json_response({'job_id': job_id}, status=204)
     else:

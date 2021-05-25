@@ -33,7 +33,17 @@ class ReplicationJobRecordKey:
     CREATE_TIME = "replication-event-create-time"
 
 
+class JobState(Enum):
+    INITIAL = 1
+    RUNNING = 2  # start or resume
+    PAUSED = 4  # pause
+    COMPLETED = 5  # after successful processing
+    ABORTED = 6  # explicitly aborted
+    FAILED = 7
+
 # Following job events can be observed by job observers.
+
+
 class JobEvents(Enum):
     UNKNOWN = 1
     STARTED = 2  # start or resume
@@ -62,22 +72,30 @@ class Job:
         # and replication id that is sent by job creator.
         self._id = uuid.uuid4()
         self._replicator = None
+        self._state = JobState.INITIAL
 
     def set_replicator(self, replicator):
         """Sets a reference to replicator for future signals (pause/abort)"""
         self._replicator = replicator
 
+    def mark_started(self):
+        """Mark job as running."""
+        self._state = JobState.RUNNING
+
     def pause(self):
         """Request replicator to pause"""
         self._replicator.pause()
+        self._state = JobState.PAUSED
 
     def resume(self):
         """Request replicator to resume"""
         self._replicator.resume()
+        self._state = JobState.RUNNING
 
     def abort(self):
         """Request replicator to abort"""
         self._replicator.abort()
+        self._state = JobState.ABORTED
 
     def get_dict(self):
         return self._obj

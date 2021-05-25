@@ -20,7 +20,7 @@
 import logging
 from s3replicationcommon.job import ReplicationJobType
 from s3replicationcommon.job import JobEvents
-from .replicate_object import ReplicateObject
+from .object_replicator import ObjectReplicator
 
 _logger = logging.getLogger('s3replicator')
 
@@ -49,12 +49,13 @@ class TransferInitiator:
         operation_type = job.get_operation_type()
         _logger.debug("Replication operation = {}".format(operation_type))
         if operation_type == ReplicationJobType.OBJECT_REPLICATION:
-            object_replicator = ReplicateObject(
+            object_replicator = ObjectReplicator(
                 job, app["config"].transfer_chunk_size_bytes)
             object_replicator.setup_observers(
                 "all_events", TranferEventHandler(app))
 
             job.set_replicator(object_replicator)
+            job.mark_started()
 
             # Start the replication.
             await object_replicator.start()

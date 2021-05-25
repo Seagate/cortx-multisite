@@ -99,8 +99,8 @@ class Jobs:
         # Job not present add it and return success=True
         self._jobs[job.get_job_id()] = job
         self._jobs[job.get_replication_id()] = job
-        self._job_id_to_replication_id_map[job.get_job_id(
-            )] = job.get_replication_id()
+        self._job_id_to_replication_id_map[job.get_job_id()] = \
+            job.get_replication_id()
         return True
 
     def get_job(self, replication_id):

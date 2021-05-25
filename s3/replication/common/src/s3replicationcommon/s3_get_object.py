@@ -19,6 +19,7 @@
 
 import sys
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+from s3replicationcommon.s3_common import S3RequestState
 
 
 class S3AsyncGetObject:
@@ -31,6 +32,11 @@ class S3AsyncGetObject:
         self._object_size = object_size
 
         self._http_status = None
+        self._state = S3RequestState.INITIALISED
+
+    def get_state(self):
+        """Returns current request state"""
+        return self._state
 
     # yields data chunk for given size
     async def fetch(self, chunk_size):
@@ -62,7 +68,17 @@ class S3AsyncGetObject:
             self._session.endpoint + request_uri))
         async with self._session.get_client_session().get(
                 self._session.endpoint + request_uri, headers=headers) as resp:
+            self._state = S3RequestState.RUNNING
             while True:
+                # If abort requested, stop the loop and return.
+                if self._state == S3RequestState.ABORTED:
+                    self._logger.debug(
+                        "Aborted after reading %d bytes"
+                        "for object size of %d",
+                        (self._object_size - total_to_fetch,
+                         self._object_size))
+                    break
+
                 data_chunk = await resp.content.read(chunk_size)
                 if not data_chunk:
                     break
@@ -74,21 +90,39 @@ class S3AsyncGetObject:
                 total_to_fetch = total_to_fetch - len(data_chunk)
                 if total_to_fetch == 0:
                     # Completed reading all expected data.
+                    self._state = S3RequestState.COMPLETED
                     break
                 elif total_to_fetch < 0:
+                    self._state = S3RequestState.FAILED
                     self._logger.error(
                         "Received %d more bytes than"
                         "expected object size of %d",
                         (total_to_fetch * -1,
                          self._object_size))
-            if total_to_fetch > 0:
-                self._logger.error(
-                    "Received partial object. Expected object size (%d), "
-                    "Actual received size (%d)",
-                    self._object_size,
-                    self._object_size - total_to_fetch)
+            # end of While True
 
-            self._http_status = resp.status
-            self._logger.info(
-                'GET Object completed with http status: {}'.format(
-                    resp.status))
+            if self._state != S3RequestState.ABORTED:
+                self._http_status = resp.status
+                self._logger.info(
+                    'GET Object completed with http status: {}'.format(
+                        resp.status))
+
+                if total_to_fetch > 0:
+                    self._state = S3RequestState.FAILED
+                    self._logger.error(
+                        "Received partial object. Expected object size (%d), "
+                        "Actual received size (%d)",
+                        self._object_size,
+                        self._object_size - total_to_fetch)
+
+    def pause(self):
+        self._state = S3RequestState.PAUSED
+        # XXX Take real pause action
+
+    def resume(self):
+        self._state = S3RequestState.PAUSED
+        # XXX Take real resume action
+
+    def abort(self):
+        self._state = S3RequestState.ABORTED
+        # XXX Take abort pause action

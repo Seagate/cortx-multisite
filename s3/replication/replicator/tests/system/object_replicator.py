@@ -97,7 +97,7 @@ async def main():
             html = await response.json()
             logger.info('Body: {}'.format(html))
 
-        # Monitor the status
+        # XXX Monitor the status - check if replication is complete.
 
 
 loop = asyncio.get_event_loop()
