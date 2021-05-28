@@ -4,3 +4,7 @@ flake8==3.9.1
 aiohttp==3.7.4.post0
 pyYaml==5.4.1
 autopep8==1.5.7
+pytest==6.2.4
+pytest-asyncio==0.15.1
+pytest-xdist==2.2.1
+pytest-random==0.2

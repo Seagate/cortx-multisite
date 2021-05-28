@@ -68,9 +68,11 @@ class Job:
             self._obj = obj
         else:
             self._obj = {}
+
         # There are 2 identifiers, job_id which is generated
         # and replication id that is sent by job creator.
-        self._id = uuid.uuid4()
+        self._id = str(uuid.uuid4())
+        self._obj['job_id'] = self._id
         self._replicator = None
         self._state = JobState.INITIAL
 
