@@ -17,6 +17,8 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+from urllib.parse import urlparse
+
 
 class S3Site:
     def __init__(self, endpoint, service_name, region):
@@ -24,3 +26,6 @@ class S3Site:
         self.endpoint = endpoint
         self.service_name = service_name
         self.region = region
+
+    def get_netloc(self):
+        return urlparse(self.endpoint).netloc

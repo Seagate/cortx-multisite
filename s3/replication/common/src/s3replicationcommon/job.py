@@ -20,6 +20,8 @@
 import json
 import uuid
 from enum import Enum
+from urllib.parse import urlparse
+from .s3_site import S3Site
 
 
 class ReplicationJobType:
@@ -129,6 +131,16 @@ class Job:
         return self._obj["source"]["operation"]["type"]
 
     # Source attribute accessors
+    def get_source_endpoint_netloc(self):
+        """Returns the netloc within source S3 endpoint"""
+        return urlparse(self._obj["source"]["endpoint"]).netloc
+
+    def get_source_s3_site(self):
+        """Returns S3 site instance"""
+        return S3Site(self.get_source_endpoint(),
+                      self.get_source_s3_service_name(),
+                      self.get_source_s3_region())
+
     def get_source_bucket_name(self):
         """Returns source bucket name"""
         return self._obj["source"]["operation"]["attributes"]["Bucket-Name"]
@@ -156,6 +168,16 @@ class Job:
         return self._obj["source"]["secret_key"]
 
     # Target attribute accessors
+    def get_target_endpoint_netloc(self):
+        """Returns the netloc within target S3 endpoint"""
+        return urlparse(self._obj["target"]["endpoint"]).netloc
+
+    def get_target_s3_site(self):
+        """Returns S3 site instance"""
+        return S3Site(self.get_target_endpoint(),
+                      self.get_target_s3_service_name(),
+                      self.get_target_s3_region())
+
     def get_target_bucket_name(self):
         """Returns target bucket name"""
         return self._obj["target"]["Bucket-Name"]

@@ -19,10 +19,19 @@
 
 import sys
 from aiohttp import web
+import logging
 from .config import Config
 from s3replicationcommon.log import setup_logger
-from .replicator_routes import routes
 from s3replicationcommon.jobs import Jobs
+from .replicator_routes import routes
+from .session_manager import close_all_sessions
+
+_logger = logging.getLogger('s3replicator')
+
+
+async def on_shutdown(app):
+    _logger.debug("Performing cleanup on shutdown...")
+    await close_all_sessions(app)
 
 
 class ReplicatorApp:
@@ -51,10 +60,11 @@ class ReplicatorApp:
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
 
-        # Each site (source or target) will have one session instance which
-        # will be reused for each request for that site.
-        # Example {"site-1": aiohttp.ClientSession(), "site-2":
-        # aiohttp.ClientSession()}
+        # Each site (source or target) for given account/user will have one
+        # session instance which will be reused for each request for that site.
+        # Example {"src.s3.seagate.com|access_key": aiohttp.ClientSession(),
+        # "tgt.s3.seagate.com|access_key": aiohttp.ClientSession()}
+        # See session_manager.py
         app["sessions"] = {}
         app["config"] = self._config
 
@@ -63,6 +73,9 @@ class ReplicatorApp:
 
         # Setup application routes.
         app.add_routes(routes)
+
+        # Setup shutdown handlers
+        app.on_shutdown.append(on_shutdown)
 
         # Start the REST server.
         web.run_app(app, host=self._config.host, port=self._config.port)
