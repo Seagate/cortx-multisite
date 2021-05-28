@@ -38,9 +38,7 @@ $ python3 setup.py install
 ```
 
 Executing Tests.
-First update the configuration to point to your CORTX s3 setup.
-Update file `tests/system/config/config.yaml` specify relevant `endpoint` and
-relevant `access_key` and `secret_key` for your setups.
+First update the configuration to point to your CORTX s3 setup. Create file `~/.cortxs3/credentials.yaml` with `access_key` and `secret_key` relevant for your S3 setup.
 
 ***Note: DO NOT accidently commit/checkin your access_key/secret_key***
 
