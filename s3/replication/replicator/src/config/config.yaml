@@ -3,3 +3,6 @@ replicator:
    port: 8081
    ssl: false
    service_name: "s3replicator"
+transfer:
+   transfer_chunk_size_bytes: 128  # Per replication job bytes in flight
+   total_in_flight_bytes: 1073741824   # 1GB = transfer_chunk_size_bytes * no of running replication jobs

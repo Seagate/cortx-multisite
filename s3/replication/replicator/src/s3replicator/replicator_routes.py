@@ -17,13 +17,16 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import asyncio
 from aiohttp import web
+import json
 import logging
 from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
-import json
+from s3replicationcommon.job import ReplicationJobRecordKey
+from .transfer_initiator import TransferInitiator
 
-LOG = logging.getLogger('s3replicator')
+_logger = logging.getLogger('s3replicator')
 
 # Route table declaration
 routes = web.RouteTableDef()
@@ -36,7 +39,8 @@ async def list_jobs(request):
     """
     jobs = request.app['all_jobs']
 
-    LOG.debug('Number of jobs in-progress {}'.format(jobs.count()))
+    _logger.debug('Number of jobs in-progress {}'.format(jobs.count()))
+    # _logger.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 
@@ -46,13 +50,13 @@ async def get_job(request):
     Handler to get job attributes for given job_id
     """
     job_id = request.match_info['job_id']
-    job = request.app['all_jobs'].get_job(job_id)
+    job = request.app['all_jobs'].get_job_by_job_id(job_id)
 
     if job is not None:
-        LOG.debug('Job found with job_id : {} '.format(job_id))
+        _logger.debug('Job found with job_id : {} '.format(job_id))
         return web.json_response({"job": job.get_dict()}, status=200)
     else:
-        LOG.debug('Job missing with job_id : {} '.format(job_id))
+        _logger.debug('Job missing with job_id : {} '.format(job_id))
         return web.json_response(
             {'ErrorResponse': 'Job Not Found!'}, status=404)
 
@@ -63,11 +67,28 @@ async def add_job(request):
     Handler to add jobs to the queue
     """
     job_record = await request.json()
-    # XXX deduplicate?
     job = request.app['all_jobs'].add_job_using_json(job_record)
-    LOG.debug('Added Job with job_id : {} '.format(job.get_job_id()))
-    LOG.debug('Added Job : {} '.format(json.dumps(job, cls=JobJsonEncoder)))
-    return web.json_response({'job': job.get_dict()}, status=201)
+    if job is not None:
+        # Start the async replication
+        _logger.debug('Starting Replication Job : {} '.format(
+            json.dumps(job, cls=JobJsonEncoder)))
+        asyncio.create_task(
+            TransferInitiator.start(
+                job, request.app))
+
+        _logger.info('Started Replication Job with job_id : {} '.format(
+            job.get_job_id()))
+        _logger.debug('Started Replication Job : {} '.format(
+            json.dumps(job, cls=JobJsonEncoder)))
+
+        return web.json_response({'job': job.get_dict()}, status=201)
+    else:
+        # Job is already posted and its duplicate. Discard the duplicate.
+        msg = 'Replication Job already exists! Replication id : {} '.\
+            format(job_record[ReplicationJobRecordKey.ID])
+        _logger.debug(msg)
+
+        return web.json_response({'ErrorResponse': msg}, status=409)
 
 
 @routes.delete('/jobs/{job_id}')  # noqa: E302
@@ -76,13 +97,15 @@ async def abort_job(request):
     Handler to abort a job with given job_id
     """
     job_id = request.match_info['job_id']
-    LOG.debug('Aborting Job with job_id {}'.format(job_id))
+    _logger.debug('Aborting Job with job_id {}'.format(job_id))
     # XXX Perform real abort...
-    job = request.app['all_jobs'].remove_job(job_id)
+    job = request.app['all_jobs'].remove_job_by_job_id(job_id)
     if job is not None:
-        LOG.debug('Aborted Job with job_id {}'.format(job_id))
+        # Perform the abort
+        job.abort()
+        _logger.debug('Aborted Job with job_id {}'.format(job_id))
         return web.json_response({'job_id': job_id}, status=204)
     else:
-        LOG.debug('Missing Job with job_id {}'.format(job_id))
+        _logger.debug('Missing Job with job_id {}'.format(job_id))
         return web.json_response(
             {'ErrorResponse': 'Job Not Found!'}, status=404)
