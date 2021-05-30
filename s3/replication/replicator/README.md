@@ -49,5 +49,5 @@ $ python3 -m s3replicator
 
 Run simple system tests.
 ```sh
-$ python3 replicator/tests/system/replicator_client.py
+$ py.test tests/system/test_replicator.py -v
 ```
