@@ -68,9 +68,11 @@ class Job:
             self._obj = obj
         else:
             self._obj = {}
+
         # There are 2 identifiers, job_id which is generated
         # and replication id that is sent by job creator.
-        self._id = uuid.uuid4()
+        self._id = str(uuid.uuid4())
+        self._obj['job_id'] = self._id
         self._replicator = None
         self._state = JobState.INITIAL
 
@@ -103,6 +105,12 @@ class Job:
     def from_json(self, json_string):
         """Loads Job attributes from json."""
         self._obj = json.loads(json_string)
+        if self.obj["job_id"] is None:
+            # job_id is not present in generated string then use existing
+            self._obj["job_id"] = self._id
+        else:
+            # json_string already have job_id
+            self._obj = self._obj["job_id"]
         self._replication_id = self._obj["replication-id"]
 
     def to_json(self):

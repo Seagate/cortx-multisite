@@ -72,7 +72,8 @@ async def add_job(request):
         # Start the async replication
         _logger.debug('Starting Replication Job : {} '.format(
             json.dumps(job, cls=JobJsonEncoder)))
-        asyncio.create_task(
+        # XXX create task is only supported for python v3.7+
+        asyncio.ensure_future(
             TransferInitiator.start(
                 job, request.app))
 
