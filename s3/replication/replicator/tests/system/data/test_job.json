@@ -2,7 +2,7 @@
   "replication-id": "sourcebucket-test-versionid-objcreatetime",
   "replication-event-create-time": "2021-05-21T10:18:50.000Z",
   "source" : {
-    "endpoint": "http://s3.seagate.com:8090",
+    "endpoint": "http://s3.seagate.com",
     "service_name": "cortxs3",
     "region": "us-west2",
     "access_key": "<your key>",
@@ -28,7 +28,7 @@
     }
   },
   "target": {
-    "endpoint": "http://s3.seagate.com:8090",
+    "endpoint": "http://s3.seagate.com",
     "service_name": "cortxs3",
     "region": "us-west2",
     "access_key": "<your key>",

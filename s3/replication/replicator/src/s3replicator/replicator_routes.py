@@ -51,6 +51,9 @@ async def get_job(request):
     """
     job_id = request.match_info['job_id']
     job = request.app['all_jobs'].get_job_by_job_id(job_id)
+    if job is None:
+        # Check if its in completed cache.
+        job = request.app['completed_jobs'].get_job_by_job_id(job_id)
 
     if job is not None:
         _logger.debug('Job found with job_id : {} '.format(job_id))
@@ -104,6 +107,9 @@ async def abort_job(request):
     if job is not None:
         # Perform the abort
         job.abort()
+        if request.app["config"].job_cache_enabled:
+            # cache it, so status can be queried.
+            request.app['completed_jobs'].add_job(job)
         _logger.debug('Aborted Job with job_id {}'.format(job_id))
         return web.json_response({'job_id': job_id}, status=204)
     else:

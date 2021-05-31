@@ -43,6 +43,9 @@ class JobState(Enum):
     ABORTED = 6  # explicitly aborted
     FAILED = 7
 
+    def __str__(self):
+        return self.name
+
 # Following job events can be observed by job observers.
 
 
@@ -76,30 +79,43 @@ class Job:
         self._id = str(uuid.uuid4())
         self._obj['job_id'] = self._id
         self._replicator = None
-        self._state = JobState.INITIAL
+        self._update_state(JobState.INITIAL)
 
     def set_replicator(self, replicator):
         """Sets a reference to replicator for future signals (pause/abort)"""
         self._replicator = replicator
 
+    def _update_state(self, state):
+        """Updates the state to given state"""
+        self._state = state
+        self._obj['state'] = str(self._state)
+
     def mark_started(self):
         """Mark job as running."""
-        self._state = JobState.RUNNING
+        self._update_state(JobState.RUNNING)
+
+    def mark_completed(self):
+        """Mark job as running."""
+        self._update_state(JobState.COMPLETED)
+
+    def mark_failed(self):
+        """Mark job as running."""
+        self._update_state(JobState.FAILED)
 
     def pause(self):
         """Request replicator to pause"""
         self._replicator.pause()
-        self._state = JobState.PAUSED
+        self._update_state(JobState.PAUSED)
 
     def resume(self):
         """Request replicator to resume"""
         self._replicator.resume()
-        self._state = JobState.RUNNING
+        self._update_state(JobState.RUNNING)
 
     def abort(self):
         """Request replicator to abort"""
         self._replicator.abort()
-        self._state = JobState.ABORTED
+        self._update_state(JobState.ABORTED)
 
     def get_dict(self):
         return self._obj

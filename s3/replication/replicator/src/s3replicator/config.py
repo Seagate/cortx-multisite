@@ -59,6 +59,8 @@ class Config:
             self.service_name = config_props['replicator']['service_name']
             self.transfer_chunk_size_bytes = \
                 config_props['transfer']["transfer_chunk_size_bytes"]
+            self.job_cache_enabled = config_props['jobs']['enable_cache']
+            self.job_cache_timeout_secs = config_props['jobs']['cache_timeout']
         return self
 
     def print_with(self, logger):

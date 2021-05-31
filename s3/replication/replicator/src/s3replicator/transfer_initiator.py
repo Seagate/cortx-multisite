@@ -38,11 +38,23 @@ class TranferEventHandler:
             event (JobEvents): Job event enum value.
             job (Job): Job for which event is handled.
         """
+        job = None
         if event == JobEvents.COMPLETED:
             _logger.debug("Processing job completed event for job id[{}]".
                           format(job_id))
             # Release completed job from job list.
-            self._app['all_jobs'].remove_job_by_job_id(job_id)
+            job = self._app['all_jobs'].remove_job_by_job_id(job_id)
+            if job is not None:
+                job.mark_completed()
+                _logger.debug(
+                    "Removed job after completion for job_id {}".format(
+                        job.get_job_id()))
+                if self._app["config"].job_cache_enabled:
+                    # cache it, so status can be queried.
+                    _logger.debug("Moved job after completion for job_id {}"
+                                  " to completed_jobs list".format(
+                                      job.get_job_id()))
+                    self._app['completed_jobs'].add_job(job)
 
 
 class TransferInitiator:

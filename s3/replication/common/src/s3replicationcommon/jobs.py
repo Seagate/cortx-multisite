@@ -118,7 +118,10 @@ class Jobs:
         Args:
             job_id (str): Job ID generated locally
         """
-        return self.get_job(self._job_id_to_replication_id_map[job_id])
+        replication_id = self._job_id_to_replication_id_map.get(job_id)
+        if replication_id is None:
+            return None
+        return self.get_job(replication_id)
 
     def remove_jobs(self, nr_entry):
         """
@@ -137,7 +140,7 @@ class Jobs:
 
         return ret_entries
 
-    def remove_job(self, replication_id):
+    def _remove_job(self, replication_id):
         """Removes a given job from collection and returns a reference.
         to removed Job entry.
 
@@ -155,4 +158,7 @@ class Jobs:
         Args:
             job_id (str): Job ID generated locally
         """
-        return self.remove_job(self._job_id_to_replication_id_map[job_id])
+        replication_id = self._job_id_to_replication_id_map.pop(job_id)
+        if replication_id is None:
+            return None
+        return self._remove_job(replication_id)

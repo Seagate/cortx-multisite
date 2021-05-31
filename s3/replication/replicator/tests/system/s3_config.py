@@ -31,7 +31,7 @@ class S3Config:
 
         # Read the config file.
         with open(os.path.join(os.path.dirname(__file__),
-                  'config/config.yaml'), 'r') as config:
+                  'config/s3_config.yaml'), 'r') as config:
             self._config = yaml.safe_load(config)
 
         # File with credentials. ~/.cortxs3/credentials.yaml

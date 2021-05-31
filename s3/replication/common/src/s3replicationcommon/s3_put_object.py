@@ -40,6 +40,12 @@ class S3AsyncPutObject:
         """Returns current request state"""
         return self._state
 
+    def get_response_header(self, header_key):
+        """Returns response http header value"""
+        if self._state == S3RequestState.COMPLETED:
+            return self._response_headers[header_key]
+        return None
+
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
         self._state = S3RequestState.RUNNING
@@ -78,6 +84,8 @@ class S3AsyncPutObject:
 
             if data_reader.get_state() != S3RequestState.ABORTED:
                 self._http_status = resp.status
+                self._response_headers = resp.headers
+
                 self._logger.info(
                     'PUT Object completed with http status: {}'.format(
                         resp.status))

@@ -49,8 +49,8 @@ class ReplicatorApp:
             print("Failed to configure logging.\n")
             sys.exit(-1)
 
-        self._jobs = Jobs()
-        self._jobs_in_progress = Jobs()
+        self._inprogress_jobs = Jobs()
+        self._completed_jobs = Jobs()
 
         self._config.print_with(self._logger)
 
@@ -68,11 +68,16 @@ class ReplicatorApp:
         app["sessions"] = {}
         app["config"] = self._config
 
-        app['all_jobs'] = self._jobs
+        # All scheduled jobs
+        app['all_jobs'] = self._inprogress_jobs
+        # completed = successfully completed, failed, or aborted and cached
+        app['completed_jobs'] = self._completed_jobs
         app['replication-managers'] = []  # TBD
 
         # Setup application routes.
         app.add_routes(routes)
+
+        # XXX Setup handler to clean up cached entries in app['completed_jobs']
 
         # Setup shutdown handlers
         app.on_shutdown.append(on_shutdown)
