@@ -22,6 +22,7 @@ from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
+from s3replicationcommon.timer import Timer
 
 _logger = logging.getLogger('s3replicator')
 
@@ -33,6 +34,7 @@ class ObjectReplicator:
 
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
         self._job_id = job.get_job_id()
+        self._timer = Timer()
 
         # A set of observers to watch for varius notifications.
         # To start with job completed (success/failure)
@@ -55,13 +57,22 @@ class ObjectReplicator:
             job.get_source_object_name(),
             int(job.get_source_object_size()))
 
+    def get_execution_time(self):
+        """Return total time for Object replication."""
+        return self._timer.elapsed_time_ms()
+
     def setup_observers(self, label, observer):
         self._observers[label] = observer
 
     async def start(self):
         # Start transfer
+        self._timer.start()
         await self._object_writer.send(self._object_reader,
                                        self._transfer_chunk_size_bytes)
+        self._timer.stop()
+        _logger.info(
+            "Replication completed in {}ms for job_id {}".format(
+                self._timer.elapsed_time_ms(), self._job_id))
         # notify job state events
         for label, observer in self._observers.items():
             _logger.debug(

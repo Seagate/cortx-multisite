@@ -4,7 +4,7 @@ replicator:
    ssl: false
    service_name: "s3replicator"
 transfer:
-   transfer_chunk_size_bytes: 128  # Per replication job bytes in flight
+   transfer_chunk_size_bytes: 512  # Per replication job bytes in flight
    total_in_flight_bytes: 1073741824   # 1GB = transfer_chunk_size_bytes * no of running replication jobs
 jobs:
    enable_cache: true  # cache for completed or aborted jobs, primarily for testing

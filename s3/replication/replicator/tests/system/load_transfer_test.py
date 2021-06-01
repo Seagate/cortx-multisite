@@ -23,6 +23,7 @@
 # Transfer all the objects at target and verify target objects existence
 # and data integrity using md5 match
 
+
 import aiohttp
 import asyncio
 import datetime
@@ -44,9 +45,13 @@ from s3_config import S3Config
 class TestConfig:
     count_of_obj = 2  # 100
     min_obj_size = 1024  # 1k - size in bytes
-    max_obj_size = 2048  # 100 * 1024 * 1024  # 100MB - size in bytes
+    max_obj_size = 2048  # 2k - size in bytes
+    fixed_size = 1024  # 1k - size in bytes
+    # True use random size objects, False fixed size.
+    random_size_enabled = True
     source_bucket = "sourcebucket"
     target_bucket = "targetbucket"
+    polling_wait_time = 2  # 2 secs wait between polling job status.
 
 # Helper methods
 
@@ -121,9 +126,9 @@ def create_replication_job(s3_config, object_info):
     with open(template_file, 'r') as file_content:
         job_dict = json.load(file_content)
     # Update the fields in template.
-    job_dict["replication-id"] = s3_config.source_bucket_name + \
-        object_info["object_name"]
     epoch_t = datetime.datetime.utcnow()
+    job_dict["replication-id"] = s3_config.source_bucket_name + \
+        object_info["object_name"] + str(epoch_t)
     job_dict["replication-event-create-time"] = epoch_t.strftime(
         '%Y%m%dT%H%M%SZ')
 
@@ -170,19 +175,21 @@ async def async_put_object(session, bucket_name, object_name, object_size,
 
 
 async def setup_source(session, bucket_name, transfer_chunk_size):
-    # Create objects at source and returns map with object info
+    # Create objects at source and returns list with object info
 
-    # {"object-name1": {size: 4096, md5: abcd},
-    #  "object-name2": {size: 8192, md5: pqr}}
+    # [{"object_name": "object-name1", "size": 4096, "md5": abcd},
+    #  {"object_name": "object-name2", "size": 8192, "md5": pqrs}]
     put_task_list = []
     for i in range(TestConfig.count_of_obj):
-        # Generate random object size
-        object_size = randrange(
-            TestConfig.min_obj_size,
-            TestConfig.max_obj_size)
+        # Generate object size
+        object_size = TestConfig.fixed_size
+        if TestConfig.random_size_enabled:
+            object_size = randrange(
+                TestConfig.min_obj_size,
+                TestConfig.max_obj_size)
 
         # Generate object name
-        object_name = "test_object_" + str(object_size)
+        object_name = "test_object_" + str(i) + "_sz" + str(object_size)
 
         # Perform the PUT operation on source and capture md5.
         task = asyncio.create_task(
@@ -272,18 +279,22 @@ async def run_load_test():
         for get_job_resp in get_job_response_list:
             job_status = await get_job_resp.json()
             job_id = job_status["job"]["job_id"]
-            logger.debug("job_status = {}".format(job_status))
-            if job_status["job"]["state"] != "RUNNING":
+            job_state = job_status["job"]["state"]
+            logger.debug(
+                "job_state = {} for job_id {}".format(
+                    job_state, job_id))
+            if job_state != "RUNNING":
                 # remove completed job from polling list
-                logger.debug("Replication Job completed for job_id {}".format(
-                    job_id))
                 posted_jobs_set.remove(job_id)
+
         if len(posted_jobs_set) == 0:
             # No jobs pending.
             jobs_running = False
         else:
             # There are atleast some running jobs, give time to complete.
-            time.sleep(2)
+            logger.info("Waiting for {} secs before polling job status...".
+                        format(TestConfig.polling_wait_time))
+            time.sleep(TestConfig.polling_wait_time)
 
         polling_count -= 1
 

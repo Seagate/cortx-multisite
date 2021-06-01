@@ -53,8 +53,9 @@ class JobEvents(Enum):
     UNKNOWN = 1
     STARTED = 2  # start or resume
     STOPPED = 4  # pause
-    COMPLETED = 5  # after successful/failed processing
-    ABORTED = 6  # explicitly aborted
+    COMPLETED = 5  # after successful processing
+    FAILED = 6
+    ABORTED = 7  # explicitly aborted
 
 # Job model to be used across both replication manager and replicator
 
@@ -64,7 +65,7 @@ class Job:
     A Job class to store replication job attributes. Provides methods to
     serialise/deserialise as json. Maintains S3 replication source and
     target details, operation type etc. For Job json format see sample in
-    ../formats/replication_job.json
+    ../formats/replication_job_template.json
     """
 
     def __init__(self, obj):
