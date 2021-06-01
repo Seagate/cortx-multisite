@@ -21,6 +21,7 @@ import logging
 from s3replicationcommon.job import ReplicationJobType
 from s3replicationcommon.job import JobEvents
 from .object_replicator import ObjectReplicator
+from .session_manager import get_session
 
 _logger = logging.getLogger('s3replicator')
 
@@ -37,20 +38,47 @@ class TranferEventHandler:
             event (JobEvents): Job event enum value.
             job (Job): Job for which event is handled.
         """
+        job = None
         if event == JobEvents.COMPLETED:
             _logger.debug("Processing job completed event for job id[{}]".
                           format(job_id))
             # Release completed job from job list.
-            self._app['all_jobs'].remove_job_by_job_id(job_id)
+            job = self._app['all_jobs'].remove_job_by_job_id(job_id)
+            if job is not None:
+                job.mark_completed()
+                _logger.debug(
+                    "Removed job from app['all_jobs'] for job_id {}".format(
+                        job.get_job_id()))
+                if self._app["config"].job_cache_enabled:
+                    # cache it, so status can be queried.
+                    _logger.debug("Moved job after completion for job_id {}"
+                                  " to app['completed_jobs']".format(
+                                      job.get_job_id()))
+                    self._app['completed_jobs'].add_job(job)
 
 
 class TransferInitiator:
     async def start(job, app):
         operation_type = job.get_operation_type()
         _logger.debug("Replication operation = {}".format(operation_type))
+
+        # Reuse the sessions.
+        source_session = get_session(
+            app,
+            job.get_source_s3_site(),
+            job.get_source_access_key(),
+            job.get_source_secret_key())
+
+        target_session = get_session(
+            app,
+            job.get_target_s3_site(),
+            job.get_target_access_key(),
+            job.get_target_secret_key())
+
         if operation_type == ReplicationJobType.OBJECT_REPLICATION:
             object_replicator = ObjectReplicator(
-                job, app["config"].transfer_chunk_size_bytes)
+                job, app["config"].transfer_chunk_size_bytes,
+                source_session, target_session)
             object_replicator.setup_observers(
                 "all_events", TranferEventHandler(app))
 

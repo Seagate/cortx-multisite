@@ -4,6 +4,12 @@ This section describes common content for various modules in this project. See i
 
 # Quickstart
 
+Ensure you have latest pip installed.
+
+```sh
+$ python3 -m pip install --upgrade pip
+```
+
 Perform flake8 checks on the python code.
 ```sh
 $ make check

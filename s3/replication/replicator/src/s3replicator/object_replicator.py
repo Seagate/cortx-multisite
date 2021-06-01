@@ -19,37 +19,28 @@
 
 import logging
 from s3replicationcommon.job import JobEvents
-from s3replicationcommon.s3_site import S3Site
-from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
+from s3replicationcommon.timer import Timer
 
 _logger = logging.getLogger('s3replicator')
 
 
 class ObjectReplicator:
-    def __init__(self, job, transfer_chunk_size_bytes) -> None:
+    def __init__(self, job, transfer_chunk_size_bytes, source_session,
+                 target_session) -> None:
         """Initialise"""
 
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
         self._job_id = job.get_job_id()
+        self._timer = Timer()
 
         # A set of observers to watch for varius notifications.
         # To start with job completed (success/failure)
         self._observers = {}
 
-        # Setup source site info
-        self._s3_source_site = S3Site(
-            job.get_source_endpoint(),
-            job.get_source_s3_service_name(),
-            job.get_source_s3_region())
-
-        self._s3_source_session = S3Session(
-            _logger,
-            self._s3_source_site,
-            job.get_source_access_key(),
-            job.get_source_secret_key())
+        self._s3_source_session = source_session
 
         self._object_reader = S3AsyncGetObject(
             self._s3_source_session,
@@ -58,16 +49,7 @@ class ObjectReplicator:
             int(job.get_source_object_size()))
 
         # Setup target site info
-        self._s3_target_site = S3Site(
-            job.get_target_endpoint(),
-            job.get_target_s3_service_name(),
-            job.get_target_s3_region())
-
-        self._s3_target_session = S3Session(
-            _logger,
-            self._s3_target_site,
-            job.get_target_access_key(),
-            job.get_target_secret_key())
+        self._s3_target_session = target_session
 
         self._object_writer = S3AsyncPutObject(
             self._s3_target_session,
@@ -75,13 +57,22 @@ class ObjectReplicator:
             job.get_source_object_name(),
             int(job.get_source_object_size()))
 
+    def get_execution_time(self):
+        """Return total time for Object replication."""
+        return self._timer.elapsed_time_ms()
+
     def setup_observers(self, label, observer):
         self._observers[label] = observer
 
     async def start(self):
         # Start transfer
+        self._timer.start()
         await self._object_writer.send(self._object_reader,
                                        self._transfer_chunk_size_bytes)
+        self._timer.stop()
+        _logger.info(
+            "Replication completed in {}ms for job_id {}".format(
+                self._timer.elapsed_time_ms(), self._job_id))
         # notify job state events
         for label, observer in self._observers.items():
             _logger.debug(
@@ -92,11 +83,6 @@ class ObjectReplicator:
                 observer.notify(JobEvents.ABORTED, self._job_id)
             else:
                 observer.notify(JobEvents.COMPLETED, self._job_id)
-
-        # Once the replication is complete, close session.
-        # XXX Extend to reuse sessions for multiple replications.
-        await self._s3_source_session.close()
-        await self._s3_target_session.close()
 
     def pause(self):
         """Pause the running object tranfer"""

@@ -67,7 +67,7 @@ def test_config(test_job):
 
     # Setup logging and get logger
     log_config_file = os.path.join(
-            os.path.dirname(__file__), 'config', 'logger_config.yaml')
+        os.path.dirname(__file__), 'config', 'logger_config.yaml')
     print("Using log config {}".format(log_config_file))
     logger = setup_logger('client_tests', log_config_file)
     if logger is None:

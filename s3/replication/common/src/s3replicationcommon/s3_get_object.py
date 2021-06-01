@@ -20,6 +20,7 @@
 import sys
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.s3_common import S3RequestState
+from s3replicationcommon.timer import Timer
 
 
 class S3AsyncGetObject:
@@ -32,11 +33,17 @@ class S3AsyncGetObject:
         self._object_size = object_size
 
         self._http_status = None
+
+        self._timer = Timer()
         self._state = S3RequestState.INITIALISED
 
     def get_state(self):
         """Returns current request state"""
         return self._state
+
+    def get_execution_time(self):
+        """Return total time for GET Object operation."""
+        return self._timer.elapsed_time_ms()
 
     # yields data chunk for given size
     async def fetch(self, chunk_size):
@@ -66,6 +73,7 @@ class S3AsyncGetObject:
 
         self._logger.info('GET on {}'.format(
             self._session.endpoint + request_uri))
+        self._timer.start()
         async with self._session.get_client_session().get(
                 self._session.endpoint + request_uri, headers=headers) as resp:
             self._state = S3RequestState.RUNNING
@@ -100,6 +108,7 @@ class S3AsyncGetObject:
                         (total_to_fetch * -1,
                          self._object_size))
             # end of While True
+            self._timer.stop()
 
             if self._state != S3RequestState.ABORTED:
                 self._http_status = resp.status

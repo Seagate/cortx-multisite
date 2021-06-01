@@ -1,0 +1,38 @@
+{
+  "replication-id": "_replication_id_",
+  "replication-event-create-time": "_replication_event_time_",
+  "source" : {
+    "endpoint": "_s3_source_endpoint_",
+    "service_name": "cortxs3",
+    "region": "_source_region_",
+    "access_key": "_access_key_",
+    "secret_key": "_secret_key_",
+    "operation": {
+      "type": "replicate_object",
+      "attributes": {
+        "ACL": "_base64_encoded_acl_json_",
+        "Bucket-Name": "_source_bucket_name_",
+        "Object-Name": "_source_object_name_",
+        "Content-Length": "_source_object_size_",
+        "Content-MD5": "_source_object_md5_",
+        "Content-Type": "",
+        "Date": "_source_object_creation_time_",
+        "Last-Modified": "_source_object_creation_time_",
+        "Owner-Account": "_source_object_owner_account_name_",
+        "Owner-Account-id": "_source_object_owner_account_id_",
+        "Owner-Canonical-id": "_source_object_owner_account_canonical_id_",
+        "Owner-User": "_source_object_owner_user_name_",
+        "Owner-User-id": "_source_object_owner_user_id_",
+        "x-amz-version-id": "_source_object_version_id_"
+      }
+    }
+  },
+  "target": {
+    "endpoint": "_s3_target_endpoint_",
+    "service_name": "cortxs3",
+    "region": "_target_region_",
+    "access_key": "_access_key_",
+    "secret_key": "_secret_key_",
+    "Bucket-Name": "_target_bucket_name_"
+  }
+}

@@ -21,6 +21,7 @@ import sys
 
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.s3_common import S3RequestState
+from s3replicationcommon.timer import Timer
 
 
 class S3AsyncPutObject:
@@ -34,11 +35,22 @@ class S3AsyncPutObject:
 
         self._http_status = None
 
+        self._timer = Timer()
         self._state = S3RequestState.INITIALISED
 
     def get_state(self):
         """Returns current request state"""
         return self._state
+
+    def get_response_header(self, header_key):
+        """Returns response http header value"""
+        if self._state == S3RequestState.COMPLETED:
+            return self._response_headers[header_key]
+        return None
+
+    def get_execution_time(self):
+        """Return total time for PUT Object operation."""
+        return self._timer.elapsed_time_ms()
 
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
@@ -70,6 +82,7 @@ class S3AsyncPutObject:
 
         self._logger.info('PUT on {}'.format(
             self._session.endpoint + request_uri))
+        self._timer.start()
         async with self._session.get_client_session().put(
                 self._session.endpoint + request_uri,
                 headers=headers,
@@ -78,6 +91,8 @@ class S3AsyncPutObject:
 
             if data_reader.get_state() != S3RequestState.ABORTED:
                 self._http_status = resp.status
+                self._response_headers = resp.headers
+
                 self._logger.info(
                     'PUT Object completed with http status: {}'.format(
                         resp.status))
@@ -85,6 +100,8 @@ class S3AsyncPutObject:
                     self._state = S3RequestState.COMPLETED
                 else:
                     self._state = S3RequestState.FAILED
+
+        self._timer.stop()
 
     def pause(self):
         self._state = S3RequestState.PAUSED
