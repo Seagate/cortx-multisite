@@ -1,3 +1,7 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6b67dd07d8b84fb0ab56036851b79b95)](https://app.codacy.com/gh/Seagate/cortx-multisite?utm_source=github.com&utm_medium=referral&utm_content=Seagate/cortx-multisite&utm_campaign=Badge_Grade_Settings)
+- Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
+- If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
+
 # CORTX S3 Multisite
 CORTX S3 Multisite feature provides ability to Asynchronous replication of S3 objects across CORTX clusters or S3 regions or to any S3 compatible object storages.
 
@@ -10,12 +14,6 @@ This project has 2 modules that help with S3 replication:
 We are excited about your interest in CORTX and hope you will join us. Refer to the [CORTX Contribution Guide](https://github.com/Seagate/cortx/blob/main/CONTRIBUTING.md) that hosts all information about community values, code of conduct, how to contribute code and documentation, community and code style guide, and how to reach out to us. 
 
 We take community very seriously and we are committed to creating a community built on respectful interactions and inclusivity as documented in our [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Reach Out To Us
-
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6b67dd07d8b84fb0ab56036851b79b95)](https://app.codacy.com/gh/Seagate/cortx-multisite?utm_source=github.com&utm_medium=referral&utm_content=Seagate/cortx-multisite&utm_campaign=Badge_Grade_Settings)
-- Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
-- If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
 
 ## Thank You!
 
