@@ -1,0 +1,30 @@
+@startuml
+FDMI -> ReplicationManager: POST job s3metadata.json
+activate ReplicationManager
+ReplicationManager -> ReplicationManager : Create rm_job_id\nGenerate actual job.json\nadd to the job_list
+return status :  200 OK
+ReplicationManager <-- Replicator: POST/subscriber?default_jobs=5
+ReplicationManager -> ReplicationManager : Update subscriber_list
+ReplicationManager -> Replicator: status :  200 OK
+ReplicationManager -> Replicator: POST 5*{rm_job_id, job.json}
+Replicator -> ReplicationManager: status : 201
+rnote over ReplicationManager: posted_job_cnt=5
+rnote over Replicator: Create job_ids\nadd job.json in job_list
+Replicator -> ReplicationManager: ACK(PUT/jobs/rm_job_id_1)
+rnote over ReplicationManager: remove rm_job_id_1\nfrom the job_list,\nposted_job_cnt--
+ReplicationManager -> ReplicationManager: check posted_job_cnt
+Replicator -> ReplicationManager: ACK(PUT/jobs/rm_job_id_2)
+rnote over ReplicationManager: remove rm_job_id_2\nfrom the job_list,\nposted_job_cnt--
+ReplicationManager -> ReplicationManager: check posted_job_cnt
+Replicator -> ReplicationManager: ACK(PUT/jobs/rm_job_id_3)
+rnote over ReplicationManager: remove rm_job_id_3\nfrom the job_list,\nposted_job_cnt--
+ReplicationManager -> ReplicationManager: check posted_job_cnt
+Replicator -> ReplicationManager: ACK(PUT/jobs/rm_job_id_4)
+rnote over ReplicationManager: remove rm_job_id_4\nfrom the job_list,\nposted_job_cnt--
+ReplicationManager -> ReplicationManager: check posted_job_cnt
+Replicator -> ReplicationManager: ACK(PUT/jobs/rm_job_id_5)
+rnote over ReplicationManager: remove rm_job_id_5\nfrom the job_list,\nposted_job_cnt--
+ReplicationManager -> ReplicationManager: check posted_job_cnt
+note over ReplicationManager: posted_job_cnt == 0
+ReplicationManager -> Replicator: POST 5*{rm_job_id, job.json}
+@enduml
