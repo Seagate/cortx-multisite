@@ -2,7 +2,7 @@
 
 Replicator for CORTX cross cluster/region replication for S3 objects.
 
-# Description
+## Description
 
 This module performs following
 1. Receive "replication jobs" from replication manager.
@@ -10,16 +10,16 @@ This module performs following
 3. Acknowledge the replication jobs to replication manager.
 4. Maintain a list of inprogress jobs and return on query.
 
-# Quickstart
+## Quickstart
 
 Create a virtualenv.
 ```sh
-$ python3 -m venv s3env
+python3 -m venv s3env
 ```
 
 Activate virtualenv s3env.
 ```sh
-$ source s3env/bin/activate
+source s3env/bin/activate
 ```
 
 Clean earlier install.
@@ -29,7 +29,7 @@ python3 setup.py clean --all
 
 Install dependencies in active virtualenv.
 ```sh
-$ pip3 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 Install the development/test dependencies from devel-requirements.txt
@@ -39,15 +39,15 @@ pip3 install  -e .[development]
 
 Install the package.
 ```sh
-$ python3 setup.py install
+python3 setup.py install
 ```
 
 Start the replicator.
 ```sh
-$ python3 -m s3replicator
+python3 -m s3replicator
 ```
 
 Run simple system tests.
 ```sh
-$ py.test tests/system/test_replicator.py -v
+py.test tests/system/test_replicator.py -v
 ```
