@@ -82,8 +82,6 @@ class ReplicatorApp:
         # Setup application routes.
         app.add_routes(routes)
 
-        # XXX Setup handler to clean up cached entries in app['completed_jobs']
-
         # Setup shutdown handlers
         app.on_shutdown.append(on_shutdown)
 
