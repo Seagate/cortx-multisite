@@ -25,11 +25,14 @@ import json
 
 class Jobs:
     def dumps(obj):
-        """json """
+        """
+        Helper to format json.
+        """
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
     def __init__(self, logger, label, timeout=None):
-        """Initialise
+        """
+        Initialise
 
         Args:
             logger (logger): For debug logging.
@@ -49,11 +52,15 @@ class Jobs:
         self._job_id_to_replication_id_map = {}
 
     def to_json(self):
-        """Converts to json."""
+        """
+        Converts to json.
+        """
         return Jobs.to_json(self)
 
     def get_keys(self):
-        """Returns all jobs"""
+        """
+        Returns all jobs.
+        """
         return self._jobs.keys()
 
     def reset(self):
@@ -61,7 +68,8 @@ class Jobs:
         self._jobs.clear()
 
     def count(self):
-        """Returns total jobs in collection.
+        """
+        Returns total jobs in collection.
 
         Returns:
             int: Count of jobs in collection.
@@ -69,11 +77,14 @@ class Jobs:
         return len(self._jobs)
 
     def add_jobs(self, jobs_dict):
-        """Populate _jobs dict with multiple job entries"""
+        """
+        Populate _jobs dict with multiple job entries
+        """
         self._jobs.update(jobs_dict)
 
     def is_job_present(self, replication_id):
-        """Checks if given replication id is present.
+        """
+        Checks if given replication id is present.
 
         Args:
             replication_id (str): Replication identifier.
@@ -83,7 +94,8 @@ class Jobs:
         return False
 
     def add_job_using_json(self, job_json):
-        """Validate json, create and add job to job list.
+        """
+        Validate json, create and add job to job list.
 
         Args:
             job_json (json): Job json record to be inserted in list.
@@ -97,7 +109,8 @@ class Jobs:
         return None
 
     def add_job(self, job):
-        """Add job to job list.
+        """
+        Add job to job list.
 
         Args:
             job (Job): Job to be inserted in list.
@@ -120,7 +133,9 @@ class Jobs:
         return True
 
     def get_job(self, replication_id):
-        """Search jobs list and return job with replication_id.
+        """
+        Search jobs list and return job with replication_id.
+
         Args:
             replication_id (str): Job identifier.
         Returns:
@@ -132,7 +147,9 @@ class Jobs:
         return job
 
     def get_job_by_job_id(self, job_id):
-        """Find a job for given job id.
+        """
+        Find a job for given job id.
+
         Args:
             job_id (str): Job ID generated locally
         """
@@ -159,7 +176,8 @@ class Jobs:
         return ret_entries
 
     def _remove_job(self, replication_id):
-        """Removes a given job from collection and returns a reference.
+        """
+        Removes a given job from collection and returns a reference.
         to removed Job entry.
 
         Args:
@@ -171,7 +189,8 @@ class Jobs:
         return self._jobs.pop(replication_id, None)
 
     def remove_job_by_job_id(self, job_id):
-        """Remove a job for given job id.
+        """
+        Remove a job for given job id.
 
         Args:
             job_id (str): Job ID generated locally
@@ -184,7 +203,8 @@ class Jobs:
         return self._remove_job(replication_id)
 
     async def schedule_clear_cache(self, job_id):
-        """Clear entry from collection after given timeout.
+        """
+        Clear entry from collection after given timeout.
 
         Args:
             job_id (str): Job to clear.
