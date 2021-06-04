@@ -69,7 +69,9 @@ class Job:
     """
 
     def __init__(self, obj):
-        """Initialise Job."""
+        """
+        Initialise Job.
+        """
         if obj is not None:
             self._obj = obj
         else:
@@ -83,38 +85,54 @@ class Job:
         self._update_state(JobState.INITIAL)
 
     def set_replicator(self, replicator):
-        """Sets a reference to replicator for future signals (pause/abort)"""
+        """
+        Sets a reference to replicator for future signals (pause/abort).
+        """
         self._replicator = replicator
 
     def _update_state(self, state):
-        """Updates the state to given state"""
+        """
+        Updates the state to given state.
+        """
         self._state = state
         self._obj['state'] = str(self._state)
 
     def mark_started(self):
-        """Mark job as running."""
+        """
+        Mark job as running.
+        """
         self._update_state(JobState.RUNNING)
 
     def mark_completed(self):
-        """Mark job as running."""
+        """
+        Mark job as running.
+        """
         self._update_state(JobState.COMPLETED)
 
     def mark_failed(self):
-        """Mark job as running."""
+        """
+        Mark job as running.
+        """
         self._update_state(JobState.FAILED)
 
     def pause(self):
-        """Request replicator to pause"""
+        """
+        Request replicator to pause.
+        """
         self._replicator.pause()
         self._update_state(JobState.PAUSED)
 
     def resume(self):
-        """Request replicator to resume"""
+        """
+        Request replicator to resume.
+        """
         self._replicator.resume()
         self._update_state(JobState.RUNNING)
 
     def abort(self):
-        """Request replicator to abort"""
+        """
+        Request replicator to abort.
+        """
         self._replicator.abort()
         self._update_state(JobState.ABORTED)
 
@@ -122,7 +140,9 @@ class Job:
         return self._obj
 
     def from_json(self, json_string):
-        """Loads Job attributes from json."""
+        """
+        Loads Job attributes from json.
+        """
         self._obj = json.loads(json_string)
         if self.obj["job_id"] is None:
             # job_id is not present in generated string then use existing
@@ -133,37 +153,54 @@ class Job:
         self._replication_id = self._obj["replication-id"]
 
     def to_json(self):
-        """Converts Job to json."""
+        """
+        Converts Job to json.
+        """
         return json.dumps(self._obj)
 
     def get_replication_id(self):
+        """
+        Returns replication id.
+        """
         return self._obj["replication-id"]
 
     def get_job_id(self):
-        """Returns job id"""
+        """
+        Returns job id.
+        """
         return self._id
 
     def get_operation_type(self):
-        """Get replication type"""
+        """
+        Get replication type.
+        """
         return self._obj["source"]["operation"]["type"]
 
     # Source attribute accessors
     def get_source_endpoint_netloc(self):
-        """Returns the netloc within source S3 endpoint"""
+        """
+        Returns the netloc within source S3 endpoint.
+        """
         return urlparse(self._obj["source"]["endpoint"]).netloc
 
     def get_source_s3_site(self):
-        """Returns S3 site instance"""
+        """
+        Returns S3 site instance.
+        """
         return S3Site(self.get_source_endpoint(),
                       self.get_source_s3_service_name(),
                       self.get_source_s3_region())
 
     def get_source_bucket_name(self):
-        """Returns source bucket name"""
+        """
+        Returns source bucket name.
+        """
         return self._obj["source"]["operation"]["attributes"]["Bucket-Name"]
 
     def get_source_object_name(self):
-        """Returns source object name"""
+        """
+        Returns source object name.
+        """
         return self._obj["source"]["operation"]["attributes"]["Object-Name"]
 
     def get_source_object_size(self):
@@ -186,17 +223,23 @@ class Job:
 
     # Target attribute accessors
     def get_target_endpoint_netloc(self):
-        """Returns the netloc within target S3 endpoint"""
+        """
+        Returns the netloc within target S3 endpoint.
+        """
         return urlparse(self._obj["target"]["endpoint"]).netloc
 
     def get_target_s3_site(self):
-        """Returns S3 site instance"""
+        """
+        Returns S3 site instance.
+        """
         return S3Site(self.get_target_endpoint(),
                       self.get_target_s3_service_name(),
                       self.get_target_s3_region())
 
     def get_target_bucket_name(self):
-        """Returns target bucket name"""
+        """
+        Returns target bucket name.
+        """
         return self._obj["target"]["Bucket-Name"]
 
     def get_target_endpoint(self):

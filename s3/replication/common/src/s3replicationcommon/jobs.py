@@ -17,6 +17,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import asyncio
 from .job import Job
 from .job import JobJsonEncoder
 import json
@@ -24,24 +25,42 @@ import json
 
 class Jobs:
     def dumps(obj):
-        """json """
+        """
+        Helper to format json.
+        """
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
-    def __init__(self):
-        """Initialise jobs collection"""
+    def __init__(self, logger, label, timeout=None):
+        """
+        Initialise
+
+        Args:
+            logger (logger): For debug logging.
+            label (str): Identifies the collection in logs.
+            timeout (int, optional): Entries in Collection will
+            be retained for given timeout. Defaults to None. If None
+            entries will remain until explicitly removed.
+        """
         # Dictionary holding replication_id and replication record
         # e.g. : jobs = {"replication-id": Job({"attribute-1": "foo"})}
         self._jobs = {}
+        self._logger = logger
+        self._label = label
+        self._timeout = timeout
 
         # Additionally store job_id and replication_id mapping
         self._job_id_to_replication_id_map = {}
 
     def to_json(self):
-        """Converts to json."""
+        """
+        Converts to json.
+        """
         return Jobs.to_json(self)
 
     def get_keys(self):
-        """Returns all jobs"""
+        """
+        Returns all jobs.
+        """
         return self._jobs.keys()
 
     def reset(self):
@@ -49,7 +68,8 @@ class Jobs:
         self._jobs.clear()
 
     def count(self):
-        """Returns total jobs in collection.
+        """
+        Returns total jobs in collection.
 
         Returns:
             int: Count of jobs in collection.
@@ -57,11 +77,14 @@ class Jobs:
         return len(self._jobs)
 
     def add_jobs(self, jobs_dict):
-        """Populate _jobs dict with multiple job entries"""
+        """
+        Populate _jobs dict with multiple job entries
+        """
         self._jobs.update(jobs_dict)
 
     def is_job_present(self, replication_id):
-        """Checks if given replication id is present.
+        """
+        Checks if given replication id is present.
 
         Args:
             replication_id (str): Replication identifier.
@@ -71,7 +94,8 @@ class Jobs:
         return False
 
     def add_job_using_json(self, job_json):
-        """Validate json, create and add job to job list.
+        """
+        Validate json, create and add job to job list.
 
         Args:
             job_json (json): Job json record to be inserted in list.
@@ -85,7 +109,8 @@ class Jobs:
         return None
 
     def add_job(self, job):
-        """Add job to job list.
+        """
+        Add job to job list.
 
         Args:
             job (Job): Job to be inserted in list.
@@ -95,14 +120,22 @@ class Jobs:
         """
         if self.is_job_present(job.get_replication_id()):
             return False
+        self._logger.debug("Jobs[{}]: Adding job with job_id {}.".
+                           format(self._label, job.get_job_id()))
         # Job not present add it and return success=True
         self._jobs[job.get_replication_id()] = job
         self._job_id_to_replication_id_map[job.get_job_id()] = \
             job.get_replication_id()
+        if self._timeout is not None:
+            asyncio.create_task(
+                self.schedule_clear_cache(job.get_job_id())
+            )
         return True
 
     def get_job(self, replication_id):
-        """Search jobs list and return job with replication_id.
+        """
+        Search jobs list and return job with replication_id.
+
         Args:
             replication_id (str): Job identifier.
         Returns:
@@ -114,7 +147,9 @@ class Jobs:
         return job
 
     def get_job_by_job_id(self, job_id):
-        """Find a job for given job id.
+        """
+        Find a job for given job id.
+
         Args:
             job_id (str): Job ID generated locally
         """
@@ -141,7 +176,8 @@ class Jobs:
         return ret_entries
 
     def _remove_job(self, replication_id):
-        """Removes a given job from collection and returns a reference.
+        """
+        Removes a given job from collection and returns a reference.
         to removed Job entry.
 
         Args:
@@ -153,7 +189,8 @@ class Jobs:
         return self._jobs.pop(replication_id, None)
 
     def remove_job_by_job_id(self, job_id):
-        """Remove a job for given job id.
+        """
+        Remove a job for given job id.
 
         Args:
             job_id (str): Job ID generated locally
@@ -161,4 +198,24 @@ class Jobs:
         replication_id = self._job_id_to_replication_id_map.pop(job_id)
         if replication_id is None:
             return None
+        self._logger.debug("Jobs[{}]: Removing job with job_id {}.".
+                           format(self._label, job_id))
         return self._remove_job(replication_id)
+
+    async def schedule_clear_cache(self, job_id):
+        """
+        Clear entry from collection after given timeout.
+
+        Args:
+            job_id (str): Job to clear.
+            timeout (int): 0 Dont clear, else clear after timeout secs.
+        """
+        if self._timeout is not None:
+            self._logger.debug(
+                "Jobs[{}]: Schedule job_id [{}] to be expired after {} secs".
+                format(self._label, job_id, self._timeout))
+            await asyncio.sleep(self._timeout)
+            self._logger.debug(
+                "Jobs[{}]: job_id [{}] entry expired.".
+                format(self._label, job_id))
+            self.remove_job_by_job_id(job_id)

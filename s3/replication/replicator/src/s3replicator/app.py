@@ -49,8 +49,13 @@ class ReplicatorApp:
             print("Failed to configure logging.\n")
             sys.exit(-1)
 
-        self._inprogress_jobs = Jobs()
-        self._completed_jobs = Jobs()
+        self._inprogress_jobs = Jobs(self._logger, "all-jobs")
+        if self._config.job_cache_enabled:
+            self._completed_jobs = Jobs(
+                self._logger, "completed-jobs",
+                self._config.job_cache_timeout_secs)
+        else:
+            self._completed_jobs = Jobs(self._logger, "completed-jobs")
 
         self._config.print_with(self._logger)
 
@@ -76,8 +81,6 @@ class ReplicatorApp:
 
         # Setup application routes.
         app.add_routes(routes)
-
-        # XXX Setup handler to clean up cached entries in app['completed_jobs']
 
         # Setup shutdown handlers
         app.on_shutdown.append(on_shutdown)
