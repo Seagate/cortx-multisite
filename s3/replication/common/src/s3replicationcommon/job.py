@@ -44,6 +44,7 @@ class JobState(Enum):
     FAILED = 7
 
     def __str__(self):
+        """Helps stringify to name only."""
         return self.name
 
 # Following job events can be observed by job observers.
@@ -61,6 +62,7 @@ class JobEvents(Enum):
 
 
 class Job:
+
     """
     A Job class to store replication job attributes. Provides methods to
     serialise/deserialise as json. Maintains S3 replication source and
@@ -69,9 +71,7 @@ class Job:
     """
 
     def __init__(self, obj):
-        """
-        Initialise Job.
-        """
+        """Initialise Job."""
         if obj is not None:
             self._obj = obj
         else:
@@ -87,6 +87,10 @@ class Job:
     def set_replicator(self, replicator):
         """
         Sets a reference to replicator for future signals (pause/abort).
+
+        Args:
+            replicator (Replicator): Replicator instance for sending
+            notifications.
         """
         self._replicator = replicator
 

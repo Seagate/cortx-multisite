@@ -31,7 +31,6 @@ LOG = logging.getLogger("s3replicationmanager")
 class ReplicationManagerApp:
     def __init__(self, config_file, log_config_file):
         """Initialise logger and configuration."""
-
         self._config = Config(config_file)
         if self._config.load() is None:
             print("Failed to load configuration.\n")

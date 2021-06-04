@@ -16,3 +16,4 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+"""Replicator module to performs S3 based Async replication."""

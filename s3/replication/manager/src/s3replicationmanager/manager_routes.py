@@ -32,10 +32,7 @@ routes = web.RouteTableDef()
 
 @routes.post('/subscribers')  # noqa: E302
 async def add_subscriber(request):
-    """Add subscriber
-
-    Handler for Subscriber
-    """
+    """Handler to add subscriber."""
     # Get subscriber
     subscriber = await request.json()
     LOG.debug('subscriber args are  : {}'.format(subscriber))
@@ -56,22 +53,14 @@ async def add_subscriber(request):
 
 @routes.get('/subscribers')  # noqa: E302
 async def list_subscribers(request):
-    """List subscriber
-
-    Handler to get subscriber list
-
-    """
+    """Handler to list subscribers."""
     return web.json_response({'subscribers': json.dumps(
         list(request.app['subscribers'].get_keys()))}, status=200)
 
 
 @routes.delete('/subscribers/{sub_id}')  # noqa: E302
 async def remove_subscriber(request):
-    """Add subscriber
-
-    Handler for Subscriber
-
-    """
+    """Handler to remove subscriber."""
     sub_id = (request.match_info['sub_id'])
     # Check if subscriber is already present
     if request.app['subscribers'].check_presence(sub_id):
@@ -84,11 +73,7 @@ async def remove_subscriber(request):
 
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
-    """Add jobs
-
-    Handler to add jobs to the job queue
-
-    """
+    """Handler to add job to job queue."""
     job_record = await request.json()
 
     # Get first key and find if already present
@@ -111,11 +96,7 @@ async def add_job(request):
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
-    """Get job attribute
-
-    Handler api to fetch job attributes
-
-    """
+    """Handler to get job attributes."""
     job_id = request.match_info['job_id']
     job = request.app['all_jobs'].get_job(job_id)
 
@@ -130,11 +111,7 @@ async def get_job(request):
 
 @routes.put('/jobs/{job_id}')  # noqa: E302
 async def update_job_attr(request):
-    """Update job attributes
-
-    Update attributes for job_id
-
-    """
+    """Handler to Update job attributes."""
     job_record = await request.json()
 
     # Get key
@@ -156,11 +133,7 @@ async def update_job_attr(request):
 
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
-    """List active jobs
-
-    Handler api to handle multiple query
-
-    """
+    """List active jobs."""
     url = request.path_qs
     url_ob = urlparse(url)
     query = parse_qs(url_ob.query)

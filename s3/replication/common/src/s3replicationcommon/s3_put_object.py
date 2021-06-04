@@ -39,11 +39,11 @@ class S3AsyncPutObject:
         self._state = S3RequestState.INITIALISED
 
     def get_state(self):
-        """Returns current request state"""
+        """Returns current request state."""
         return self._state
 
     def get_response_header(self, header_key):
-        """Returns response http header value"""
+        """Returns response http header value."""
         if self._state == S3RequestState.COMPLETED:
             return self._response_headers[header_key]
         return None

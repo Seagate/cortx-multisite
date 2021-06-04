@@ -16,6 +16,7 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+"""For capturing performance timings using start/stop timer."""
 
 from enum import Enum
 import time
@@ -29,6 +30,7 @@ class TimerState(Enum):
 
 class Timer:
     def __init__(self):
+        """Initialise timer."""
         self._start = None
         self._end = None
         self._state = TimerState.INITIALISED
