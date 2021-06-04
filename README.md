@@ -1,9 +1,14 @@
+[![ license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/Seagate/cortx-multisite/blob/main/LICENSE)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6b67dd07d8b84fb0ab56036851b79b95)](https://app.codacy.com/gh/Seagate/cortx-multisite?utm_source=github.com&utm_medium=referral&utm_content=Seagate/cortx-multisite&utm_campaign=Badge_Grade_Settings)
+[![YouTube](https://img.shields.io/badge/Video-YouTube-red)](https://cortx.link/videos)
+[![Slack](https://img.shields.io/badge/chat-on%20Slack-blue")](https://cortx.link/join-slack)
+
 # CORTX S3 Multisite
 CORTX S3 Multisite feature provides ability to Asynchronous replication of S3 objects across CORTX clusters or S3 regions or to any S3 compatible object storages.
 
 This project has 2 modules that help with S3 replication:
-1. S3 replication manager (Provides ability to queue replication jobs and distribute to one or more replicators). See [replication-manager readme](s3/replication/manager/README.md)
-2. S3 replicator (Provides ability to replication objects from one S3 endpoint to another). See [replicator readme](s3/replication/replicator/README.md)
+1. S3 replication manager (Provides ability to queue replication jobs and distribute to one or more replicators). See [replication-manager readme](s3/replication/manager/README.md).
+2. S3 replicator (Provides ability to replication objects from one S3 endpoint to another). See [replicator readme](s3/replication/replicator/README.md).
 
 ## CORTX Community
 
@@ -13,7 +18,6 @@ We take community very seriously and we are committed to creating a community bu
 
 ## Reach Out To Us
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6b67dd07d8b84fb0ab56036851b79b95)](https://app.codacy.com/gh/Seagate/cortx-multisite?utm_source=github.com&utm_medium=referral&utm_content=Seagate/cortx-multisite&utm_campaign=Badge_Grade_Settings)
 - Join our CORTX-Open Source Slack Channel to interact with your fellow community members and gets your questions answered. [![Slack Channel](https://img.shields.io/badge/chat-on%20Slack-blue)](https://join.slack.com/t/cortxcommunity/shared_invite/zt-femhm3zm-yiCs5V9NBxh89a_709FFXQ?)
 - If you'd like to contact us directly, drop us a mail at cortx-questions@seagate.com.
 
