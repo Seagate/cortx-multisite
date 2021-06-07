@@ -19,11 +19,10 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-# s3 replicator test file
+# s3 replication manager pytest
 #
-# This file contains replicator tests with various REST
-# requests such as post a job, get a job using job_id,
-# list all jobs and abort a particular job.
+# This file contains replication manager's tests with
+# various REST requests.
 
 import aiohttp
 import asyncio
