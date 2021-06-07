@@ -3,6 +3,3 @@ s3_service_name: cortxs3
 s3_region: us-west2
 source_bucket_name: sourcebucket
 target_bucket_name: targetbucket
-object_name_prefix: foo_
-object_size: 1024
-transfer_chunk_size: 512

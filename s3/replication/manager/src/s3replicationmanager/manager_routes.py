@@ -21,10 +21,8 @@ from aiohttp import web
 import logging
 import json
 from urllib.parse import urlparse, parse_qs
-from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
-from s3replicationcommon.job import ReplicationJobRecordKey
-from .prepare_job import PrepareJob
+from .prepare_job import PrepareReplicationJob
 
 LOG = logging.getLogger('s3replicationmanager')
 
@@ -78,13 +76,15 @@ async def add_job(request):
     """Handler to add job to job queue."""
     job_record = await request.json()
 
-    job_prep = PrepareJob()
+    if job_record == {}:
+        return web.json_response('Empty json', status=500)
+
+    job_prep = PrepareReplicationJob()
 
     fdmi_job = job_prep.prepare_replication_job(job_record)
 
-    # Get first key and find if already present
     job = request.app['all_jobs'].add_job_using_json(fdmi_job)
-    LOG.debug('Added Job with job_id : {} '.format(fdmi_job))
+    LOG.debug('Added Job with job_id : {} '.format(job))
     LOG.debug(
         'Added Job : {} '.format(
             json.dumps(
