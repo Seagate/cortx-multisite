@@ -19,30 +19,30 @@
 
 class Subscribers:
     def __init__(self):
-        """Initialise Subscribers collection"""
+        """Initialise Subscribers collection."""
         # Dictionary holding subscriber_id and attributes
         # E.g. :
         # _Subscribers = {testsubscriber': {'id':'testsubscriber','foo':'bar'}}
         self._subscribers = {}
 
     def get_keys(self):
-        """Returns subscribers ids"""
+        """Returns subscribers id's."""
         return self._subscribers.keys()
 
     def add_subscriber(self, subscriber):
-        """Adds subscriber to the subscribers dict"""
+        """Adds subscriber to the subscribers dict."""
         sub_id = subscriber['id']
         self._subscribers[sub_id] = subscriber
 
     def check_presence(self, sub_id):
-        """Check if sub_id exist in the list"""
+        """Check if sub_id exist in the list."""
         if sub_id in self._subscribers.keys():
             return True
         else:
             return False
 
     def remove_subscriber(self, sub_id):
-        """Remove subscriber from the list"""
+        """Remove subscriber from the list."""
         subscriber_attr = None
         if sub_id in self._subscribers:
             subscriber_attr = self._subscribers.pop(sub_id)

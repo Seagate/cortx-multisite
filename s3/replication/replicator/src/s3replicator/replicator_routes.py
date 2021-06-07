@@ -34,9 +34,7 @@ routes = web.RouteTableDef()
 
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
-    """List_jobs
-    Handler to list in-progress jobs
-    """
+    """List all in-progress jobs."""
     jobs = request.app['all_jobs']
 
     _logger.debug('Number of jobs in-progress {}'.format(jobs.count()))
@@ -46,9 +44,7 @@ async def list_jobs(request):
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
-    """Get job attribute
-    Handler to get job attributes for given job_id
-    """
+    """Get job details for given job_id."""
     job_id = request.match_info['job_id']
     job = request.app['all_jobs'].get_job_by_job_id(job_id)
     if job is None:
@@ -66,9 +62,7 @@ async def get_job(request):
 
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
-    """Add job in the queue
-    Handler to add jobs to the queue
-    """
+    """Add job in the queue and trigger replication."""
     job_record = await request.json()
     job = request.app['all_jobs'].add_job_using_json(job_record)
     if job is not None:
@@ -97,9 +91,7 @@ async def add_job(request):
 
 @routes.delete('/jobs/{job_id}')  # noqa: E302
 async def abort_job(request):
-    """Abort a job
-    Handler to abort a job with given job_id
-    """
+    """Abort a job with given job_id."""
     job_id = request.match_info['job_id']
     _logger.debug('Aborting Job with job_id {}'.format(job_id))
     # XXX Perform real abort...

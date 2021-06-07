@@ -35,11 +35,7 @@ from s3replicationcommon.log import setup_logger
 
 
 async def main():
-    """main function
-
-    Main function calls REST apis
-
-    """
+    """Main function calls REST apis."""
     host = '127.0.0.1'
     port = '8080'
 

@@ -24,7 +24,6 @@ from s3replicator.app import ReplicatorApp
 
 def setup_args(parser):
     """Defines program arguments."""
-
     # adding an arguments
     parser.add_argument(
         '--configfile',

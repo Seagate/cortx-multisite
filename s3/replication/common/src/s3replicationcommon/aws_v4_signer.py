@@ -52,7 +52,6 @@ class AWSV4Signer(object):
             epoch_t,
             host):
         """Create canonical request based on uri and query string."""
-
         body_256sha_hex = hashlib.sha256(body.encode('utf-8')).hexdigest()
 
         self._body_hash_hex = body_256sha_hex
@@ -75,6 +74,8 @@ class AWSV4Signer(object):
 
     def _getV4SignatureKey(self, key, dateStamp, regionName, serviceName):
         """
+        Internal method to generate V4 signature.
+
         Generate v4SignatureKey based on key, datestamp, region and
         service name.
         """
@@ -96,7 +97,6 @@ class AWSV4Signer(object):
             service='',
             region=''):
         """Generates string_to_sign for authorization key generation."""
-
         canonical_request = self._create_canonical_request(
             method, canonical_uri, canonical_query_string, body, epoch_t, host)
         credential_scope = self._get_date(epoch_t) + '/' + \

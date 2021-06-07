@@ -30,8 +30,7 @@ _logger = logging.getLogger('s3replicator')
 class ObjectReplicator:
     def __init__(self, job, transfer_chunk_size_bytes, source_session,
                  target_session) -> None:
-        """Initialise"""
-
+        """Initialise."""
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
         self._job_id = job.get_job_id()
         self._timer = Timer()

@@ -29,11 +29,10 @@ import yaml
 
 
 class Config:
-    """ configuration for replicator """
+    """Configuration for replicator."""
 
     def __init__(self, configfile):
-        """config class constructor"""
-
+        """Initialise."""
         if configfile is None:
             self.configfile = os.path.join(os.path.dirname(__file__),
                                            '..', 'config', 'config.yaml')

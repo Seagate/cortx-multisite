@@ -1,7 +1,7 @@
 # Introduction
 Common modules for CORTX cross cluster/region replication for S3 objects.
 
-# Modules
+## Modules
 Following modules are defined in common package to be used by replication manager and replicator.
 
 ## Logging
@@ -10,21 +10,21 @@ TBD
 ## Job module used across replication manager and replicator
 TBD
 
-# Quickstart
+## Quickstart
 
 Create a virtualenv.
 ```sh
-$ python3 -m venv s3env
+python3 -m venv s3env
 ```
 
 Activate virtualenv s3env.
 ```sh
-$ source s3env/bin/activate
+source s3env/bin/activate
 ```
 
 Install dependencies in active virtualenv.
 ```sh
-$ pip3 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 Clean earlier install.
@@ -34,7 +34,7 @@ python3 setup.py clean --all
 
 Install the package.
 ```sh
-$ python3 setup.py install
+python3 setup.py install
 ```
 
 Executing Tests.

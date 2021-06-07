@@ -16,3 +16,4 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+"""Common code for Replicator and Replication manager."""

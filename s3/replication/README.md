@@ -2,26 +2,26 @@
 
 This section describes common content for various modules in this project. See individual module readme for more details.
 
-# Quickstart
+## Quickstart
 
 Ensure you have latest pip installed.
 
 ```sh
-$ python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 ```
 
 Perform flake8 checks on the python code.
 ```sh
-$ make check
+make check
 ```
 or 
 ```sh
-$ make flake8
+make flake8
 ```
 
 Autocorrect formatting errors for flake8.
 ```sh
-$ make autopep8
+make autopep8
 ```
 
 Run basic tests for each module. Clean, Build and test.
@@ -29,7 +29,7 @@ Run basic tests for each module. Clean, Build and test.
 make test
 ```
 
-# Troubleshooting
+## Troubleshooting
 When running `make test` on MacOS, timeout in Makefile may fail and you need following.
 
 ```sh

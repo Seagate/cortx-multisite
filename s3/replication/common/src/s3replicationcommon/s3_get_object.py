@@ -38,7 +38,7 @@ class S3AsyncGetObject:
         self._state = S3RequestState.INITIALISED
 
     def get_state(self):
-        """Returns current request state"""
+        """Returns current request state."""
         return self._state
 
     def get_execution_time(self):

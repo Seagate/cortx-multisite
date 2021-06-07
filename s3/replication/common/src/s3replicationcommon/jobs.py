@@ -25,9 +25,7 @@ import json
 
 class Jobs:
     def dumps(obj):
-        """
-        Helper to format json.
-        """
+        """Helper to format json."""
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
     def __init__(self, logger, label, timeout=None):
@@ -52,19 +50,15 @@ class Jobs:
         self._job_id_to_replication_id_map = {}
 
     def to_json(self):
-        """
-        Converts to json.
-        """
+        """Converts to json."""
         return Jobs.to_json(self)
 
     def get_keys(self):
-        """
-        Returns all jobs.
-        """
+        """Returns all jobs."""
         return self._jobs.keys()
 
     def reset(self):
-        """Clear all jobs"""
+        """Clear all jobs."""
         self._jobs.clear()
 
     def count(self):

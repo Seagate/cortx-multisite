@@ -26,11 +26,8 @@ import yaml
 
 
 class Config:
-    """Configuration for Replication manager"""
-
     def __init__(self, configfile):
-        """config class constructor"""
-
+        """Initialise."""
         if configfile is None:
             self.configfile = os.path.join(os.path.dirname(__file__),
                                            '..', 'config', 'config.yaml')
