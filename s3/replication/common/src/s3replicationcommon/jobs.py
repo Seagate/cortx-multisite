@@ -30,14 +30,14 @@ class Jobs:
 
     def __init__(self, logger, label, timeout=None):
         """
-        Initialise
-
+        Initialises collection with given label used for logging.
+        Entries in Collection will be retained for given timeout.
+        When timeout is not specified, entries will remain until
+        explicitly removed.
         Args:
             logger (logger): For debug logging.
             label (str): Identifies the collection in logs.
-            timeout (int, optional): Entries in Collection will
-            be retained for given timeout. Defaults to None. If None
-            entries will remain until explicitly removed.
+            timeout (int, optional): Specified in secs. Defaults to None.
         """
         # Dictionary holding replication_id and replication record
         # e.g. : jobs = {"replication-id": Job({"attribute-1": "foo"})}

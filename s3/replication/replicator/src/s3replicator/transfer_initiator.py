@@ -28,11 +28,11 @@ _logger = logging.getLogger('s3replicator')
 
 class TranferEventHandler:
     def __init__(self, app) -> None:
-        """Initialise"""
+        """Initialise."""
         self._app = app
 
     def notify(self, event, job_id):
-        """Handles a given JobEvent
+        """Handles a given JobEvent.
 
         Args:
             event (JobEvents): Job event enum value.

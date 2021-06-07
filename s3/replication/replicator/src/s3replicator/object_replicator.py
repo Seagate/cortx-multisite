@@ -84,13 +84,13 @@ class ObjectReplicator:
                 observer.notify(JobEvents.COMPLETED, self._job_id)
 
     def pause(self):
-        """Pause the running object tranfer"""
+        """Pause the running object tranfer."""
         pass  # XXX
 
     def resume(self):
-        """Resume the running object tranfer"""
+        """Resume the running object tranfer."""
         pass  # XXX
 
     def abort(self):
-        """Abort the running object tranfer"""
+        """Abort the running object tranfer."""
         self._object_writer.abort()

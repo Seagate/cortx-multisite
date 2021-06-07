@@ -38,8 +38,10 @@ class Config:
         self.port = 8080
 
     def load(self):
-        """
-        Load the configuration data.
+        """Load the configuration data.
+
+        This method loads the configuration data from a config file
+        and sets up members to be used within application.
 
         Returns:
             on success returns self

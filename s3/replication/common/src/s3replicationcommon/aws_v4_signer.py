@@ -16,8 +16,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+"""Utility class used for Authentication using V4 signature."""
 
-"""This is utility class used for Authorization."""
 import hmac
 import hashlib
 import urllib
@@ -25,7 +25,8 @@ import datetime
 
 
 class AWSV4Signer(object):
-    """Generate Authorization headers to validate requests."""
+
+    """Generate Authentication headers to validate requests."""
 
     def __init__(self, endpoint, service_name, region, access_key, secret_key):
         """Initialise config."""
@@ -39,7 +40,7 @@ class AWSV4Signer(object):
         headers = {
             'host': host,
             'x-amz-content-sha256': body_256hash,
-            'x-amz-date': self._get_amz_timestamp(epoch_t)
+            'x-amz-date': AWSV4Signer._get_amz_timestamp(epoch_t)
         }
         return headers
 
@@ -68,21 +69,20 @@ class AWSV4Signer(object):
             signed_headers + '\n' + body_256sha_hex
         return canonical_request
 
-    def _sign(self, key, msg):
+    # Class method.
+    def _sign(key, msg):
         """Return hmac value based on key and msg."""
         return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
     def _getV4SignatureKey(self, key, dateStamp, regionName, serviceName):
         """
-        Internal method to generate V4 signature.
-
-        Generate v4SignatureKey based on key, datestamp, region and
+        Generate v4 signature based on key, datestamp, region and
         service name.
         """
-        kDate = self._sign(('AWS4' + key).encode('utf-8'), dateStamp)
-        kRegion = self._sign(kDate, regionName)
-        kService = self._sign(kRegion, serviceName)
-        kSigning = self._sign(kService, 'aws4_request')
+        kDate = AWSV4Signer._sign(('AWS4' + key).encode('utf-8'), dateStamp)
+        kRegion = AWSV4Signer._sign(kDate, regionName)
+        kService = AWSV4Signer._sign(kRegion, serviceName)
+        kSigning = AWSV4Signer._sign(kService, 'aws4_request')
         return kSigning
 
     def _create_string_to_sign_v4(
@@ -99,21 +99,23 @@ class AWSV4Signer(object):
         """Generates string_to_sign for authorization key generation."""
         canonical_request = self._create_canonical_request(
             method, canonical_uri, canonical_query_string, body, epoch_t, host)
-        credential_scope = self._get_date(epoch_t) + '/' + \
+        credential_scope = AWSV4Signer._get_date(epoch_t) + '/' + \
             region + '/' + service + '/' + 'aws4_request'
 
         string_to_sign = algorithm + '\n' + \
-            self._get_amz_timestamp(epoch_t) + '\n' + \
+            AWSV4Signer._get_amz_timestamp(epoch_t) + '\n' + \
             credential_scope + '\n' + \
             hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
 
         return string_to_sign
 
-    def _get_date(self, epoch_t):
+    # Class method.
+    def _get_date(epoch_t):
         """Return date in Ymd format."""
         return epoch_t.strftime('%Y%m%d')
 
-    def _get_amz_timestamp(self, epoch_t):
+    # Class method.
+    def _get_amz_timestamp(epoch_t):
         """Return timestamp in YMDTHMSZ format."""
         return epoch_t.strftime('%Y%m%dT%H%M%SZ')
 
@@ -147,7 +149,7 @@ class AWSV4Signer(object):
         if method is None:
             print("method can not be null")
             return None
-        credential_scope = self._get_date(epoch_t) + '/' + region + \
+        credential_scope = AWSV4Signer._get_date(epoch_t) + '/' + region + \
             '/' + service + '/' + 'aws4_request'
 
         headers = self._get_headers(host, epoch_t, body)
@@ -168,7 +170,7 @@ class AWSV4Signer(object):
             region)
 
         signing_key = self._getV4SignatureKey(
-            self._secret_key, self._get_date(epoch_t), region, service)
+            self._secret_key, AWSV4Signer._get_date(epoch_t), region, service)
 
         signature = hmac.new(
             signing_key,
@@ -226,7 +228,7 @@ class AWSV4Signer(object):
             self._region)
 
         # Setup std headers
-        headers['x-amz-date'] = self._get_amz_timestamp(epoch_t)
+        headers['x-amz-date'] = AWSV4Signer._get_amz_timestamp(epoch_t)
         # generated in _create_canonical_request()
         headers['x-amz-content-sha256'] = self._body_hash_hex
         return headers

@@ -24,7 +24,8 @@ import yaml
 
 
 def setup_logger(logger_name: str, log_config_file: str):
-    """
+    """Setup logger for reuse.
+
     Sets up a logger with given name and log properties defined in
     log_config_file yaml.
 
