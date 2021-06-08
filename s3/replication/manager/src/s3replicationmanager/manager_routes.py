@@ -18,11 +18,11 @@
 #
 
 from aiohttp import web
-from urllib.parse import urlparse, parse_qs
 import logging
-from s3replicationcommon.job import JobJsonEncoder
 import json
-
+from urllib.parse import urlparse, parse_qs
+from s3replicationcommon.job import JobJsonEncoder
+from .prepare_job import PrepareReplicationJob
 
 LOG = logging.getLogger('s3replicationmanager')
 
@@ -74,24 +74,21 @@ async def remove_subscriber(request):
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
     """Handler to add job to job queue."""
-    job_record = await request.json()
+    fdmi_job = await request.json()
 
-    # Get first key and find if already present
-    job_id = job_record['Object-Name']
-    job = request.app['all_jobs'].get_job(job_id)
+    if fdmi_job == {}:
+        return web.json_response('Empty json', status=500)
 
-    if job is not None:
-        return web.json_response(
-            {'ErrorResponse': 'job already present'}, status=201)
-    else:
-        job = request.app['all_jobs'].add_job_using_json(job_record)
-        LOG.debug('Added Job with job_id : {} '.format(job.get_job_id()))
-        LOG.debug(
-            'Added Job : {} '.format(
-                json.dumps(
-                    job,
-                    cls=JobJsonEncoder)))
-        return web.json_response({'job': job.get_dict()}, status=201)
+    job_record = PrepareReplicationJob.from_fdmi(fdmi_job)
+
+    job = request.app['all_jobs'].add_job_using_json(job_record)
+    LOG.debug('Added Job with job_id : {} '.format(job))
+    LOG.debug(
+        'Added Job : {} '.format(
+            json.dumps(
+                job,
+                cls=JobJsonEncoder)))
+    return web.json_response({'job': job.get_dict()}, status=201)
 
 
 @routes.get('/jobs/{job_id}')  # noqa: E302

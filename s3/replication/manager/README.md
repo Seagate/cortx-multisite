@@ -52,3 +52,8 @@ Run system tests after starting the replicator.
 ```sh
 python3 manager/tests/system/manager_client.py
 ```
+
+Run system tests after starting the replicator.
+```sh
+py.test manager/tests/system/test_replication_manager.py
+```

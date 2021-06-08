@@ -1,0 +1,29 @@
+{
+  "ACL": "base64-encoded-acl-json",
+  "Bucket-Name": "seagatebucket",
+  "Object-Name": "seagate-hdd.jpg",
+  "Object-URI": "seagatebucket\\\\seagate-hdd.jpg",
+  "System-Defined": {
+    "Content-Length": "0",
+    "Content-MD5": "d41d8cd98f00b204e9800998ecf8427e",
+    "Content-Type": "",
+    "Date": "2021-05-05T08:10:14.000Z",
+    "Last-Modified": "2021-05-05T08:10:14.000Z",
+    "Owner-Account": "cloud",
+    "Owner-Account-id": "708741171239",
+    "Owner-Canonical-id": "f5810cae61af4d8d99b113cdc3c55443c7f6eb36fec041f88b05f9704daeed47",
+    "Owner-User": "root",
+    "Owner-User-id": "BJo5ILHCTOiXYrWrkitJeg",
+    "x-amz-server-side-encryption": "None",
+    "x-amz-server-side-encryption-aws-kms-key-id": "",
+    "x-amz-server-side-encryption-customer-algorithm": "",
+    "x-amz-server-side-encryption-customer-key": "",
+    "x-amz-server-side-encryption-customer-key-MD5": "",
+    "x-amz-storage-class": "STANDARD",
+    "x-amz-version-id": "MTg0NDY3NDI0NTM1MDczNDEwMjU",
+    "x-amz-website-redirect-location": "None"
+  },
+  "create_timestamp": "2021-05-05T08:10:15.000Z",
+  "layout_id": 1,
+  "motr_oid": "kQxABAAAAAA=-QgCQAQAAbJY="
+}
