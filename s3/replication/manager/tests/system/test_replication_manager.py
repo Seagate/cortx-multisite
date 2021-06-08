@@ -94,28 +94,25 @@ def test_config(fdmi_job):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('test_input_param', ['valid_job', 'empty_job'])
-async def test_post_job(test_config, test_input_param):
+@pytest.mark.parametrize(
+    "test_input_param, expected", [('valid_job', 201), ('empty_job', 500)])
+async def test_post_job(test_config, test_input_param, expected):
     """Pytest for post job test."""
     input_test = {'valid_job': fdmi_job_record, 'empty_job': {}}
 
-    test_input = input_test[test_input_param]
+    test_input_job = input_test[test_input_param]
 
     async with aiohttp.ClientSession() as session:
 
         # Add job and attributes
         async with session.post(
                 test_config['url'] + '/jobs',
-                json=test_input) as response:
+                json=test_input_job) as response:
             logger.info(
                 'POST job returned http Status: {}'.format(response.status))
             html = await response.json()
             logger.info('Body: {}'.format(html))
-            if test_input_param == 'valid_job':
-                assert 201 == response.status, "ERROR : Bad response  : " + \
-                    str(response.status)
-                logger.info('POST job successful.')
-            elif test_input_param == 'empty_job':
-                assert 500 == response.status, "ERROR : Bad response  : " + \
-                    str(response.status)
-                logger.info('POST job fail. Empty json')
+            assert expected == response.status, \
+                "ERROR : Bad response status : " + \
+                str(response.status) + "Expected status :" + str(expected)
+            logger.info('POST job successful.')

@@ -74,16 +74,14 @@ async def remove_subscriber(request):
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
     """Handler to add job to job queue."""
-    job_record = await request.json()
+    fdmi_job = await request.json()
 
-    if job_record == {}:
+    if fdmi_job == {}:
         return web.json_response('Empty json', status=500)
 
-    job_prep = PrepareReplicationJob()
+    job_record = PrepareReplicationJob.from_fdmi(fdmi_job)
 
-    fdmi_job = job_prep.prepare_replication_job(job_record)
-
-    job = request.app['all_jobs'].add_job_using_json(fdmi_job)
+    job = request.app['all_jobs'].add_job_using_json(job_record)
     LOG.debug('Added Job with job_id : {} '.format(job))
     LOG.debug(
         'Added Job : {} '.format(

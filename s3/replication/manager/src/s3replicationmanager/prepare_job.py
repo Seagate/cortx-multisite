@@ -38,11 +38,13 @@ class PrepareReplicationJob():
         # Job id for replication manager's reference
         self.rm_job_id = str(uuid.uuid4())
 
-    def prepare_replication_job(self, fdmi_record):
+    @classmethod
+    def from_fdmi(cls, fdmi_record):
         """Prepare replication job record from fdmi record."""
 
         # Read the config file.
         with open(os.path.join(os.path.dirname(__file__), '..', 'config/source_target_s3_config.yaml'), 'r') as config:
+
             config = yaml.safe_load(config)
 
         # File with credentials. ~/.cortxs3/credentials.yaml
