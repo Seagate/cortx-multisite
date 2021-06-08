@@ -66,7 +66,8 @@ async def main():
     # Read input config file and get host, port
     if args.configfile is None:
         args.configfile = os.path.join(os.path.dirname(__file__),
-                                       'config', 'config.yaml')
+                                       "..", "..", "src", 'config',
+                                       'config.yaml')
     with open(args.configfile, 'r') as file_config:
         config = yaml.safe_load(file_config)
         host = config['replicator'].get('host')
