@@ -5,10 +5,10 @@ Replicator for CORTX cross cluster/region replication for S3 objects.
 ## Description
 
 This module performs following
-1. Receive "replication jobs" from replication manager.
-2. Perform the replication
-3. Acknowledge the replication jobs to replication manager.
-4. Maintain a list of inprogress jobs and return on query.
+1.  Receive "replication jobs" from replication manager.
+2.  Perform the replication
+3.  Acknowledge the replication jobs to replication manager.
+4.  Maintain a list of inprogress jobs and return on query.
 
 ## Quickstart
 

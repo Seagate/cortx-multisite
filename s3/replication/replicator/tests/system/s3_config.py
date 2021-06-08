@@ -24,11 +24,11 @@ import yaml
 
 
 class S3Config:
-    """ Configuration for S3 tests """
+
+    """Configuration for S3 tests."""
 
     def __init__(self):
-        """constructor"""
-
+        """Initialise."""
         # Read the config file.
         with open(os.path.join(os.path.dirname(__file__),
                   'config/s3_config.yaml'), 'r') as config:

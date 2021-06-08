@@ -36,8 +36,7 @@ async def on_shutdown(app):
 
 class ReplicatorApp:
     def __init__(self, config_file, log_config_file):
-        """Initialise logger and configuration"""
-
+        """Initialise logger and configuration."""
         self._config = Config(config_file)
         if self._config.load() is None:
             print("Failed to load configuration.\n")
@@ -60,7 +59,7 @@ class ReplicatorApp:
         self._config.print_with(self._logger)
 
     def run(self):
-        """Start replicator"""
+        """Start replicator."""
         app = web.Application()
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config

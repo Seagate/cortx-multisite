@@ -29,6 +29,7 @@ import yaml
 
 
 class Config:
+
     """Configuration for replicator."""
 
     def __init__(self, configfile):
@@ -43,12 +44,7 @@ class Config:
         self.port = 8081
 
     def load(self):
-        """
-        Load the configuration data.
-
-        Returns:
-            on success returns self
-        """
+        """Load the configuration data."""
         with open(self.configfile, 'r') as file_config:
             config_props = yaml.safe_load(file_config)
 

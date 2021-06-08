@@ -64,10 +64,11 @@ class JobEvents(Enum):
 class Job:
 
     """
-    A Job class to store replication job attributes. Provides methods to
-    serialise/deserialise as json. Maintains S3 replication source and
-    target details, operation type etc. For Job json format see sample in
-    ../formats/replication_job_template.json
+    A Job class to store replication job attributes.
+
+    Provides methods to serialise/deserialise as json. Maintains S3
+    replication source and target details, operation type etc. For Job json
+    format see sample in ../formats/replication_job_template.json.
     """
 
     def __init__(self, obj):
@@ -263,7 +264,7 @@ class Job:
 
 
 class JobJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Job):
-            return obj._obj
-        return super().default(obj)
+    def default(self, o):  # pylint: disable=E0202
+        if isinstance(o, Job):
+            return o._obj
+        return super().default(o)

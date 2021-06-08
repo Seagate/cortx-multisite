@@ -36,9 +36,6 @@ import json
 
 logger = None
 
-# Load the test job record.
-test_job = {}
-
 # String to save job_id of posted job
 job_id = ''
 

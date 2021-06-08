@@ -30,7 +30,7 @@ import json
 import uuid
 
 
-class PrepareReplicationJob():
+class PrepareReplicationJob:
 
     def __init__(self):
         """Replication manager's job id."""
@@ -43,8 +43,9 @@ class PrepareReplicationJob():
         """Prepare replication job record from fdmi record."""
 
         # Read the config file.
-        with open(os.path.join(os.path.dirname(__file__), '..', 'config/source_target_s3_config.yaml'), 'r') as config:
-
+        with open(os.path.join(
+                os.path.dirname(__file__), '..',
+                'config/source_target_s3_config.yaml'), 'r') as config:
             config = yaml.safe_load(config)
 
         # File with credentials. ~/.cortxs3/credentials.yaml
