@@ -17,7 +17,7 @@ return status :  ack fdmi event
 
 
 rnote over FDMI: node-2
-FDMI -> ReplicationManager: fdmi event (ev1) with s3 metadata
+FDMI -> ReplicationManager: fdmi event (ev1:key1) with s3 metadata
 activate ReplicationManager
 ReplicationManager -> MOTR_KVS : GET-KV(ev1:key1)
 MOTR_KVS --> ReplicationManager : found
@@ -27,7 +27,7 @@ MOTR_KVS --> ReplicationManager : success
 return status :  ack fdmi event
 
 rnote over FDMI: node-3
-FDMI -> ReplicationManager: fdmi event (ev1) with s3 metadata
+FDMI -> ReplicationManager: fdmi event (ev1:key1) with s3 metadata
 activate ReplicationManager
 ReplicationManager -> MOTR_KVS : GET-KV(ev1:key1)
 MOTR_KVS --> ReplicationManager : found
