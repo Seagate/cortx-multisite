@@ -25,7 +25,6 @@ import datetime
 
 
 class AWSV4Signer(object):
-
     """Generate Authentication headers to validate requests."""
 
     def __init__(self, endpoint, service_name, region, access_key, secret_key):
@@ -36,7 +35,8 @@ class AWSV4Signer(object):
         self._access_key = access_key
         self._secret_key = secret_key
 
-    def _get_headers(self, host, epoch_t, body_256hash):
+    # Helper method.
+    def _get_headers(host, epoch_t, body_256hash):
         headers = {
             'host': host,
             'x-amz-content-sha256': body_256hash,
@@ -56,7 +56,7 @@ class AWSV4Signer(object):
         body_256sha_hex = hashlib.sha256(body.encode('utf-8')).hexdigest()
 
         self._body_hash_hex = body_256sha_hex
-        headers = self._get_headers(host, epoch_t, body_256sha_hex)
+        headers = AWSV4Signer._get_headers(host, epoch_t, body_256sha_hex)
         sorted_headers = sorted([k for k in headers])
         canonical_headers = ""
         for key in sorted_headers:
@@ -69,13 +69,15 @@ class AWSV4Signer(object):
             signed_headers + '\n' + body_256sha_hex
         return canonical_request
 
-    # Class method.
+    # Helper method.
     def _sign(key, msg):
         """Return hmac value based on key and msg."""
         return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
 
-    def _getV4SignatureKey(self, key, dateStamp, regionName, serviceName):
-        """
+    # Helper method.
+    def _getV4SignatureKey(key, dateStamp, regionName, serviceName):
+        """Generate v4 signature.
+
         Generate v4 signature based on key, datestamp, region and
         service name.
         """
@@ -109,17 +111,17 @@ class AWSV4Signer(object):
 
         return string_to_sign
 
-    # Class method.
+    # Helper method.
     def _get_date(epoch_t):
         """Return date in Ymd format."""
         return epoch_t.strftime('%Y%m%d')
 
-    # Class method.
+    # Helper method.
     def _get_amz_timestamp(epoch_t):
         """Return timestamp in YMDTHMSZ format."""
         return epoch_t.strftime('%Y%m%dT%H%M%SZ')
 
-    # Helper class method for generating request_uri for v4 signing.
+    # Helper Helper method for generating request_uri for v4 signing.
     def fmt_s3_request_uri(bucket_name, object_name):
         # The URL quoting functions focus on taking program data and making
         # it safe for use as URL components by quoting special characters
@@ -152,7 +154,7 @@ class AWSV4Signer(object):
         credential_scope = AWSV4Signer._get_date(epoch_t) + '/' + region + \
             '/' + service + '/' + 'aws4_request'
 
-        headers = self._get_headers(host, epoch_t, body)
+        headers = AWSV4Signer._get_headers(host, epoch_t, body)
         sorted_headers = sorted([k for k in headers])
         signed_headers = "{}".format(";".join(sorted_headers))
 
@@ -169,7 +171,7 @@ class AWSV4Signer(object):
             service,
             region)
 
-        signing_key = self._getV4SignatureKey(
+        signing_key = AWSV4Signer._getV4SignatureKey(
             self._secret_key, AWSV4Signer._get_date(epoch_t), region, service)
 
         signature = hmac.new(

@@ -30,10 +30,9 @@ class Jobs:
 
     def __init__(self, logger, label, timeout=None):
         """
-        Initialises collection with given label used for logging.
-        Entries in Collection will be retained for given timeout.
-        When timeout is not specified, entries will remain until
-        explicitly removed.
+        Initialises collection with given label used for logging. Entries in
+        Collection will be retained for given timeout. When timeout is
+        not specified, entries will remain until explicitly removed.
         Args:
             logger (logger): For debug logging.
             label (str): Identifies the collection in logs.
@@ -71,9 +70,7 @@ class Jobs:
         return len(self._jobs)
 
     def add_jobs(self, jobs_dict):
-        """
-        Populate _jobs dict with multiple job entries
-        """
+        """Populate _jobs dict with multiple job entries."""
         self._jobs.update(jobs_dict)
 
     def is_job_present(self, replication_id):
