@@ -96,9 +96,7 @@ class Job:
         self._replicator = replicator
 
     def _update_state(self, state):
-        """
-        Updates the state to given state.
-        """
+        """Updates the state to given state."""
         self._state = state
         self._obj['state'] = str(self._state)
 

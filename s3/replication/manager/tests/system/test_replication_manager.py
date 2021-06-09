@@ -43,7 +43,6 @@ empty_record = {}
 @pytest.fixture()
 def fdmi_job():
     """fdmi job fixture to read and load fdmi record."""
-
     global fdmi_job_record
 
     job_file = os.path.join(
@@ -56,7 +55,6 @@ def fdmi_job():
 @pytest.fixture
 def event_loop():
     """Fixture for async operations."""
-
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
@@ -65,7 +63,6 @@ def event_loop():
 @pytest.fixture
 def test_config(fdmi_job):
     """Fixture for host, port configuration."""
-
     global logger
 
     host = '127.0.0.1'
