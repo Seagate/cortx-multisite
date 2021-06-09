@@ -1,0 +1,41 @@
+@startuml
+
+title FDMI events for replication.\n
+
+== Queue replication jobs ==
+
+rnote over FDMI: node-1
+FDMI -> ReplicationManager: fdmi event (ev1:key1) with s3 metadata
+activate ReplicationManager
+ReplicationManager -> MOTR_KVS : GET-KV(ev1:key1)
+MOTR_KVS --> ReplicationManager : not-found
+rnote over ReplicationManager: Persist the new entry
+ReplicationManager -> MOTR_KVS : PUT-KV(ev1:key1, value{copies:0})
+MOTR_KVS --> ReplicationManager : success
+
+return status :  ack fdmi event
+
+
+rnote over FDMI: node-2
+FDMI -> ReplicationManager: fdmi event (ev1) with s3 metadata
+activate ReplicationManager
+ReplicationManager -> MOTR_KVS : GET-KV(ev1:key1)
+MOTR_KVS --> ReplicationManager : found
+rnote over ReplicationManager: deduplicate &\nmark first copy received
+ReplicationManager -> MOTR_KVS : PUT-KV(ev1:key1, updated-value{copies:1})
+MOTR_KVS --> ReplicationManager : success
+return status :  ack fdmi event
+
+rnote over FDMI: node-3
+FDMI -> ReplicationManager: fdmi event (ev1) with s3 metadata
+activate ReplicationManager
+ReplicationManager -> MOTR_KVS : GET-KV(ev1:key1)
+MOTR_KVS --> ReplicationManager : found
+rnote over ReplicationManager: deduplicate &\nmark second copy received
+ReplicationManager -> MOTR_KVS : PUT-KV(ev1:key1, updated-value{copies:2})
+MOTR_KVS --> ReplicationManager : success
+return status :  ack fdmi event
+
+rnote over ReplicationManager: No more events expected for ev1
+
+@enduml

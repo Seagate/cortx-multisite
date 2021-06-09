@@ -1,0 +1,37 @@
+@startuml
+
+title Replication workflow - Detailed\n
+
+== Queue replication jobs ==
+
+FDMI -> ReplicationManager: fdmi event with s3 metadata (ev1:key1)
+activate ReplicationManager
+rnote over ReplicationManager: Prepare replication job (key1)
+ReplicationManager -> ReplicationManager : Queue job in memory (key1)
+ReplicationManager -> MOTRKVS : Put-KV (key1, job) (Persist job)
+MOTRKVS --> ReplicationManager : success
+return status :  ack fdmi event
+
+ReplicationManager -> Replicator : POST /jobs {job-details:rm_job_id=A}
+Replicator --> ReplicationManager : 201 CREATED (job_id=X)
+
+group Replication (job_id=X)
+activate Replicator
+  rnote over Replicator: For each chunk in a object
+
+  S3SourceSite -> Replicator: read object chunk
+  Replicator -> S3TargetSite: write object chunk
+  rnote over Replicator: Replication complete
+end
+
+Replicator -> ReplicationManager: ACK = PUT /jobs/A rm_job_id=A, body={status = done}
+
+ReplicationManager -> MOTRKVS : Put-KV (key1, job) (Update job with status = done)
+MOTRKVS --> ReplicationManager : success
+
+ReplicationManager --> Replicator : ACK success
+deactivate Replicator
+
+== Job processing continues... ==
+
+@enduml
