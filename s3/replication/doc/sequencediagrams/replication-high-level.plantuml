@@ -1,0 +1,40 @@
+@startuml
+
+title Replication workflow - Overview\n
+
+== Queue replication jobs ==
+
+FDMI -> ReplicationManager: fdmi event with s3 metadata
+activate ReplicationManager
+ReplicationManager -> ReplicationManager : Create replication job &\nPersist to Motr KVS (QUEUED).
+return status :  ack fdmi event
+
+== Subscribe for replication jobs ==
+rnote over Replicator: prefetch_count=<n>,\nability to process 'n' jobs in parallel.
+
+ReplicationManager <-- Replicator: POST /subscriber?prefetch_count=<n>
+return status :  201 CREATED
+
+== Distribute replication jobs to Replicators ==
+
+rnote over ReplicationManager: from list of QUEUED jobs
+ReplicationManager -> Replicator: POST /jobs body={n jobs}
+return status : 201 CREATED
+
+rnote over ReplicationManager: posted_job_cnt=<n>
+
+== Perform replication ==
+
+rnote over Replicator: Process "n" replication jobs
+
+== Ack replication completion ==
+rnote over Replicator: For each posted job
+Replicator -> ReplicationManager: ACK = PUT /jobs/<job id> body={status = done}
+
+rnote over ReplicationManager: Mark ACK'ed job complete.
+
+return status : 200 OK
+
+== POST & Ack jobs continues... ==
+
+@enduml
