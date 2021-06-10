@@ -1,0 +1,5 @@
+{
+  "id": "some-uuid-generated-by-replication-manager-on-subscribe",
+  "endpoint": "_endpoint_http_url_",
+  "prefetch_count": "5"
+}

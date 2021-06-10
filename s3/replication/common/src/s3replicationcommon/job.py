@@ -68,7 +68,7 @@ class Job:
 
     Provides methods to serialise/deserialise as json. Maintains S3
     replication source and target details, operation type etc. For Job json
-    format see sample in ../formats/replication_job_template.json.
+    format see sample in templates/replication_job_template.json.
     """
 
     def __init__(self, obj):

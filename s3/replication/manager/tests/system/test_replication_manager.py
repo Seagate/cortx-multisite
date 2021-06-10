@@ -29,27 +29,12 @@ import asyncio
 import os
 import sys
 import yaml
-from s3replicationcommon.log import setup_logger
 import pytest
 import json
+import uuid
 
-logger = None
-
-# Load the test job record.
-fdmi_job_record = {}
-empty_record = {}
-
-
-@pytest.fixture()
-def fdmi_job():
-    """fdmi job fixture to read and load fdmi record."""
-    global fdmi_job_record
-
-    job_file = os.path.join(
-        os.path.dirname(__file__), 'data', 'fdmi_test_job.json')
-    with open(job_file, 'r') as file_config:
-        fdmi_job_record = json.load(file_config)
-    return fdmi_job_record
+from s3replicationcommon.log import setup_logger
+from s3replicationcommon.templates import subscribe_payload_template
 
 
 @pytest.fixture
@@ -61,25 +46,30 @@ def event_loop():
 
 
 @pytest.fixture
-def test_config(fdmi_job):
-    """Fixture for host, port configuration."""
-    global logger
-
-    host = '127.0.0.1'
-    port = '8080'
-
+def logger():
+    """Setup logger for tests."""
     # Setup logging and get logger
     log_config_file = os.path.join(
         os.path.dirname(__file__), 'config', 'logger_config.yaml')
     logger = setup_logger('client_tests', log_config_file)
     if logger is None:
         sys.exit(-1)
+    return logger
 
-    # Connection config
-    config = os.path.join(
+
+@pytest.fixture
+def test_config(logger):
+    """Fixture for Replication manager host, port configuration."""
+    host = '127.0.0.1'
+    port = '8080'
+
+    # Replication manager Connection config
+    config_path = os.path.join(
         os.path.dirname(__file__), '..', '..', 'src', 'config', 'config.yaml')
+    logger.debug("Using Replication manager config from {}".
+                 format(config_path))
 
-    with open(config, 'r') as file_config:
+    with open(config_path, 'r') as file_config:
         config = yaml.safe_load(file_config)
         host = config['manager'].get('host')
         port = str(config['manager'].get('port'))
@@ -90,26 +80,86 @@ def test_config(fdmi_job):
     return {'url': url}
 
 
+@pytest.fixture()
+def fdmi_job(logger):
+    """fdmi job fixture to load fdmi record."""
+    fdmi_job_record = None
+
+    job_file = os.path.join(
+        os.path.dirname(__file__), 'data', 'fdmi_test_job.json')
+    logger.debug("Using fdmi record from {}".format(job_file))
+
+    with open(job_file, 'r') as file_config:
+        fdmi_job_record = json.load(file_config)
+
+    return fdmi_job_record
+
+
+@pytest.fixture()
+def subscriber_record(logger):
+    """Prepare subscriber payload for tests."""
+    subscriber_payload = subscribe_payload_template()
+
+    subscriber_payload["id"] = str(uuid.uuid4())
+    subscriber_payload["endpoint"] = "http://localhost:8081/"
+    subscriber_payload["prefetch_count"] = "5"
+
+    return subscriber_payload
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "test_input_param, expected", [('valid_job', 201), ('empty_job', 500)])
-async def test_post_job(test_config, test_input_param, expected):
-    """Pytest for post job test."""
-    input_test = {'valid_job': fdmi_job_record, 'empty_job': {}}
+    "test_case_name, expected_http_status",
+    [('valid_job', 201),
+     ('empty_job', 500)])
+async def test_post_job(logger, test_config, fdmi_job,
+                        test_case_name, expected_http_status):
+    """Post job tests."""
+    test_data = {'valid_job': fdmi_job, 'empty_job': {}}
 
-    test_input_job = input_test[test_input_param]
+    test_payload = test_data[test_case_name]
 
     async with aiohttp.ClientSession() as session:
-
         # Add job and attributes
-        async with session.post(
-                test_config['url'] + '/jobs',
-                json=test_input_job) as response:
+        async with session.post(test_config['url'] + '/jobs',
+                                json=test_payload) as response:
+
+            response_body = await response.json()
+            logger.debug('HTTP Response: Status: {}, Body: {}'.format(
+                response.status, response_body))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
             logger.info(
-                'POST job returned http Status: {}'.format(response.status))
-            html = await response.json()
-            logger.info('Body: {}'.format(html))
-            assert expected == response.status, \
-                "ERROR : Bad response status : " + \
-                str(response.status) + "Expected status :" + str(expected)
-            logger.info('POST job successful.')
+                'POST successful: http status: {}'.format(response.status))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_case_name, expected_http_status",
+    [('valid_payload', 201),
+     ('empty_payload', 500)])
+async def test_post_subscriber(logger, test_config, subscriber_record,
+                               test_case_name, expected_http_status):
+    """Post job tests."""
+    test_data = {'valid_payload': subscriber_record, 'empty_payload': {}}
+
+    test_payload = test_data[test_case_name]
+
+    async with aiohttp.ClientSession() as session:
+        # Add subscriber
+        async with session.post(test_config['url'] + '/subscribers',
+                                json=test_payload) as response:
+
+            response_body = await response.json()
+            logger.debug('HTTP Response: Status: {}, Body: {}'.format(
+                response.status, response_body))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            logger.info(
+                'POST successful: http status: {}'.format(response.status))

@@ -24,6 +24,7 @@ import json
 
 
 class Jobs:
+    @staticmethod
     def dumps(obj):
         """Helper to format json."""
         return json.dumps(obj._jobs, cls=JobJsonEncoder)

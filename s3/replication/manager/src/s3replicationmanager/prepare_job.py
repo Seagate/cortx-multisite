@@ -22,24 +22,17 @@
 # This file contains class which helps to create
 # replication job preparation from s3 metadata
 
-
+import datetime
 import os
 import yaml
-import datetime
-import json
-import uuid
+
+from s3replicationcommon.templates import replication_job_template
 
 
 class PrepareReplicationJob:
 
-    def __init__(self):
-        """Replication manager's job id."""
-
-        # Job id for replication manager's reference
-        self.rm_job_id = str(uuid.uuid4())
-
-    @classmethod
-    def from_fdmi(cls, fdmi_record):
+    @staticmethod
+    def from_fdmi(fdmi_record):
         """Prepare replication job record from fdmi record."""
 
         # Read the config file.
@@ -56,16 +49,15 @@ class PrepareReplicationJob:
         with open(creds_file_path, 'r') as cred_config:
             credentials_config = yaml.safe_load(cred_config)
 
-        template_file = os.path.join(os.path.dirname(__file__), '..',
-                                     'config/replication_job_template.json')
-        with open(template_file, 'r') as file_content:
-            job_dict = json.load(file_content)
+        job_dict = replication_job_template()
 
         # Update the fields in template.
         epoch_t = datetime.datetime.utcnow()
 
-        job_dict["replication-id"] = config["source_bucket_name"] + \
-            fdmi_record["Object-Name"] + str(epoch_t)
+        job_dict["replication-id"] = fdmi_record["Bucket-Name"] + \
+            fdmi_record["Object-Name"] + \
+            fdmi_record["System-Defined"]["x-amz-version-id"]
+
         job_dict["replication-event-create-time"] = epoch_t.strftime(
             '%Y%m%dT%H%M%SZ')
 
@@ -77,7 +69,7 @@ class PrepareReplicationJob:
         job_dict["source"]["secret_key"] = credentials_config["secret_key"]
 
         job_dict["source"]["operation"]["attributes"]["Bucket-Name"] = \
-            config["source_bucket_name"]
+            fdmi_record["Bucket-Name"]
         job_dict["source"]["operation"]["attributes"]["Object-Name"] = \
             fdmi_record["Object-Name"]
         job_dict["source"]["operation"]["attributes"]["Content-Length"] = \
