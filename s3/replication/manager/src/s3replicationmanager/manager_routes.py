@@ -42,6 +42,8 @@ async def add_subscriber(request):
 
     # Check if subscriber is already present
     subscriber_obj = subscribers_list.add_subscriber(subscriber)
+    _logger.debug('Subscriber added  : {}'.format(
+        subscriber_obj.get_dictionary()))
     return web.json_response({'subscriber': subscriber_obj.get_dictionary()},
                              status=201)
 
@@ -64,7 +66,9 @@ async def remove_subscriber(request):
     subscriber_id = (request.match_info['subscriber_id'])
     # Check if subscriber is already present
     if subscribers.is_subscriber_present(subscriber_id):
-        subscribers.remove_subscriber(subscriber_id)
+        subscriber = subscribers.remove_subscriber(subscriber_id)
+        _logger.debug('Subscriber added  : {}'.format(
+            subscriber.get_dictionary()))
         return web.json_response({'subscriber_id': subscriber_id}, status=204)
     else:
         return web.json_response(

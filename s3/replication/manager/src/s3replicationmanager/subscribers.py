@@ -25,8 +25,8 @@ class Subscriber:
     def __init__(self, sub_obj):
         """Initialise Subscriber object."""
         self.id = str(uuid.uuid4())
-        self.endpoint = sub_obj.endpoint
-        self.prefetch_count = sub_obj.prefetch_count
+        self.endpoint = sub_obj["endpoint"]
+        self.prefetch_count = sub_obj["prefetch_count"]
         self._jobs_sent_count = 0
 
     def get_dictionary(self):

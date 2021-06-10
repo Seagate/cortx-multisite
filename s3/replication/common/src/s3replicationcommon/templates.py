@@ -23,8 +23,10 @@ import os
 
 def replication_job_template():
     """Returns Replication job template loaded from json file."""
-    template_path = os.path.join(os.path.dirname(__file__),
-                                 'templates', 'replication_job_template.json')
+    template_path = os.path.join(
+        os.path.dirname(__file__),
+        '..', 'templates',
+        'replication_job_template.json')
 
     with open(template_path, 'r') as template_file:
         template = json.load(template_file)
@@ -36,7 +38,7 @@ def subscribe_payload_template():
     """Returns subscribe payload template loaded from json file."""
     template_path = os.path.join(
         os.path.dirname(__file__),
-        'templates',
+        '..', 'templates',
         'subscribe_payload_template.json')
 
     with open(template_path, 'r') as template_file:

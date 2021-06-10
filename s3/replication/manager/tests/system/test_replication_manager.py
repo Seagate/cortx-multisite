@@ -100,7 +100,7 @@ def subscriber_record(logger):
     """Prepare subscriber payload for tests."""
     subscriber_payload = subscribe_payload_template()
 
-    subscriber_payload["id"] = str(uuid.uuid4())
+    subscriber_payload.pop("id")  # replication manager will generate.
     subscriber_payload["endpoint"] = "http://localhost:8081/"
     subscriber_payload["prefetch_count"] = "5"
 
@@ -153,9 +153,10 @@ async def test_post_subscriber(logger, test_config, subscriber_record,
         async with session.post(test_config['url'] + '/subscribers',
                                 json=test_payload) as response:
 
-            response_body = await response.json()
-            logger.debug('HTTP Response: Status: {}, Body: {}'.format(
-                response.status, response_body))
+            if test_case_name == 'valid_payload':
+                response_body = await response.json()
+                logger.debug('HTTP Response: Status: {}, Body: {}'.format(
+                    response.status, response_body))
 
             assert expected_http_status == response.status, \
                 "ERROR : Received http status : " + str(response.status) + \
