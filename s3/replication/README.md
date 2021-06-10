@@ -29,6 +29,9 @@ Run basic tests for each module. Clean, Build and test.
 make test
 ```
 
+## Design documents
+For more understanding on repication process checkout this [sequence diagrams](doc/README.md).
+
 ## Troubleshooting
 When running `make test` on MacOS, timeout in Makefile may fail and you need following.
 
