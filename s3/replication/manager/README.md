@@ -48,12 +48,12 @@ Start the replicator.
 python3 -m s3replicationmanager
 ```
 
-Run system tests after starting the replicator.
+Run system tests after starting the Replication manager.
 ```sh
-python3 manager/tests/system/manager_client.py
+py.test tests/system
 ```
-
-Run system tests after starting the replicator.
+To run individual tests.
 ```sh
-py.test manager/tests/system/test_replication_manager.py
+py.test tests/system/test_subscribers_resource.py
+py.test tests/system/test_jobs_resource.py
 ```

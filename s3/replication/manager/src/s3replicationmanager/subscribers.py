@@ -110,6 +110,11 @@ class Subscribers:
         self._subscribers[subscriber.id] = subscriber
         return subscriber
 
+    def get_subscriber(self, subscriber_id):
+        """Gets subscriber with given id."""
+        subscriber = self._subscribers.get(subscriber_id, None)
+        return subscriber
+
     def is_subscriber_present(self, subscriber_id):
         """Check if subscriber_id exist in the list."""
         if subscriber_id in self._subscribers.keys():

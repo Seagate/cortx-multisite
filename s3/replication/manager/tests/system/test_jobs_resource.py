@@ -46,11 +46,11 @@ async def test_post_job(logger, test_config,
         async with session.post(test_config['url'] + '/jobs',
                                 json=test_payload) as response:
 
-            response_body = await response.json()
-            logger.debug('HTTP Response: Status: {}, Body: {}'.format(
-                response.status, response_body))
-
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
             if test_case_name == "valid_job":
+                response_body = await response.json()
+                logger.debug('HTTP Response: Body: {}'.format(response_body))
+
                 global global_valid_job_id
                 global_valid_job_id = response_body["job_id"]
 

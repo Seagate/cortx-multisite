@@ -24,6 +24,9 @@ import pytest
 
 from fixtures.subscribe import subscriber_record  # noqa: F401;
 
+# Global subscriber id to perform validations across test cases.
+global_valid_subscriber_id = ""
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -33,7 +36,7 @@ from fixtures.subscribe import subscriber_record  # noqa: F401;
 async def test_post_subscriber(logger, test_config,
                                subscriber_record,  # noqa: F811;
                                test_case_name, expected_http_status):
-    """Post job tests."""
+    """Post subscriber tests."""
     test_data = {'valid_payload': subscriber_record, 'empty_payload': {}}
 
     test_payload = test_data[test_case_name]
@@ -42,11 +45,12 @@ async def test_post_subscriber(logger, test_config,
         # Add subscriber
         async with session.post(test_config['url'] + '/subscribers',
                                 json=test_payload) as response:
-
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
             if test_case_name == 'valid_payload':
                 response_body = await response.json()
-                logger.debug('HTTP Response: Status: {}, Body: {}'.format(
-                    response.status, response_body))
+                logger.debug('HTTP Response: Body: {}'.format(response_body))
+                global global_valid_subscriber_id
+                global_valid_subscriber_id = response_body["id"]
 
             assert expected_http_status == response.status, \
                 "ERROR : Received http status : " + str(response.status) + \
@@ -54,3 +58,71 @@ async def test_post_subscriber(logger, test_config,
 
             logger.info(
                 'POST successful: http status: {}'.format(response.status))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_case_name, expected_http_status",
+    [('valid_subscriber', 200),
+     ('missing_subscriber', 404)])
+async def test_get_subscriber(logger, test_config,
+                              subscriber_record,  # noqa: F811;
+                              test_case_name, expected_http_status):
+    """GET specific subscriber tests."""
+    if test_case_name == "valid_subscriber":
+        global global_valid_subscriber_id
+        subscriber_id = global_valid_subscriber_id
+    elif test_case_name == "missing_subscriber":
+        subscriber_id = "invalid-subscriber-id"
+    else:
+        assert False, "Invalid test case."
+
+    async with aiohttp.ClientSession() as session:
+        # Add subscriber and attributes
+        async with session.get(test_config['url'] + '/subscribers/' +
+                               subscriber_id) as response:
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            if test_case_name == 'valid_subscriber':
+                response_body = await response.json()
+                logger.debug('HTTP Response Body: {}'.format(response_body))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            logger.info(
+                'GET subscriber successful: http status: {}'.format(
+                    response.status))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "test_case_name, expected_http_status",
+    [('valid_subscriber', 204),
+     ('missing_subscriber', 404)])
+async def test_delete_subscriber(logger, test_config,
+                                 subscriber_record,  # noqa: F811;
+                                 test_case_name, expected_http_status):
+    """DELETE specific subscriber tests."""
+    if test_case_name == "valid_subscriber":
+        global global_valid_subscriber_id
+        subscriber_id = global_valid_subscriber_id
+    elif test_case_name == "missing_subscriber":
+        subscriber_id = "invalid-subscriber-id"
+    else:
+        assert False, "Invalid test case."
+
+    async with aiohttp.ClientSession() as session:
+        # Add subscriber and attributes
+        async with session.delete(test_config['url'] + '/subscribers/' +
+                                  subscriber_id) as response:
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            logger.info(
+                'DELETE subscriber successful: http status: {}'.format(
+                    response.status))
