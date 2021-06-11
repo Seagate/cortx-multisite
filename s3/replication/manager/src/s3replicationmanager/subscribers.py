@@ -96,8 +96,7 @@ class Subscribers:
         self._subscribers = {}
 
     def count(self):
-        """
-        Returns total subscribers in collection.
+        """Returns total subscribers in collection.
 
         Returns:
             int: Count of subscribers in collection.

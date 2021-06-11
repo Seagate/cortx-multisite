@@ -26,7 +26,7 @@ import pytest
 
 @pytest.fixture()
 def fdmi_job(logger):
-    """fdmi job fixture to load fdmi record."""
+    """Fdmi job fixture to load fdmi record."""
     fdmi_job_record = None
 
     job_file = os.path.join(
