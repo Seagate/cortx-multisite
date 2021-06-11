@@ -24,6 +24,7 @@ import json
 
 
 class Jobs:
+    @staticmethod
     def dumps(obj):
         """Helper to format json."""
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
@@ -186,7 +187,7 @@ class Jobs:
         Args:
             job_id (str): Job ID generated locally
         """
-        replication_id = self._job_id_to_replication_id_map.pop(job_id)
+        replication_id = self._job_id_to_replication_id_map.pop(job_id, None)
         if replication_id is None:
             return None
         self._logger.debug("Jobs[{}]: Removing job with job_id {}.".

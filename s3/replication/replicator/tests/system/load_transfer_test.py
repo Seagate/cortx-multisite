@@ -28,7 +28,6 @@ import aiohttp
 import asyncio
 import datetime
 import hashlib
-import json
 import os
 import sys
 import time
@@ -38,6 +37,7 @@ from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_common import S3RequestState
+from s3replicationcommon.templates import replication_job_template
 from s3replicator.config import Config as ReplicatorConfig
 from s3_config import S3Config
 
@@ -119,12 +119,7 @@ def init_logger():
 
 
 def create_replication_job(s3_config, object_info):
-    template_file = os.path.join(
-        os.path.dirname(__file__),
-        'data',
-        'replication_job_template.json')
-    with open(template_file, 'r') as file_content:
-        job_dict = json.load(file_content)
+    job_dict = replication_job_template()
     # Update the fields in template.
     epoch_t = datetime.datetime.utcnow()
     job_dict["replication-id"] = s3_config.source_bucket_name + \
