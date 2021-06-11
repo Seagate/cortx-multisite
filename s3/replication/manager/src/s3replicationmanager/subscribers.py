@@ -121,7 +121,7 @@ class Subscribers:
         """Remove subscriber from the list."""
         subscriber = None
         if subscriber_id in self._subscribers:
-            subscriber = self._subscribers.pop(subscriber_id)
+            subscriber = self._subscribers.pop(subscriber_id, None)
         else:
             # Subscriber with subscriber_id not found.
             subscriber = None

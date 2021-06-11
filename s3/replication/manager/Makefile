@@ -9,8 +9,8 @@ AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
 
 check: flake8
 
-flake8: src/**/*.py tests/**/*.py
-	python3 -m flake8 $(FLAKE8_OPTS) $^
+flake8:
+	python3 -m flake8 $(FLAKE8_OPTS) src tests
 
 autopep8:
 	python3 -m autopep8 $(AUTOPEP8_OPTS) src tests

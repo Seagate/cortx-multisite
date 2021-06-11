@@ -36,7 +36,7 @@ async def add_subscriber(request):
     """Handler to add subscriber."""
     # Get subscriber details from payload
     subscriber = await request.json()
-    _logger.debug('Subscriber payload  : {}'.format(subscriber))
+    _logger.debug('API: POST /subscribers\nContent : {}'.format(subscriber))
 
     subscribers_list = request.app['subscribers']
 
@@ -51,6 +51,7 @@ async def add_subscriber(request):
 @routes.get('/subscribers')  # noqa: E302
 async def list_subscribers(request):
     """Handler to list subscribers."""
+    _logger.debug('API: GET /subscribers')
     subscribers = request.app['subscribers']
 
     _logger.debug('Number of subscribers {}'.format(subscribers.count()))
@@ -64,10 +65,12 @@ async def remove_subscriber(request):
     subscribers = request.app['subscribers']
 
     subscriber_id = (request.match_info['subscriber_id'])
+    _logger.debug('API: DELETE /subscribers/{}'.format(subscriber_id))
+
     # Check if subscriber is already present
     if subscribers.is_subscriber_present(subscriber_id):
         subscriber = subscribers.remove_subscriber(subscriber_id)
-        _logger.debug('Subscriber added  : {}'.format(
+        _logger.debug('Subscriber removed  : {}'.format(
             subscriber.get_dictionary()))
         return web.json_response({'subscriber_id': subscriber_id}, status=204)
     else:
@@ -79,6 +82,7 @@ async def remove_subscriber(request):
 async def add_job(request):
     """Handler to add job to job queue."""
     fdmi_job = await request.json()
+    _logger.debug('API: POST /jobs\nContent : {}'.format(fdmi_job))
 
     if fdmi_job == {}:
         return web.json_response('Empty json', status=500)
@@ -86,23 +90,22 @@ async def add_job(request):
     job_record = PrepareReplicationJob.from_fdmi(fdmi_job)
 
     job = request.app['all_jobs'].add_job_using_json(job_record)
-    _logger.debug('Added Job with job_id : {} '.format(job))
-    _logger.debug(
-        'Added Job : {} '.format(
-            json.dumps(
-                job,
-                cls=JobJsonEncoder)))
-    return web.json_response({'job': job.get_dict()}, status=201)
+    _logger.debug('Successfully added Job with job_id : {} '.
+                  format(job.get_job_id()))
+    return web.json_response(job.get_dict(), status=201)
 
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
     """Handler to get job attributes."""
     job_id = request.match_info['job_id']
-    job = request.app['all_jobs'].get_job(job_id)
+    _logger.debug('API: GET /jobs/{}'.format(job_id))
+
+    job = request.app['all_jobs'].get_job_by_job_id(job_id)
 
     if job is not None:
         _logger.debug('Job found with job_id : {} '.format(job_id))
+        _logger.debug('Job details : {} '.format(job.get_dict()))
         return web.json_response({"job": job.get_dict()}, status=200)
     else:
         _logger.debug('Job missing with job_id : {} '.format(job_id))
@@ -115,8 +118,9 @@ async def update_job_attr(request):
     """Handler to Update job attributes."""
     job_record = await request.json()
 
-    # Get key
     job_id = request.match_info['job_id']
+    _logger.debug('API: PUT /jobs/{}'.format(job_id))
+
     job = request.app['all_jobs'].get_job(job_id)
 
     if job is None:
@@ -138,6 +142,8 @@ async def list_jobs(request):
     url = request.path_qs
     url_ob = urlparse(url)
     query = parse_qs(url_ob.query)
+
+    _logger.debug('API: GET /jobs\n Query: {}'.format(query))
 
     progressing_jobs_obj = request.app['jobs_in_progress']
     all_jobs_obj = request.app['all_jobs']
@@ -184,3 +190,21 @@ async def list_jobs(request):
     else:
         return web.json_response(
             {'Response': json.dumps(list(all_jobs_obj.get_keys()))})
+
+
+@routes.delete('/jobs/{job_id}')  # noqa: E302
+async def remove_job(request):
+    """Handler to get job attributes."""
+    job_id = request.match_info['job_id']
+    _logger.debug('API: DELETE /jobs/{}'.format(job_id))
+
+    jobs_list = request.app['all_jobs']
+    job = jobs_list.remove_job_by_job_id(job_id)
+
+    if job is not None:
+        _logger.debug('Deleted job with job_id : {} '.format(job_id))
+        return web.json_response({"job": job.get_dict()}, status=204)
+    else:
+        _logger.debug('Job missing with job_id : {} '.format(job_id))
+        return web.json_response(
+            {'ErrorResponse': 'Job Not Found!'}, status=404)
