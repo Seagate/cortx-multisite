@@ -56,7 +56,6 @@ async def list_subscribers(request):
     subscribers = request.app['subscribers']
 
     _logger.debug('Number of subscribers {}'.format(subscribers.count()))
-    # _logger.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
     return web.json_response(subscribers, dumps=Subscribers.dumps, status=200)
 
 
@@ -168,10 +167,6 @@ async def list_jobs(request):
 
     progressing_jobs_obj = request.app['jobs_in_progress']
     all_jobs_obj = request.app['all_jobs']
-
-    # _logger.debug(
-    #        'progressing jobs : {}'.format(list(progressing_jobs_obj.keys())))
-    # _logger.debug('all jobs : {}'.format(list(all_jobs_obj.keys())))
 
     # Return in progress jobs
     if 'inprogress' in query:
