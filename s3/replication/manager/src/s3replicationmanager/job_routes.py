@@ -22,6 +22,7 @@ import logging
 import json
 from urllib.parse import urlparse, parse_qs
 from s3replicationcommon.job import JobJsonEncoder
+from s3replicationcommon.jobs import Jobs
 from .prepare_job import PrepareReplicationJob
 
 _logger = logging.getLogger('s3replicationmanager')
@@ -86,55 +87,38 @@ async def update_job_attr(request):
 
 
 @routes.get('/jobs')  # noqa: E302
-async def list_jobs(request):
+async def get_jobs(request):
     """List active jobs."""
     url = request.path_qs
     url_ob = urlparse(url)
-    query = parse_qs(url_ob.query)
+    query = parse_qs(url_ob.query, keep_blank_values=True)
 
     _logger.debug('API: GET /jobs\n Query: {}'.format(query))
 
     inprogress_jobs_list = request.app['jobs_in_progress']
     all_jobs_list = request.app['all_jobs']
 
-    # Return in progress jobs
     if 'inprogress' in query:
-        _logger.debug('InProgress query param: {}'.format(query['inprogress']))
+        # Return in progress jobs
+        _logger.debug('Returning Jobs In-Progress, count = {}'.format(
+            inprogress_jobs_list.count()))
         return web.json_response(
-            {'jobs-inprogress': json.dumps(
-                list(inprogress_jobs_list.get_keys()))})
+            inprogress_jobs_list, dumps=Jobs.dumps, status=200)
 
-    # Return total job counts
     elif 'count' in query:
+        # Return total job counts
+        _logger.debug('Returning all jobs count = {}'.format(
+            inprogress_jobs_list.count()))
         return web.json_response(
-            {'count': inprogress_jobs_list.count() + all_jobs_list.count()})
+            {'count': inprogress_jobs_list.count() + all_jobs_list.count()},
+            status=200)
 
-    # Return requested jobs
-    elif 'prefetch' in query:
-        prefetch_count = int(query['prefetch'][0])
-        sub_id = query['subscriber_id'][0]
-        _logger.debug('sub_id is : {}'.format(sub_id))
-
-        # Validate subscriber and server request
-        if request.app['subscribers'].is_subscriber_present(sub_id):
-
-            # Remove prefetch_count jobs from all_jobs and add to inprogress
-            add_inprogress = all_jobs_list.remove_jobs(prefetch_count)
-            inprogress_jobs_list.add_jobs(add_inprogress)
-
-            _logger.debug('jobs in progress : {}'.format(
-                list(inprogress_jobs_list.get_keys())))
-            return web.json_response({
-                json.dumps(list(inprogress_jobs_list.get_keys()))
-            })
-
-        # Subscriber is not in the list
-        else:
-            return web.json_response({'ErrorResponse': 'Invalid subscriber'})
     else:
-        return web.json_response({
-            json.dumps(list(all_jobs_list.get_keys()))
-        })
+        # return jobs that are not yet distributed.
+        _logger.debug('Returning Jobs Queued, count = {}'.format(
+            all_jobs_list.count()))
+        return web.json_response(
+            all_jobs_list, dumps=Jobs.dumps, status=200)
 
 
 @routes.delete('/jobs/{job_id}')  # noqa: E302

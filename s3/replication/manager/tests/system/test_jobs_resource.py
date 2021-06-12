@@ -80,7 +80,7 @@ async def test_get_job(logger, test_config,
         assert False, "Invalid test case."
 
     async with aiohttp.ClientSession() as session:
-        # Add job and attributes
+        # Get Job details.
         async with session.get(
                 test_config['url'] + '/jobs/' + job_id) as response:
 
@@ -93,6 +93,45 @@ async def test_get_job(logger, test_config,
             assert expected_http_status == response.status, \
                 "ERROR : Received http status : " + str(response.status) + \
                 "Expected http status :" + str(expected_http_status)
+
+            logger.info(
+                'GET job successful: http status: {}'.format(response.status))
+
+
+@pytest.mark.asyncio
+async def test_get_jobs(logger, test_config):
+    """GET jobs list, expected entries added in post."""
+    expected_http_status = 200
+    expected_count = 1
+
+    global global_valid_job_id
+    # job_id = global_valid_job_id
+
+    async with aiohttp.ClientSession() as session:
+        # Get jobs list.
+        async with session.get(
+                test_config['url'] + '/jobs') as response:
+
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            jobs_list = await response.json()
+            logger.debug('HTTP Response Body: {}'.format(jobs_list))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            assert len(jobs_list) == expected_count, \
+                "ERROR : Invalid expected jobs count." + \
+                "Received {} jobs.\nExpected {} jobs".format(
+                    len(jobs_list), expected_count)
+
+            # Access the first job.
+            job = next(iter(jobs_list.items()))[1]
+            assert global_valid_job_id == job["job_id"], \
+                "ERROR : Expected job is missing. job_id = {}".format(
+                    global_valid_job_id
+                )
 
             logger.info(
                 'GET job successful: http status: {}'.format(response.status))
@@ -116,7 +155,7 @@ async def test_delete_job(logger, test_config,
         assert False, "Invalid test case."
 
     async with aiohttp.ClientSession() as session:
-        # Add job and attributes
+        # Delete Job.
         async with session.delete(
                 test_config['url'] + '/jobs/' + job_id) as response:
 
@@ -129,3 +168,32 @@ async def test_delete_job(logger, test_config,
             logger.info(
                 'DELETE job successful: http status: {}'.format(
                     response.status))
+
+
+@pytest.mark.asyncio
+async def test_get_jobs_count(logger, test_config):
+    """GET jobs count to valid deleted entry."""
+    expected_http_status = 200
+    expected_count = 0
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+                test_config['url'] + '/jobs', params="count") as response:
+
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            response_body = await response.json()
+            logger.debug('HTTP Response Body: {}'.format(response_body))
+            received_count = int(response_body["count"])
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            assert received_count == expected_count, \
+                "ERROR : Expected count mismatch." + \
+                "Received count : {}\nExpected count : {}".format(
+                    received_count, expected_count)
+
+            logger.info(
+                'GET job successful: http status: {}'.format(response.status))
