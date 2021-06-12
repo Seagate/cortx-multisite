@@ -97,6 +97,47 @@ async def test_get_subscriber(logger, test_config,
 
 
 @pytest.mark.asyncio
+async def test_get_subscribers(logger, test_config):
+    """GET subscribers list, expected entries added in post."""
+    expected_http_status = 200
+    expected_count = 1
+
+    global global_valid_subscriber_id
+    subscriber_id = global_valid_subscriber_id
+
+    async with aiohttp.ClientSession() as session:
+        # Get subscribers list.
+        async with session.get(
+                test_config['url'] + '/subscribers') as response:
+
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            subscribers_list = await response.json()
+            logger.debug('HTTP Response Body: {}'.format(subscribers_list))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            assert len(subscribers_list) == expected_count, \
+                "ERROR : Invalid expected subscribers count." + \
+                "Received {} subscribers.\nExpected {} subscribers".format(
+                    len(subscribers_list), expected_count)
+
+            # Access the first subscriber.
+            subscriber = next(iter(subscribers_list.items()))[1]
+            assert subscriber_id == subscriber["id"], \
+                "ERROR : Expected subscriber is missing." + \
+                "subscriber_id = {}".format(
+                    subscriber_id
+            )
+
+            logger.info(
+                'GET subscribers successful: http status: {}'.format(
+                    response.status))
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_case_name, expected_http_status",
     [('valid_subscriber', 204),
@@ -125,4 +166,34 @@ async def test_delete_subscriber(logger, test_config,
 
             logger.info(
                 'DELETE subscriber successful: http status: {}'.format(
+                    response.status))
+
+
+@pytest.mark.asyncio
+async def test_get_subscribers_empty(logger, test_config):
+    """GET subscribers list, expected empty after delete."""
+    expected_http_status = 200
+    expected_count = 0
+
+    async with aiohttp.ClientSession() as session:
+        # Get subscribers list.
+        async with session.get(
+                test_config['url'] + '/subscribers') as response:
+
+            logger.debug('HTTP Response: Status: {}'.format(response.status))
+
+            subscribers_list = await response.json()
+            logger.debug('HTTP Response Body: {}'.format(subscribers_list))
+
+            assert expected_http_status == response.status, \
+                "ERROR : Received http status : " + str(response.status) + \
+                "Expected http status :" + str(expected_http_status)
+
+            assert len(subscribers_list) == expected_count, \
+                "ERROR : Invalid expected subscribers count." + \
+                "Received {} subscribers.\nExpected {} subscribers".format(
+                    len(subscribers_list), expected_count)
+
+            logger.info(
+                'GET subscribers successful: http status: {}'.format(
                     response.status))

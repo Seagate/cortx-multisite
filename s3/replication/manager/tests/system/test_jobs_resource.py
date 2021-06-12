@@ -105,7 +105,7 @@ async def test_get_jobs(logger, test_config):
     expected_count = 1
 
     global global_valid_job_id
-    # job_id = global_valid_job_id
+    job_id = global_valid_job_id
 
     async with aiohttp.ClientSession() as session:
         # Get jobs list.
@@ -128,10 +128,10 @@ async def test_get_jobs(logger, test_config):
 
             # Access the first job.
             job = next(iter(jobs_list.items()))[1]
-            assert global_valid_job_id == job["job_id"], \
+            assert job_id == job["job_id"], \
                 "ERROR : Expected job is missing. job_id = {}".format(
-                    global_valid_job_id
-                )
+                    job_id
+            )
 
             logger.info(
                 'GET job successful: http status: {}'.format(response.status))
