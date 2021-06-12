@@ -35,6 +35,7 @@ routes = web.RouteTableDef()
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
     """List all in-progress jobs."""
+    _logger.debug('API: GET /jobs')
     jobs = request.app['all_jobs']
 
     _logger.debug('Number of jobs in-progress {}'.format(jobs.count()))
@@ -46,6 +47,8 @@ async def list_jobs(request):
 async def get_job(request):
     """Get job details for given job_id."""
     job_id = request.match_info['job_id']
+    _logger.debug('API: GET /jobs/{}'.format(job_id))
+
     job = request.app['all_jobs'].get_job_by_job_id(job_id)
     if job is None:
         # Check if its in completed cache.
@@ -64,6 +67,8 @@ async def get_job(request):
 async def add_job(request):
     """Add job in the queue and trigger replication."""
     job_record = await request.json()
+    _logger.debug('API: POST /jobs\nContent : {}'.format(job_record))
+
     job = request.app['all_jobs'].add_job_using_json(job_record)
     if job is not None:
         # Start the async replication
@@ -93,6 +98,8 @@ async def add_job(request):
 async def abort_job(request):
     """Abort a job with given job_id."""
     job_id = request.match_info['job_id']
+    _logger.debug('API: DELETE /jobs/{}'.format(job_id))
+
     _logger.debug('Aborting Job with job_id {}'.format(job_id))
     # XXX Perform real abort...
     job = request.app['all_jobs'].remove_job_by_job_id(job_id)
