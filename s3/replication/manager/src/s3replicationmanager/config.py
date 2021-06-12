@@ -53,6 +53,8 @@ class Config:
             self.port = config_props['manager']['port']
             self.ssl = config_props['manager']['ssl']
             self.service_name = config_props['manager']['service_name']
+            self.job_polling_interval = \
+                config_props['manager']['job_polling_interval']
         return self
 
     def print_with(self, logger):
@@ -62,3 +64,6 @@ class Config:
             logger.info("Port: {}".format(self.port))
             logger.info("ssl: {}".format(self.ssl))
             logger.info("service_name: {}".format(self.service_name))
+            logger.info(
+                "job_polling_interval: {}".format(
+                    self.job_polling_interval))
