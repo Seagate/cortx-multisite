@@ -172,7 +172,7 @@ async def test_delete_job(logger, test_config,
 
 @pytest.mark.asyncio
 async def test_get_jobs_count(logger, test_config):
-    """GET jobs count to valid deleted entry."""
+    """GET jobs count to validate deleted entry."""
     expected_http_status = 200
     expected_count = 0
 
