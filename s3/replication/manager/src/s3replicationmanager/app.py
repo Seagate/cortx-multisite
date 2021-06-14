@@ -21,7 +21,8 @@ import logging
 import sys
 from .config import Config
 from s3replicationcommon.log import setup_logger
-from .manager_routes import routes
+from .job_routes import routes as job_routes
+from .subscriber_routes import routes as subscriber_routes
 from s3replicationcommon.jobs import Jobs
 from .subscribers import Subscribers
 
@@ -58,7 +59,10 @@ class ReplicationManagerApp:
         app['subscribers'] = self._subscribers
 
         # Setup application routes.
-        app.add_routes(routes)
+        app.add_routes([
+            *job_routes,
+            *subscriber_routes
+        ])
 
         # Start the REST server.
         web.run_app(app, host=self._config.host, port=self._config.port)
