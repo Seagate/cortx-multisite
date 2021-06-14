@@ -63,9 +63,9 @@ class JobDistributor:
                     _logger.debug("No subscribers registered.")
                     continue
 
-                if jobs_list.queued_count() == 0:
-                    _logger.debug("No jobs available to distribute.")
-                    continue
+                # if jobs_list.queued_count() == 0:
+                #     _logger.debug("No jobs available to distribute.")
+                #     continue
 
                 # For each subscriber, check count to send as per prefetch.
                 task_list = []
@@ -118,15 +118,19 @@ class JobDistributor:
                 for client in post_jobs_response_list:
                     if client.http_status == 201:
                         # Job was posted successfully.
+                        _logger.debug(
+                            "Jobs posted successfully to subscriber id {}".
+                            format(subscriber_id))
                         pass
                     else:
                         # Job post failed, move back to queued.
+                        _logger.debug(
+                            "Failed to post jobs to subscriber id {}".
+                            format(subscriber_id))
+
                         for job in client.jobs_to_send:
                             jobs_list.move_to_queued(job.get_replication_id())
 
-                # Send count jobs to subscriber from what we have.
-
-                pass
             elif self._state == DistributorState.PAUSED:
                 # If paused just loop and do nothing.
                 _logger.debug("Job distributor is paused, do nothing.")

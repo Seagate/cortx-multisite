@@ -95,6 +95,10 @@ class Job:
         """
         self._replicator = replicator
 
+    def get_state(self):
+        """Get job state."""
+        return self._state
+
     def _update_state(self, state):
         """Updates the state to given state."""
         self._state = state

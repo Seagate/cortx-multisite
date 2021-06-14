@@ -27,3 +27,9 @@ class S3RequestState(Enum):
     COMPLETED = 5  # after successful/failed processing
     ABORTED = 6  # explicitly aborted
     FAILED = 7
+
+
+def move_across_sets(source_set, target_set, element):
+    """Move element from one set to another."""
+    source_set.remove(element)
+    target_set.add(element)

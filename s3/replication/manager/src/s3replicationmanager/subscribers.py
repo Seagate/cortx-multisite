@@ -28,7 +28,7 @@ class Subscriber:
         """Initialise Subscriber object."""
         self.id = str(uuid.uuid4())
         self.endpoint = sub_obj["endpoint"]
-        self.prefetch_count = sub_obj["prefetch_count"]
+        self.prefetch_count = int(sub_obj["prefetch_count"])
         self._jobs_sent_count = 0
         self.client_session = aiohttp.ClientSession()
 
@@ -42,7 +42,7 @@ class Subscriber:
 
     def pending_capacity(self):
         """Returns count of jobs that can be sent to subscriber."""
-        return self._prefetch_count - self._jobs_sent_count
+        return self.prefetch_count - self._jobs_sent_count
 
     def jobs_sent(self, count):
         """Remember jobs sent to subscriber.

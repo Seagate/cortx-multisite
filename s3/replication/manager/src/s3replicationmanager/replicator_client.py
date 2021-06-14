@@ -17,6 +17,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import aiohttp
 import json
 import logging
 from s3replicationcommon.timer import Timer
@@ -33,6 +34,7 @@ class ReplicatorClient:
         self.http_status = None
         self.response = None
         self.response_headers = None
+        self.remote_down = False
 
         self._timer = Timer()
 
@@ -46,27 +48,29 @@ class ReplicatorClient:
 
         headers = []
 
-        _logger.info('POST on {}'.format(self._session.endpoint))
+        _logger.info('POST on {}'.format(self._subscriber.endpoint))
         _logger.debug(
-            'POST on {}'.format(
-                json.dumps(
-                    jobs_to_send,
-                    cls=JobJsonEncoder)))
+            'POST on {}'.format(json.dumps(jobs_to_send, cls=JobJsonEncoder)))
 
         self._timer.start()
-        async with self._subscriber.client_session.post(
-                self._session.endpoint,
-                headers=headers, json=jobs_to_send) as resp:
+        try:
+            async with self._subscriber.client_session.post(
+                    self._subscriber.endpoint,
+                    headers=headers,
+                    json=json.dumps(jobs_to_send, cls=JobJsonEncoder)) as resp:
 
-            self._response_headers = resp.headers
+                self._response_headers = resp.headers
 
-            self.http_status = resp.status
-            if resp.status == 201:
-                self.response = await resp.json()
+                self.http_status = resp.status
+                if resp.status == 201:
+                    self.response = await resp.json()
 
-            _logger.info(
-                'POST on {} completed with http status: {}'.format(
-                    self._session.endpoint, resp.status))
+                _logger.info(
+                    'POST on {} completed with http status: {}'.format(
+                        self._subscriber.endpoint, resp.status))
+        except aiohttp.client_exceptions.ClientConnectorError as e:
+            self.remote_down = True
+            _logger.error('Failed to connect to replicator: ' + str(e))
 
         self._timer.stop()
 
