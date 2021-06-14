@@ -47,15 +47,17 @@ class ReplicatorClient:
         self.jobs_to_send = jobs_to_send
 
         headers = []
+        jobs_url = self._subscriber.endpoint + "jobs"
 
-        _logger.info('POST on {}'.format(self._subscriber.endpoint))
+        _logger.info('POST on {}'.format(jobs_url))
         _logger.debug(
-            'POST on {}'.format(json.dumps(jobs_to_send, cls=JobJsonEncoder)))
+            'POST content {}'.format(
+                json.dumps(jobs_to_send, cls=JobJsonEncoder)))
 
         self._timer.start()
         try:
             async with self._subscriber.client_session.post(
-                    self._subscriber.endpoint,
+                    jobs_url,
                     headers=headers,
                     json=json.dumps(jobs_to_send, cls=JobJsonEncoder)) as resp:
 
@@ -67,7 +69,7 @@ class ReplicatorClient:
 
                 _logger.info(
                     'POST on {} completed with http status: {}'.format(
-                        self._subscriber.endpoint, resp.status))
+                        jobs_url, resp.status))
         except aiohttp.client_exceptions.ClientConnectorError as e:
             self.remote_down = True
             _logger.error('Failed to connect to replicator: ' + str(e))

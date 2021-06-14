@@ -74,7 +74,7 @@ class Jobs:
 
     def get_queued(self, count):
         """Get list of queued jobs."""
-        # Creates new dictionary reference, use cautiously w.r.t performance.
+        # Creates array reference, use cautiously w.r.t performance.
         queued_list = []
         for replication_id in self._jobs_queued.keys():
             count -= 1

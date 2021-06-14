@@ -99,6 +99,11 @@ class Job:
         """Get job state."""
         return self._state
 
+    def is_valid(self):
+        """Validate the job attributes."""
+        # XXX - Implement real validation.
+        return True
+
     def _update_state(self, state):
         """Updates the state to given state."""
         self._state = state
