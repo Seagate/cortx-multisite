@@ -19,6 +19,7 @@
 
 import json
 import uuid
+from collections import OrderedDict
 
 
 class Subscriber:
@@ -82,18 +83,18 @@ class SubscriberJsonEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class Subscribers:
+class Subscribers(OrderedDict):
     @staticmethod
     def dumps(obj):
         """Helper to format json."""
-        return json.dumps(obj._subscribers, cls=SubscriberJsonEncoder)
+        return json.dumps(obj, cls=SubscriberJsonEncoder)
 
     def __init__(self):
         """Initialise Subscribers collection."""
         # Dictionary holding subscriber_id and attributes
         # E.g. : subscriber = {'id':'some-uuid','foo':'bar'}
-        # _subscribers = {some-uuid': Subscriber(subscriber), ...}
-        self._subscribers = {}
+        # subscribers = {some-uuid': Subscriber(subscriber), ...}
+        super(Subscribers, self).__init__()
 
     def count(self):
         """Returns total subscribers in collection.
@@ -101,22 +102,22 @@ class Subscribers:
         Returns:
             int: Count of subscribers in collection.
         """
-        return len(self._subscribers)
+        return len(self)
 
     def add_subscriber(self, subscriber):
         """Adds subscriber to the subscribers dict."""
         subscriber = Subscriber(subscriber)
-        self._subscribers[subscriber.id] = subscriber
+        self[subscriber.id] = subscriber
         return subscriber
 
     def get_subscriber(self, subscriber_id):
         """Gets subscriber with given id."""
-        subscriber = self._subscribers.get(subscriber_id, None)
+        subscriber = self.get(subscriber_id, None)
         return subscriber
 
     def is_subscriber_present(self, subscriber_id):
         """Check if subscriber_id exist in the list."""
-        if subscriber_id in self._subscribers.keys():
+        if subscriber_id in self.keys():
             return True
         else:
             return False
@@ -124,8 +125,8 @@ class Subscribers:
     def remove_subscriber(self, subscriber_id):
         """Remove subscriber from the list."""
         subscriber = None
-        if subscriber_id in self._subscribers:
-            subscriber = self._subscribers.pop(subscriber_id, None)
+        if subscriber_id in self:
+            subscriber = self.pop(subscriber_id, None)
         else:
             # Subscriber with subscriber_id not found.
             subscriber = None

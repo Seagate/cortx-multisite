@@ -53,6 +53,7 @@ async def list_subscribers(request):
 
     _logger.debug('Number of subscribers {}'.format(subscribers.count()))
     return web.json_response(subscribers, dumps=Subscribers.dumps, status=200)
+    # return web.json_response(subscribers, status=200)
 
 
 @routes.get('/subscribers/{subscriber_id}')  # noqa: E302

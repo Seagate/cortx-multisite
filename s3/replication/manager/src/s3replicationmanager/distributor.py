@@ -54,6 +54,13 @@ class JobDistributor:
             if self._state == DistributorState.RUNNING:
                 # Scan jobs list and send to subscribers.
                 _logger.debug("Sending jobs to subscribers.")
+
+                # For each subscriber, check count to send as per prefetch.
+
+                # Find count jobs in pending jobs.
+
+                # Send count jobs to subscriber from what we have.
+
                 pass
             elif self._state == DistributorState.PAUSED:
                 # If paused just loop and do nothing.
