@@ -20,6 +20,8 @@
 import asyncio
 import logging
 from enum import Enum
+from .replicator_client import ReplicatorClient
+
 
 _logger = logging.getLogger("s3replicationmanager")
 
@@ -47,17 +49,80 @@ class JobDistributor:
         """Starts distributor loop for distributing jobs to subscribers."""
         self._state = DistributorState.RUNNING
         _logger.info("Job distributor loop started...")
+        subscribers_list = self._app['subscribers']
+        jobs_list = self._app['all_jobs']
         while self._state == DistributorState.RUNNING:
             # Wait for next interval.
             await asyncio.sleep(self._polling_interval)
 
             if self._state == DistributorState.RUNNING:
                 # Scan jobs list and send to subscribers.
-                _logger.debug("Sending jobs to subscribers.")
+                _logger.debug("Checking jobs for distribution.")
+
+                if len(subscribers_list) == 0:
+                    _logger.debug("No subscribers registered.")
+                    continue
+
+                if jobs_list.queued_count() == 0:
+                    _logger.debug("No jobs available to distribute.")
+                    continue
 
                 # For each subscriber, check count to send as per prefetch.
+                task_list = []
+                jobs_list_per_task = []  # so we can co-relate with task
+                for subscriber_id, subscriber in subscribers_list.items():
+                    _logger.debug("Processing subscriber id {}".format(
+                        subscriber_id))
+                    # How many more subscriber can accept?
+                    capacity = subscriber.pending_capacity()
 
-                # Find count jobs in pending jobs.
+                    # Find count of jobs in pending jobs.
+                    available_jobs_count = jobs_list.queued_count()
+
+                    # Identify how many jobs to send to current subscriber.
+                    count_to_send = 0
+                    if available_jobs_count == 0:
+                        # No available jobs, break for subscribers and wait
+                        _logger.debug("No jobs available to distribute.")
+                        break
+                    elif capacity == 0:
+                        # Current subscriber has no more capacity.
+                        _logger.debug("Subscriber with id {} is busy.")
+                        continue
+                    elif available_jobs_count > capacity:
+                        # Send capacity jobs.
+                        count_to_send = capacity
+                    else:
+                        # We dont have enough to fullfill capacity, send all.
+                        count_to_send = available_jobs_count
+
+                    # Extract first count_to_send number of jobs from queue.
+                    jobs_to_send = jobs_list.get_queued(count_to_send)
+                    replicator_client = ReplicatorClient(subscriber)
+
+                    # Schedule async job send using http POST.
+                    task = asyncio.create_task(replicator_client.post(
+                        jobs_to_send))
+                    task_list.append(task)
+                    jobs_list_per_task.append(jobs_to_send)
+
+                    # Move jobs_to_send to inprogress list.
+                    for job in jobs_to_send:
+                        jobs_list.move_to_inprogress(job.get_replication_id())
+
+                # end of for each subscriber
+
+                post_jobs_response_list = await asyncio.gather(*task_list)
+
+                # Process the job post responses.
+                for client in post_jobs_response_list:
+                    if client.http_status == 201:
+                        # Job was posted successfully.
+                        pass
+                    else:
+                        # Job post failed, move back to queued.
+                        for job in client.jobs_to_send:
+                            jobs_list.move_to_queued(job.get_replication_id())
 
                 # Send count jobs to subscriber from what we have.
 
@@ -85,3 +150,7 @@ class JobDistributor:
         """Resumes the Distributor loop."""
         _logger.debug("Resuming job distribution.")
         self._state = DistributorState.RUNNING
+
+    def on_client_send_done(self, client):
+        """Once client send completes, handle success or failure."""
+        pass

@@ -95,27 +95,44 @@ async def get_jobs(request):
 
     _logger.debug('API: GET /jobs\n Query: {}'.format(query))
 
-    inprogress_jobs_list = request.app['jobs_in_progress']
     all_jobs_list = request.app['all_jobs']
 
+    if 'queued' in query:
+        # Return queued jobs not yet distributed.
+        queued_jobs = all_jobs_list.get_queued()
+        _logger.debug('Returning Jobs Queued, count = {}'.format(
+            queued_jobs.count()))
+        return web.json_response(
+            queued_jobs, dumps=Jobs.dumps, status=200)
+
     if 'inprogress' in query:
-        # Return in progress jobs
+        # Return in progress jobs that are distributed.
+        inprogress_jobs_list = all_jobs_list.get_inprogress()
+
         _logger.debug('Returning Jobs In-Progress, count = {}'.format(
             inprogress_jobs_list.count()))
         return web.json_response(
             inprogress_jobs_list, dumps=Jobs.dumps, status=200)
 
-    elif 'count' in query:
-        # Return total job counts
-        _logger.debug('Returning all jobs count = {}'.format(
-            inprogress_jobs_list.count()))
+    elif 'completed' in query:
+        # Return completed and acknowledged jobs.
+        completed_jobs = all_jobs_list.get_completed()
+        _logger.debug('Returning Jobs completed, count = {}'.format(
+            completed_jobs.count()))
         return web.json_response(
-            {'count': inprogress_jobs_list.count() + all_jobs_list.count()},
+            completed_jobs, dumps=Jobs.dumps, status=200)
+
+    elif 'count' in query:
+        # Return total jobs count.
+        _logger.debug('Returning all jobs count = {}'.format(
+            all_jobs_list.count()))
+        return web.json_response(
+            {'count': all_jobs_list.count() + all_jobs_list.count()},
             status=200)
 
     else:
         # return jobs that are not yet distributed.
-        _logger.debug('Returning Jobs Queued, count = {}'.format(
+        _logger.debug('Returning All Jobs, count = {}'.format(
             all_jobs_list.count()))
         return web.json_response(
             all_jobs_list, dumps=Jobs.dumps, status=200)

@@ -17,6 +17,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import aiohttp
 import json
 import uuid
 from collections import OrderedDict
@@ -29,6 +30,7 @@ class Subscriber:
         self.endpoint = sub_obj["endpoint"]
         self.prefetch_count = sub_obj["prefetch_count"]
         self._jobs_sent_count = 0
+        self.client_session = aiohttp.ClientSession()
 
     def get_dictionary(self):
         return {

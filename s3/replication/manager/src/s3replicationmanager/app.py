@@ -61,7 +61,7 @@ class ReplicationManagerApp:
         self._config.print_with(self._logger)
 
         self._jobs = Jobs(self._logger, "all-jobs")
-        self._jobs_in_progress = Jobs(self._logger, "inprogress-jobs")
+        # self._jobs_in_progress = Jobs(self._logger, "inprogress-jobs")
         self._subscribers = Subscribers()
 
     def run(self):
@@ -70,8 +70,10 @@ class ReplicationManagerApp:
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
         app["config"] = self._config
+        # Jobs are in 3 phases, 1. Queued by FDMI, 2. InProgress - Sent for
+        # processing to replicator and 3. Completed and acknowledged by
+        # replicator.
         app['all_jobs'] = self._jobs
-        app['jobs_in_progress'] = self._jobs_in_progress
         app['subscribers'] = self._subscribers
 
         # Setup application routes.
