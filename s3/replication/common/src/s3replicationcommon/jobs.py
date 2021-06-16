@@ -72,17 +72,30 @@ class Jobs:
         self._jobs_paused.clear()
         self._jobs_completed.clear()
 
-    def get_queued(self, count):
-        """Get list of queued jobs."""
+    def get_queued(self, count=None):
+        """Get list of queued jobs.
+
+        Args:
+            count (int, optional): Number if jobs to return. Defaults to None.
+            When count is None, return all jobs.
+
+        Returns
+        -------
+            list[Job]: List of jobs in queued state.
+        """
         # Creates array reference, use cautiously w.r.t performance.
         queued_list = []
+        if count is None:
+            # Return all.
+            count = len(self._jobs_queued)
+
+        # Only return first 'count' number of entries.
         for replication_id in self._jobs_queued.keys():
+            if count == 0:
+                break
             count -= 1
             queued_list.append(
                 self.get_job(replication_id))
-            # Only return first 'count' number of entries.
-            if count == 0:
-                break
 
         return queued_list
 
@@ -120,7 +133,7 @@ class Jobs:
             move_across_sets(self._jobs_paused, self._jobs_inprogress,
                              replication_id)
         else:
-            # If was not in queued, then invalid state.
+            # If was not in queued/paused, then invalid state.
             assert False, "Bug: Invalid state transition for job {}".format(
                 replication_id
             )
@@ -134,7 +147,7 @@ class Jobs:
             move_across_sets(self._jobs_inprogress, self._jobs_paused,
                              replication_id)
         else:
-            # If was not in queued, then invalid state.
+            # If was not in inprogress, then invalid state.
             assert False, "Bug: Invalid state transition for job {}".format(
                 replication_id
             )
@@ -162,7 +175,7 @@ class Jobs:
             move_across_sets(self._jobs_inprogress, self._jobs_completed,
                              replication_id)
         else:
-            # If was not in queued, then invalid state.
+            # If was not in inprogress, then invalid state.
             assert False, "Bug: Invalid state transition for job {}".format(
                 replication_id
             )

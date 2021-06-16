@@ -63,9 +63,9 @@ class JobDistributor:
                     _logger.debug("No subscribers registered.")
                     continue
 
-                # if jobs_list.queued_count() == 0:
-                #     _logger.debug("No jobs available to distribute.")
-                #     continue
+                if jobs_list.queued_count() == 0:
+                    _logger.debug("No jobs available to distribute.")
+                    continue
 
                 # For each subscriber, check count to send as per prefetch.
                 task_list = []

@@ -61,7 +61,6 @@ class ReplicationManagerApp:
         self._config.print_with(self._logger)
 
         self._jobs = Jobs(self._logger, "all-jobs")
-        # self._jobs_in_progress = Jobs(self._logger, "inprogress-jobs")
         self._subscribers = Subscribers()
 
     def run(self):

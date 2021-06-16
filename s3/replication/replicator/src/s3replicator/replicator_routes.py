@@ -82,8 +82,6 @@ async def add_job(request):
         _logger.debug('Processing record: {} '.format(record))
         job = Job(record)
 
-        # XXX Validate job parameters.
-
         # Check if job already present.
         if job.is_valid() is False:
             discarded_jobs.append({
