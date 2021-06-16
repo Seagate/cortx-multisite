@@ -31,6 +31,6 @@ def subscriber_record(logger):
 
     subscriber_payload.pop("id")  # replication manager will generate.
     subscriber_payload["endpoint"] = "http://localhost:8081/"
-    subscriber_payload["prefetch_count"] = "5"
+    subscriber_payload["prefetch_count"] = 5
 
     return subscriber_payload

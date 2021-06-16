@@ -95,6 +95,40 @@ class Job:
         """
         self._replicator = replicator
 
+    def get_state(self):
+        """Get job state."""
+        return self._state
+
+    def is_valid(self):
+        """Validate the job attributes."""
+        try:
+            # Following fields should atleast be present
+            # to perform replication.
+            assert self.get_source_bucket_name() is not None
+            assert self.get_source_object_name() is not None
+            assert self.get_source_object_size() is not None
+
+            assert self.get_source_endpoint() is not None
+            assert self.get_source_s3_service_name() is not None
+            assert self.get_source_s3_region() is not None
+
+            assert self.get_source_access_key() is not None
+            assert self.get_source_secret_key() is not None
+
+            assert self.get_target_bucket_name() is not None
+
+            assert self.get_target_endpoint() is not None
+            assert self.get_target_s3_service_name() is not None
+            assert self.get_target_s3_region() is not None
+
+            assert self.get_target_access_key() is not None
+            assert self.get_target_secret_key() is not None
+        except (KeyError, AssertionError):
+            # Missing required field in job.
+            return False
+
+        return True
+
     def _update_state(self, state):
         """Updates the state to given state."""
         self._state = state

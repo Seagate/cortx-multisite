@@ -21,9 +21,9 @@ import asyncio
 from aiohttp import web
 import json
 import logging
+from s3replicationcommon.jobs import Job
 from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
-from s3replicationcommon.job import ReplicationJobRecordKey
 from .transfer_initiator import TransferInitiator
 
 _logger = logging.getLogger('s3replicator')
@@ -66,32 +66,71 @@ async def get_job(request):
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
     """Add job in the queue and trigger replication."""
-    job_record = await request.json()
-    _logger.debug('API: POST /jobs\nContent : {}'.format(job_record))
+    job_records = await request.json()
+    _logger.debug('API: POST /jobs\nContent : {}'.format(job_records))
 
-    job = request.app['all_jobs'].add_job_using_json(job_record)
-    if job is not None:
-        # Start the async replication
-        _logger.debug('Starting Replication Job : {} '.format(
-            json.dumps(job, cls=JobJsonEncoder)))
-        # XXX create task is only supported for python v3.7+
-        asyncio.ensure_future(
-            TransferInitiator.start(
-                job, request.app))
+    jobs_list = request.app['all_jobs']
 
-        _logger.info('Started Replication Job with job_id : {} '.format(
-            job.get_job_id()))
-        _logger.debug('Started Replication Job : {} '.format(
-            json.dumps(job, cls=JobJsonEncoder)))
+    # Accepted_jobs response format [{"replication-id": "job-id"}, ...].
+    accepted_jobs = []
 
-        return web.json_response({'job': job.get_dict()}, status=201)
+    # Discarded jobs with additional info as possible.
+    # Format [{msg: "Job already exists.", record = {post in request}}, ...]
+    discarded_jobs = []
+
+    for record in job_records:
+        _logger.debug('Processing record: {} '.format(record))
+        job = Job(record)
+
+        # Check if job already present.
+        if job.is_valid() is False:
+            discarded_jobs.append({
+                "message": "Invalid job record.",
+                "record": record
+            })
+            _logger.warn('Invalid job record: {} '.format(record))
+        elif jobs_list.is_job_present(job.get_replication_id()):
+            discarded_jobs.append({
+                "message": "Job Already exists for replication-id {}.".
+                format(job.get_replication_id()),
+                "record": record
+            })
+            _logger.warn('Job Already exists: {} '.format(record))
+        else:
+            jobs_list.add_job(job)
+
+            # Start the async replication.
+            _logger.debug('Starting Replication Job : {} '.format(
+                json.dumps(job, cls=JobJsonEncoder)))
+            # XXX create task is only supported for python v3.7+
+            asyncio.ensure_future(
+                TransferInitiator.start(
+                    job, request.app))
+
+            jobs_list.move_to_inprogress(job.get_replication_id())
+
+            # Populate the response.
+            accepted_jobs.append({
+                job.get_replication_id(): job.get_job_id()
+            })
+
+            _logger.info('Started Replication Job with job_id : {} '.format(
+                job.get_job_id()))
+            _logger.debug('Started Replication Job : {} '.format(
+                json.dumps(job, cls=JobJsonEncoder)))
+
+    # end of for each record.
+
+    response_status = None
+    if len(accepted_jobs) > 0:
+        # Atleast one job accepted.
+        response_status = 201  # Created.
     else:
-        # Job is already posted and its duplicate. Discard the duplicate.
-        msg = 'Replication Job already exists! Replication id : {} '.\
-            format(job_record[ReplicationJobRecordKey.ID])
-        _logger.debug(msg)
+        response_status = 400  # Bad Request.
 
-        return web.json_response({'ErrorResponse': msg}, status=409)
+    return web.json_response(
+        {"accepted_jobs": accepted_jobs, "discarded_jobs": discarded_jobs},
+        status=response_status)
 
 
 @routes.delete('/jobs/{job_id}')  # noqa: E302

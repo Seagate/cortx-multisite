@@ -96,7 +96,7 @@ class S3AsyncPutObject:
                 self._logger.info(
                     'PUT Object completed with http status: {}'.format(
                         resp.status))
-                if resp.status == 201:
+                if resp.status == 200:
                     self._state = S3RequestState.COMPLETED
                 else:
                     self._state = S3RequestState.FAILED

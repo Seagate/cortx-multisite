@@ -52,8 +52,15 @@ Run system tests after starting the Replication manager.
 ```sh
 py.test tests/system
 ```
-To run individual tests.
+
+To run individual test group.
 ```sh
 py.test tests/system/test_subscribers_resource.py
 py.test tests/system/test_jobs_resource.py
+```
+
+To run specific test.
+```sh
+py.test tests/system -k 'test_post_job[valid_job-201]'
+py.test tests/system -k 'test_post_subscriber[valid_payload-201]'
 ```

@@ -3,3 +3,4 @@ manager:
    port: 8080
    ssl: false
    service_name: "s3replicationmanager"
+   job_polling_interval: 5  # Job distribution polling interval in seconds
