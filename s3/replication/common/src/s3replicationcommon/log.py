@@ -23,6 +23,20 @@ import sys
 import yaml
 
 
+def fmt_reqid_log(request_id=None):
+    """Generates formatted string with request id for logging.
+
+    Args
+    -----
+        request_id (str, optional): ID used in logs for easy debugging.
+        Defaults to None.
+    """
+    message = ""
+    if request_id is not None:
+        message = "RequestId [{}]: ".format(request_id)
+    return message
+
+
 def setup_logger(logger_name: str, log_config_file: str):
     """
     Sets up a logger with given name and log properties defined in

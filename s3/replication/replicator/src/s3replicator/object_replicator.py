@@ -33,6 +33,7 @@ class ObjectReplicator:
         """Initialise."""
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
         self._job_id = job.get_job_id()
+        self._request_id = self._job_id
         self._timer = Timer()
 
         # A set of observers to watch for varius notifications.
@@ -43,6 +44,7 @@ class ObjectReplicator:
 
         self._object_reader = S3AsyncGetObject(
             self._s3_source_session,
+            self._request_id,
             job.get_source_bucket_name(),
             job.get_source_object_name(),
             int(job.get_source_object_size()))
@@ -52,6 +54,7 @@ class ObjectReplicator:
 
         self._object_writer = S3AsyncPutObject(
             self._s3_target_session,
+            self._request_id,
             job.get_target_bucket_name(),
             job.get_source_object_name(),
             int(job.get_source_object_size()))

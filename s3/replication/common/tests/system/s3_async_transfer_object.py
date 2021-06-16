@@ -51,10 +51,12 @@ async def main():
     # Generate object names
     source_object_name = config.object_name_prefix + "test"
     target_object_name = config.object_name_prefix + "copy"
-
-    object_reader = S3AsyncGetObject(session, config.source_bucket_name,
+    request_id = "dummy-request-id"
+    object_reader = S3AsyncGetObject(session, request_id,
+                                     config.source_bucket_name,
                                      source_object_name, config.object_size)
-    object_writer = S3AsyncPutObject(session, config.target_bucket_name,
+    object_writer = S3AsyncPutObject(session, request_id,
+                                     config.target_bucket_name,
                                      target_object_name, config.object_size)
 
     # Start transfer

@@ -31,6 +31,7 @@ import hashlib
 import os
 import sys
 import time
+import uuid
 from random import randrange
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
 from s3replicationcommon.s3_site import S3Site
@@ -156,9 +157,11 @@ def create_replication_job(s3_config, object_info):
 async def async_put_object(session, bucket_name, object_name, object_size,
                            transfer_chunk_size):
 
+    request_id = str(uuid.uuid4())
+
     object_reader = ObjectDataGenerator(session.logger,
                                         object_name, object_size)
-    object_writer = S3AsyncPutObject(session, bucket_name,
+    object_writer = S3AsyncPutObject(session, request_id, bucket_name,
                                      object_name, object_size)
 
     # Start transfer
