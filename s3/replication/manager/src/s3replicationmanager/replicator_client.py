@@ -46,20 +46,20 @@ class ReplicatorClient:
     async def post(self, jobs_to_send):
         self.jobs_to_send = jobs_to_send
 
-        headers = []
+        headers = {"Content-Type": "application/json"}
+        payload = json.dumps(jobs_to_send, cls=JobJsonEncoder)
+
         jobs_url = self._subscriber.endpoint + "jobs"
 
         _logger.info('POST on {}'.format(jobs_url))
-        _logger.debug(
-            'POST content {}'.format(
-                json.dumps(jobs_to_send, cls=JobJsonEncoder)))
+        _logger.debug('POST content {}'.format(payload))
 
         self._timer.start()
         try:
             async with self._subscriber.client_session.post(
                     jobs_url,
                     headers=headers,
-                    json=json.dumps(jobs_to_send, cls=JobJsonEncoder)) as resp:
+                    data=payload) as resp:
 
                 self._response_headers = resp.headers
 

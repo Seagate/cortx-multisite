@@ -229,22 +229,25 @@ async def run_load_test():
     for object_info in objects_info:
         replication_job = create_replication_job(
             s3_config, object_info)
-        logger.debug("POST {}/jobs {}".format(url, replication_job))
+        replication_jobs = [replication_job]
+        logger.debug("POST {}/jobs {}".format(url, replication_jobs))
         transfer_task = asyncio.create_task(replicator_session.post(
-            url + '/jobs', json=replication_job))
+            url + '/jobs', json=replication_jobs))
         transfer_task_list.append(transfer_task)
     # jobs info contains list of response from POST /jobs for each transfer
     logger.debug("Waiting for all POST {}/jobs response...".format(url))
     post_jobs_response_list = await asyncio.gather(*transfer_task_list)
-    # logger.debug("post_jobs_response_list: {}".format(
-    #     post_jobs_response_list))
+    logger.debug("post_jobs_response_list: {}".format(
+        post_jobs_response_list))
 
     # Prepare a list of posted job_id's
     posted_jobs_set = set()
     for post_job_resp in post_jobs_response_list:
         job_status = await post_job_resp.json()
-        job_id = job_status["job"]["job_id"]
-        replication_id = job_status["job"]["replication-id"]
+        logger.debug("job_status: {}".format(job_status))
+        accepted_job = job_status["accepted_jobs"][0]
+        job_id = list(accepted_job.values())[0]
+        replication_id = list(accepted_job.keys())[0]
         logger.debug("Posted job details: job_id [{}], replication-id [{}]".
                      format(job_id, replication_id))
 

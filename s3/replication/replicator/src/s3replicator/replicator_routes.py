@@ -66,9 +66,7 @@ async def get_job(request):
 @routes.post('/jobs')  # noqa: E302
 async def add_job(request):
     """Add job in the queue and trigger replication."""
-    raw_records = await request.json()
-    # For some reason request.json() does not return a list but give str()
-    job_records = json.loads(raw_records)
+    job_records = await request.json()
     _logger.debug('API: POST /jobs\nContent : {}'.format(job_records))
 
     jobs_list = request.app['all_jobs']
