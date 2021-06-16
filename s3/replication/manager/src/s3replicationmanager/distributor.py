@@ -121,7 +121,6 @@ class JobDistributor:
                         _logger.debug(
                             "Jobs posted successfully to subscriber id {}".
                             format(subscriber_id))
-                        pass
                     else:
                         # Job post failed, move back to queued.
                         _logger.debug(
@@ -134,7 +133,6 @@ class JobDistributor:
             elif self._state == DistributorState.PAUSED:
                 # If paused just loop and do nothing.
                 _logger.debug("Job distributor is paused, do nothing.")
-                pass
             else:
                 # Either Stopped or aborted, break while loop.
                 _logger.debug("Job distributor {}".str(self._state))
