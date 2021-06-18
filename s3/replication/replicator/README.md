@@ -51,3 +51,8 @@ Run simple system tests.
 ```sh
 py.test tests/system/test_replicator.py -v
 ```
+
+Run load transfer tests.
+```sh
+python3 tests/system/load_transfer_test.py
+```

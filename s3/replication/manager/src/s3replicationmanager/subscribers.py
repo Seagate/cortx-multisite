@@ -32,6 +32,9 @@ class Subscriber:
         self._jobs_sent_count = 0
         self.client_session = aiohttp.ClientSession()
 
+    async def close(self):
+        await self.client_session.close()
+
     def get_dictionary(self):
         return {
             "id": self.id,
@@ -133,3 +136,8 @@ class Subscribers(OrderedDict):
             # Subscriber with subscriber_id not found.
             subscriber = None
         return subscriber
+
+    async def close(self):
+        """Resets and closes all subscriber sessions."""
+        for subscriber in self.values():
+            await subscriber.close()

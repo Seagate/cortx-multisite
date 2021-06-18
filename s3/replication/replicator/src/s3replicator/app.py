@@ -47,7 +47,7 @@ async def on_startup(app):
     else:
         await close_all_sessions(app)
         await replication_manager.close()
-        _logger.debug("Failed to subscribe for jobs...")
+        _logger.error("Failed to subscribe for jobs...")
         sys.exit(-1)
 
 

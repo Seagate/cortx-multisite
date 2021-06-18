@@ -138,5 +138,5 @@ class ReplicationManagers(OrderedDict):
 
     async def close(self):
         """Resets and closes all replication manager sessions."""
-        for id, manager in self.items():
+        for manager in self.values():
             await manager.close()
