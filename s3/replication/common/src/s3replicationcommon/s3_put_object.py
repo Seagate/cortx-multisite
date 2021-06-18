@@ -17,22 +17,29 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import aiohttp
 import sys
 
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
 class S3AsyncPutObject:
-    def __init__(self, session, bucket_name, object_name, object_size):
+    def __init__(self, session, request_id,
+                 bucket_name, object_name, object_size):
         """Initialise."""
         self._session = session
+        # Request id for better logging.
+        self._request_id = request_id
         self._logger = session.logger
+
         self._bucket_name = bucket_name
         self._object_name = object_name
         self._object_size = object_size
 
+        self.remote_down = False
         self._http_status = None
 
         self._timer = Timer()
@@ -75,32 +82,40 @@ class S3AsyncPutObject:
             body)
 
         if (headers['Authorization'] is None):
-            self._logger.error("Failed to generate v4 signature")
+            self._logger.error(fmt_reqid_log(self._request_id) +
+                               "Failed to generate v4 signature")
             sys.exit(-1)
 
         headers["Content-Length"] = str(self._object_size)
 
-        self._logger.info('PUT on {}'.format(
-            self._session.endpoint + request_uri))
+        self._logger.info(fmt_reqid_log(self._request_id) +
+                          "PUT on {}".format(
+                              self._session.endpoint + request_uri))
         self._timer.start()
-        async with self._session.get_client_session().put(
-                self._session.endpoint + request_uri,
-                headers=headers,
-                # Read all data from data_reader
-                data=data_reader.fetch(transfer_size)) as resp:
+        try:
+            async with self._session.get_client_session().put(
+                    self._session.endpoint + request_uri,
+                    headers=headers,
+                    # Read all data from data_reader
+                    data=data_reader.fetch(transfer_size)) as resp:
 
-            if data_reader.get_state() != S3RequestState.ABORTED:
-                self._http_status = resp.status
-                self._response_headers = resp.headers
+                if data_reader.get_state() != S3RequestState.ABORTED:
+                    self._http_status = resp.status
+                    self._response_headers = resp.headers
 
-                self._logger.info(
-                    'PUT Object completed with http status: {}'.format(
-                        resp.status))
-                if resp.status == 200:
-                    self._state = S3RequestState.COMPLETED
-                else:
-                    self._state = S3RequestState.FAILED
-
+                    self._logger.info(
+                        fmt_reqid_log(self._request_id) +
+                        'PUT Object completed with http status: {}'.format(
+                            resp.status))
+                    if resp.status == 200:
+                        self._state = S3RequestState.COMPLETED
+                    else:
+                        self._state = S3RequestState.FAILED
+        except aiohttp.client_exceptions.ClientConnectorError as e:
+            self.remote_down = True
+            self._state = S3RequestState.FAILED
+            self._logger.error(fmt_reqid_log(self._request_id) +
+                               "Failed to connect to S3: " + str(e))
         self._timer.stop()
 
     def pause(self):
