@@ -24,14 +24,37 @@ from .config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.jobs import Jobs
 from .replicator_routes import routes
+from .replication_managers import ReplicationManager
+from .replication_managers import ReplicationManagers
 from .session_manager import close_all_sessions
 
 _logger = logging.getLogger('s3replicator')
 
 
+async def on_startup(app):
+    _logger.debug("Starting server...")
+    # Currently only one replication manager is registered.
+    config = app["config"]
+    managers_list = app['replication-managers']
+
+    remote_endpoint = config.get_replication_manager_endpoint()
+    replication_manager = ReplicationManager(remote_endpoint)
+    connected = await replication_manager.subscribe(
+        config.get_replicator_endpoint(), config.max_replications)
+    if connected:
+        _logger.debug("Subscribed successfully for jobs...")
+        managers_list[replication_manager.id] = replication_manager
+    else:
+        await close_all_sessions(app)
+        await replication_manager.close()
+        _logger.debug("Failed to subscribe for jobs...")
+        sys.exit(-1)
+
+
 async def on_shutdown(app):
     _logger.debug("Performing cleanup on shutdown...")
     await close_all_sessions(app)
+    await app['replication-managers'].close()
 
 
 class ReplicatorApp:
@@ -56,6 +79,8 @@ class ReplicatorApp:
         else:
             self._completed_jobs = Jobs(self._logger, "completed-jobs")
 
+        self._replication_managers = ReplicationManagers()
+
         self._config.print_with(self._logger)
 
     def run(self):
@@ -76,12 +101,13 @@ class ReplicatorApp:
         app['all_jobs'] = self._inprogress_jobs
         # completed = successfully completed, failed, or aborted and cached
         app['completed_jobs'] = self._completed_jobs
-        app['replication-managers'] = []  # TBD
+        app['replication-managers'] = self._replication_managers
 
         # Setup application routes.
         app.add_routes(routes)
 
-        # Setup shutdown handlers
+        # Setup startup/shutdown handlers
+        app.on_startup.append(on_startup)
         app.on_shutdown.append(on_shutdown)
 
         # Start the REST server.
