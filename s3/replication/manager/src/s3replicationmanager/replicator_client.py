@@ -20,6 +20,7 @@
 import aiohttp
 import json
 import logging
+from s3replicationcommon.s3_common import url_with_resources
 from s3replicationcommon.timer import Timer
 from s3replicationcommon.job import JobJsonEncoder
 
@@ -49,7 +50,7 @@ class ReplicatorClient:
         headers = {"Content-Type": "application/json"}
         payload = json.dumps(jobs_to_send, cls=JobJsonEncoder)
 
-        jobs_url = self._subscriber.endpoint + "jobs"
+        jobs_url = url_with_resources(self._subscriber.endpoint, ["jobs"])
 
         _logger.info('POST on {}'.format(jobs_url))
         _logger.debug('POST content {}'.format(payload))

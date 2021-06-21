@@ -42,6 +42,7 @@ async def on_startup(app):
 async def on_shutdown(app):
     _logger.debug("Performing cleanup on shutdown...")
     app["job_distributor"].stop()
+    await app['subscribers'].close()
 
 
 class ReplicationManagerApp:

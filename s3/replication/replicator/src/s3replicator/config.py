@@ -26,6 +26,7 @@
 
 import os
 import yaml
+from s3replicationcommon.s3_common import make_baseurl
 
 
 class Config:
@@ -52,11 +53,33 @@ class Config:
             self.port = config_props['replicator']['port']
             self.ssl = config_props['replicator']['ssl']
             self.service_name = config_props['replicator']['service_name']
+            self.max_replications = \
+                config_props['transfer']["max_replications"]
             self.transfer_chunk_size_bytes = \
                 config_props['transfer']["transfer_chunk_size_bytes"]
             self.job_cache_enabled = config_props['jobs']['enable_cache']
             self.job_cache_timeout_secs = config_props['jobs']['cache_timeout']
+            self.manager_host = config_props['manager']['host']
+            self.manager_port = config_props['manager']['port']
+            self.manager_ssl = config_props['manager']['ssl']
+            self.manager_service_name = config_props['manager']['service_name']
         return self
+
+    def get_replicator_endpoint(self):
+        """Returns replicator endpoint."""
+        scheme = "http"
+        if self.ssl:
+            scheme = "https"
+        # example http://localhost:8080
+        return make_baseurl(scheme, self.host, self.port)
+
+    def get_replication_manager_endpoint(self):
+        """Returns replication manager endpoint."""
+        scheme = "http"
+        if self.manager_ssl:
+            scheme = "https"
+        # example http://localhost:8080
+        return make_baseurl(scheme, self.manager_host, self.manager_port)
 
     def print_with(self, logger):
         if logger is not None:
@@ -65,3 +88,13 @@ class Config:
             logger.info("Port: {}".format(self.port))
             logger.info("ssl: {}".format(self.ssl))
             logger.info("service_name: {}".format(self.service_name))
+
+            logger.info("transfer_chunk_size_bytes: {}".format(
+                self.transfer_chunk_size_bytes))
+            logger.info("max_replications: {}".format(self.max_replications))
+
+            logger.info("manager_host: {}".format(self.manager_host))
+            logger.info("manager_port: {}".format(self.manager_port))
+            logger.info("manager_ssl: {}".format(self.manager_ssl))
+            logger.info("manager_service_name: {}".format(
+                self.manager_service_name))
