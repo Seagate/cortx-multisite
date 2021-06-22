@@ -64,3 +64,12 @@ To run specific test.
 py.test tests/system -k 'test_post_job[valid_job-201]'
 py.test tests/system -k 'test_post_subscriber[valid_payload-201]'
 ```
+
+For testing with cortx s3, following user defined attributes can be specified
+to simulate replication events.
+```sh
+s3cmd put --add-header x-amz-meta-replication:true \
+          --add-header x-amz-meta-target-site:awss3 \
+          --add-header x-amz-meta-target-bucket:targetbucket \
+          someobject.jpg s3://sourcebucket
+```

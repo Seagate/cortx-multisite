@@ -41,20 +41,26 @@ class PrepareReplicationJob:
 
         # Read the config file for source/target sites.
         cortx_s3 = None
-        with open(os.path.join(
-                os.path.dirname(__file__), '..',
-                'config/cortx_s3.yaml'), 'r') as cortx_s3_f:
+        conf_path = os.path.join(os.path.expanduser('~'), '.cortxs3')
+        file_path = os.path.join(conf_path, "cortx_s3.yaml")
+        if not os.path.isfile(file_path):
+            file_path = os.path.join(
+                os.path.dirname(__file__), '..', 'config/cortx_s3.yaml')
+
+        with open(file_path, 'r') as cortx_s3_f:
             cortx_s3 = yaml.safe_load(cortx_s3_f)
 
         aws_s3 = None
-        with open(os.path.join(
-                os.path.dirname(__file__), '..',
-                'config/aws_s3.yaml'), 'r') as aws_s3_f:
+        file_path = os.path.join(conf_path, "aws_s3.yaml")
+        if not os.path.isfile(file_path):
+            file_path = os.path.join(
+                os.path.dirname(__file__), '..', 'config/aws_s3.yaml')
+
+        with open(file_path, 'r') as aws_s3_f:
             aws_s3 = yaml.safe_load(aws_s3_f)
 
         # File with credentials. ~/.cortxs3/credentials.yaml
-        cortx_creds_home = os.path.join(os.path.expanduser('~'), '.cortxs3')
-        cortx_creds_path = os.path.join(cortx_creds_home, 'credentials.yaml')
+        cortx_creds_path = os.path.join(conf_path, 'credentials.yaml')
 
         cortx_credentials = None
         with open(cortx_creds_path, 'r') as cred_config:
