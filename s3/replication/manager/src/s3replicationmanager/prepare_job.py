@@ -125,8 +125,10 @@ class PrepareReplicationJob:
             job_dict["target"]["endpoint"] = aws_s3["endpoint"]
             job_dict["target"]["service_name"] = aws_s3["s3_service_name"]
             job_dict["target"]["region"] = aws_s3["s3_region"]
-            job_dict["target"]["access_key"] = aws_s3_credentials["access_key"]
-            job_dict["target"]["secret_key"] = aws_s3_credentials["secret_key"]
+            job_dict["target"]["access_key"] = \
+                aws_s3_credentials["default"]["aws_access_key_id"]
+            job_dict["target"]["secret_key"] = \
+                aws_s3_credentials["default"]["aws_secret_access_key"]
         else:
             # Invalid record.
             return None
