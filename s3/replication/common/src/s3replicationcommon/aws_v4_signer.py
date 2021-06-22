@@ -53,7 +53,10 @@ class AWSV4Signer(object):
             epoch_t,
             host):
         """Create canonical request based on uri and query string."""
-        body_256sha_hex = hashlib.sha256(body.encode('utf-8')).hexdigest()
+        body_256sha_hex = 'UNSIGNED-PAYLOAD'
+        if body:
+            # body has some content.
+            body_256sha_hex = hashlib.sha256(body.encode('utf-8')).hexdigest()
 
         self._body_hash_hex = body_256sha_hex
         headers = AWSV4Signer._get_headers(host, epoch_t, body_256sha_hex)
