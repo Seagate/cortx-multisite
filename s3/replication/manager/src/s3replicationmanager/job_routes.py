@@ -39,6 +39,10 @@ async def add_job(request):
 
     job_record = PrepareReplicationJob.from_fdmi(fdmi_job)
 
+    if job_record is None:
+        return web.json_response(
+            {'ErrorResponse': 'BadRequest. Invalid Job!'}, status=400)
+
     job = request.app['all_jobs'].add_job_using_json(job_record)
     _logger.debug('Successfully added Job with job_id : {} '.
                   format(job.get_job_id()))

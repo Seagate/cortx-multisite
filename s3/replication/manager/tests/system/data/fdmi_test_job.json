@@ -1,11 +1,11 @@
 {
   "ACL": "base64-encoded-acl-json",
-  "Bucket-Name": "seagatebucket",
-  "Object-Name": "seagate-hdd.jpg",
-  "Object-URI": "seagatebucket\\\\seagate-hdd.jpg",
+  "Bucket-Name": "sourcebucket",
+  "Object-Name": "test_object_0_sz1223",
+  "Object-URI": "sourcebucket\\\\test_object_0_sz1223",
   "System-Defined": {
-    "Content-Length": "0",
-    "Content-MD5": "d41d8cd98f00b204e9800998ecf8427e",
+    "Content-Length": "1223",
+    "Content-MD5": "6a7ef642e08c2ca64ac644d3ed7b847d",
     "Content-Type": "",
     "Date": "2021-05-05T08:10:14.000Z",
     "Last-Modified": "2021-05-05T08:10:14.000Z",
@@ -22,6 +22,11 @@
     "x-amz-storage-class": "STANDARD",
     "x-amz-version-id": "MTg0NDY3NDI0NTM1MDczNDEwMjU",
     "x-amz-website-redirect-location": "None"
+  },
+  "User-Defined": {
+    "x-amz-meta-replication": "true",
+    "x-amz-meta-target-site": "cortxs3",
+    "x-amz-meta-target-bucket": "targetbucket"
   },
   "create_timestamp": "2021-05-05T08:10:15.000Z",
   "layout_id": 1,
