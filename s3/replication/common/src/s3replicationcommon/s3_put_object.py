@@ -91,6 +91,8 @@ class S3AsyncPutObject:
         self._logger.info(fmt_reqid_log(self._request_id) +
                           "PUT on {}".format(
                               self._session.endpoint + request_uri))
+        self._logger.debug(fmt_reqid_log(self._request_id) +
+                           "PUT with headers {}".format(headers))
         self._timer.start()
         try:
             async with self._session.get_client_session().put(
@@ -110,6 +112,10 @@ class S3AsyncPutObject:
                     if resp.status == 200:
                         self._state = S3RequestState.COMPLETED
                     else:
+                        error_msg = await resp.text()
+                        self._logger.error(
+                            fmt_reqid_log(self._request_id) +
+                            'Error Response: {}'.format(error_msg))
                         self._state = S3RequestState.FAILED
         except aiohttp.client_exceptions.ClientConnectorError as e:
             self.remote_down = True

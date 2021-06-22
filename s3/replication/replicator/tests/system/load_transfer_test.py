@@ -164,11 +164,16 @@ async def async_put_object(session, bucket_name, object_name, object_size,
     object_writer = S3AsyncPutObject(session, request_id, bucket_name,
                                      object_name, object_size)
 
+    status = "success"
     # Start transfer
     await object_writer.send(object_reader, transfer_chunk_size)
+    if object_writer.get_state() != S3RequestState.COMPLETED:
+        status = "failed"
+
     return {"object_name": object_name, "size": object_size,
             "md5": object_reader.get_md5(),
-            "etag": object_writer.get_response_header("ETag")
+            "etag": object_writer.get_response_header("ETag"),
+            "status": status
             }
 
 
@@ -230,6 +235,9 @@ async def run_load_test():
     # Post replication jobs.
     transfer_task_list = []
     for object_info in objects_info:
+        if object_info["status"] == "failed":
+            logger.error("\n\nFailed preparing source object!\n")
+            sys.exit(-1)
         replication_job = create_replication_job(
             s3_config, object_info)
         replication_jobs = [replication_job]

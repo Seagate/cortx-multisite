@@ -82,11 +82,22 @@ class S3AsyncGetObject:
         self._logger.info(fmt_reqid_log(self._request_id) +
                           'GET on {}'.format(
                               self._session.endpoint + request_uri))
+        self._logger.debug(fmt_reqid_log(self._request_id) +
+                           "GET with headers {}".format(headers))
         self._timer.start()
         try:
             async with self._session.get_client_session().get(
                     self._session.endpoint + request_uri,
                     headers=headers) as resp:
+                if resp.status != 200:
+                    self._state = S3RequestState.FAILED
+                    error_msg = await resp.text()
+                    self._logger.error(
+                        fmt_reqid_log(self._request_id) +
+                        'GET Object failed with http status: {}'.
+                        format(resp.status) +
+                        'Error Response: {}'.format(error_msg))
+
                 self._state = S3RequestState.RUNNING
                 while True:
                     # If abort requested, stop the loop and return.
