@@ -24,7 +24,7 @@ from .config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.jobs import Jobs
 from .replicator_routes import routes
-from .replication_managers import ReplicationManager
+from .replication_manager import ReplicationManager
 from .replication_managers import ReplicationManagers
 from .session_manager import close_all_sessions
 

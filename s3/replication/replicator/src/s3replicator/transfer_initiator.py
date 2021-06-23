@@ -31,7 +31,7 @@ class TranferEventHandler:
         """Initialise."""
         self._app = app
 
-    def notify(self, event, job_id):
+    async def notify(self, event, job_id):
         """Handles a given JobEvent.
 
         Args:
@@ -47,14 +47,22 @@ class TranferEventHandler:
             if job is not None:
                 job.mark_completed()
                 _logger.debug(
-                    "Removed job from app['all_jobs'] for job_id {}".format(
-                        job.get_job_id()))
+                    "Removed job from app['all_jobs'] for job_id {}".
+                    format(job_id))
                 if self._app["config"].job_cache_enabled:
                     # cache it, so status can be queried.
                     _logger.debug("Moved job after completion for job_id {}"
-                                  " to app['completed_jobs']".format(
-                                      job.get_job_id()))
+                                  " to app['completed_jobs']".format(job_id))
                     self._app['completed_jobs'].add_job(job)
+
+                # Update the replication manager about job completion.
+                # XXX Support to pick out of multiple replication managers.
+                replication_manager = \
+                    list(self._app['replication-managers'].values())[0]
+
+                await replication_manager.send_update(
+                    job.get_remote_job_id(),
+                    "completed")
 
 
 class TransferInitiator:

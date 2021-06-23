@@ -79,9 +79,11 @@ class PrepareReplicationJob:
         # Update the fields in template.
         epoch_t = datetime.datetime.utcnow()
 
+        # Combination of following fields makes S3 metadata update unique.
         job_dict["replication-id"] = fdmi_record["Bucket-Name"] + \
             fdmi_record["Object-Name"] + \
-            fdmi_record["System-Defined"]["x-amz-version-id"]
+            fdmi_record["System-Defined"]["x-amz-version-id"] + \
+            fdmi_record["create_timestamp"]
 
         job_dict["replication-event-create-time"] = epoch_t.strftime(
             '%Y%m%dT%H%M%SZ')

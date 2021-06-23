@@ -81,7 +81,12 @@ class Job:
         # There are 2 identifiers, job_id which is generated
         # and replication id that is sent by job creator.
         self._id = str(uuid.uuid4())
+
+        self._remote_job_id = None
+        if self._obj.get('job_id', None) is not None:
+            self._remote_job_id = self._obj['job_id']
         self._obj['job_id'] = self._id
+
         self._replicator = None
         self._update_state(JobState.INITIAL)
 
@@ -142,15 +147,21 @@ class Job:
 
     def mark_completed(self):
         """
-        Mark job as running.
+        Mark job as completed.
         """
         self._update_state(JobState.COMPLETED)
 
     def mark_failed(self):
         """
-        Mark job as running.
+        Mark job as failed.
         """
         self._update_state(JobState.FAILED)
+
+    def mark_aborted(self):
+        """
+        Mark job as aborted.
+        """
+        self._update_state(JobState.ABORTED)
 
     def pause(self):
         """
@@ -206,6 +217,12 @@ class Job:
         Returns job id.
         """
         return self._id
+
+    def get_remote_job_id(self):
+        """
+        Returns remote job id.
+        """
+        return self._remote_job_id
 
     def get_operation_type(self):
         """

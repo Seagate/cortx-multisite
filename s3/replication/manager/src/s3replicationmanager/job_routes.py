@@ -43,7 +43,14 @@ async def add_job(request):
         return web.json_response(
             {'ErrorResponse': 'BadRequest. Invalid Job!'}, status=400)
 
-    job = request.app['all_jobs'].add_job_using_json(job_record)
+    jobs_list = request.app['all_jobs']
+    if jobs_list.is_job_present(job_record["replication-id"]):
+        # Duplicate job submitted.
+        _logger.warn('Duplicate Job!')
+        return web.json_response(
+            {'ErrorResponse': 'Duplicate Job!'}, status=409)
+
+    job = jobs_list.add_job_using_json(job_record)
     _logger.debug('Successfully added Job with job_id : {} '.
                   format(job.get_job_id()))
     return web.json_response(job.get_dict(), status=201)
@@ -75,19 +82,27 @@ async def update_job_attr(request):
     job_id = request.match_info['job_id']
     _logger.debug('API: PUT /jobs/{}'.format(job_id))
 
-    job = request.app['all_jobs'].get_job(job_id)
+    jobs_list = request.app['all_jobs']
+    job = jobs_list.get_job_by_job_id(job_id)
 
     if job is None:
+        _logger.error('Job Not Found! job_id : {} '.format(job.get_job_id()))
         return web.json_response(
-            {'ErrorResponse': 'job is not present'}, status=404)
+            {'ErrorResponse': 'Job Not Found!'}, status=404)
     else:
-        request.app['all_jobs']._jobs[job.get_job_id()] = job_record
-        _logger.debug('Updated Job with job_id : {} '.format(job.get_job_id()))
+        if job_record["status"] == "completed":
+            job.mark_completed()
+        elif job_record["status"] == "failed":
+            job.mark_failed()
+        elif job_record["status"] == "aborted":
+            job.mark_aborted()
+
+        jobs_list.move_to_complete(job.get_replication_id())
+
+        _logger.info('Updated Job with job_id : {} '.format(job.get_job_id()))
         _logger.debug(
-            'Update Job : {} '.format(
-                json.dumps(
-                    job,
-                    cls=JobJsonEncoder)))
+            'Updated Job : {} '.format(json.dumps(job, cls=JobJsonEncoder)))
+        return web.json_response(job.get_dict(), status=200)
 
 
 @routes.get('/jobs')  # noqa: E302

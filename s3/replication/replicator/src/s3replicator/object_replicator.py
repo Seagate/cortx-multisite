@@ -80,11 +80,11 @@ class ObjectReplicator:
             _logger.debug(
                 "Notify completion to observer with label[{}]".format(label))
             if self._object_writer.get_state() == S3RequestState.PAUSED:
-                observer.notify(JobEvents.STOPPED, self._job_id)
+                await observer.notify(JobEvents.STOPPED, self._job_id)
             elif self._object_writer.get_state() == S3RequestState.ABORTED:
-                observer.notify(JobEvents.ABORTED, self._job_id)
+                await observer.notify(JobEvents.ABORTED, self._job_id)
             else:
-                observer.notify(JobEvents.COMPLETED, self._job_id)
+                await observer.notify(JobEvents.COMPLETED, self._job_id)
 
     def pause(self):
         """Pause the running object tranfer."""
