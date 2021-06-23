@@ -283,10 +283,10 @@ class Job:
         return self._obj["target"]["endpoint"]
 
     def get_target_s3_service_name(self):
-        return self._obj["source"]["service_name"]
+        return self._obj["target"]["service_name"]
 
     def get_target_s3_region(self):
-        return self._obj["source"]["region"]
+        return self._obj["target"]["region"]
 
     def get_target_access_key(self):
         return self._obj["target"]["access_key"]

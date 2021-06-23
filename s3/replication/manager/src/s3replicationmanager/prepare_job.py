@@ -26,6 +26,7 @@ import datetime
 import os
 import yaml
 
+from configparser import ConfigParser
 from s3replicationcommon.templates import replication_job_template
 
 
@@ -35,19 +36,43 @@ class PrepareReplicationJob:
     def from_fdmi(fdmi_record):
         """Prepare replication job record from fdmi record."""
 
-        # Read the config file.
-        with open(os.path.join(
-                os.path.dirname(__file__), '..',
-                'config/source_target_s3_config.yaml'), 'r') as config:
-            config = yaml.safe_load(config)
+        # XXX All below, source/target credentials logic to change after
+        # S3 server changes are ready for setting up replication.
+
+        # Read the config file for source/target sites.
+        cortx_s3 = None
+        conf_path = os.path.join(os.path.expanduser('~'), '.cortxs3')
+        file_path = os.path.join(conf_path, "cortx_s3.yaml")
+        if not os.path.isfile(file_path):
+            file_path = os.path.join(
+                os.path.dirname(__file__), '..', 'config/cortx_s3.yaml')
+
+        with open(file_path, 'r') as cortx_s3_f:
+            cortx_s3 = yaml.safe_load(cortx_s3_f)
+
+        aws_s3 = None
+        file_path = os.path.join(conf_path, "aws_s3.yaml")
+        if not os.path.isfile(file_path):
+            file_path = os.path.join(
+                os.path.dirname(__file__), '..', 'config/aws_s3.yaml')
+
+        with open(file_path, 'r') as aws_s3_f:
+            aws_s3 = yaml.safe_load(aws_s3_f)
 
         # File with credentials. ~/.cortxs3/credentials.yaml
-        creds_home = os.path.join(os.path.expanduser('~'), '.cortxs3')
-        creds_file_path = os.path.join(creds_home, 'credentials.yaml')
+        cortx_creds_path = os.path.join(conf_path, 'credentials.yaml')
 
-        credentials_config = None
-        with open(creds_file_path, 'r') as cred_config:
-            credentials_config = yaml.safe_load(cred_config)
+        cortx_credentials = None
+        with open(cortx_creds_path, 'r') as cred_config:
+            cortx_credentials = yaml.safe_load(cred_config)
+
+        # For AWS target.
+        # File with credentials. ~/.aws/credentials
+        aws_s3_creds_home = os.path.join(os.path.expanduser('~'), '.aws')
+        aws_s3_creds_path = os.path.join(aws_s3_creds_home, 'credentials')
+
+        aws_s3_credentials = ConfigParser()
+        aws_s3_credentials.read(aws_s3_creds_path)
 
         job_dict = replication_job_template()
 
@@ -61,12 +86,12 @@ class PrepareReplicationJob:
         job_dict["replication-event-create-time"] = epoch_t.strftime(
             '%Y%m%dT%H%M%SZ')
 
-        job_dict["source"]["endpoint"] = config["endpoint"]
-        job_dict["source"]["service_name"] = config["s3_service_name"]
-        job_dict["source"]["region"] = config["s3_region"]
+        job_dict["source"]["endpoint"] = cortx_s3["endpoint"]
+        job_dict["source"]["service_name"] = cortx_s3["s3_service_name"]
+        job_dict["source"]["region"] = cortx_s3["s3_region"]
 
-        job_dict["source"]["access_key"] = credentials_config["access_key"]
-        job_dict["source"]["secret_key"] = credentials_config["secret_key"]
+        job_dict["source"]["access_key"] = cortx_credentials["access_key"]
+        job_dict["source"]["secret_key"] = cortx_credentials["secret_key"]
 
         job_dict["source"]["operation"]["attributes"]["Bucket-Name"] = \
             fdmi_record["Bucket-Name"]
@@ -95,12 +120,26 @@ class PrepareReplicationJob:
         job_dict["source"]["operation"]["attributes"]["x-amz-version-id"] = \
             fdmi_record["System-Defined"]["x-amz-version-id"]
 
-        job_dict["target"]["endpoint"] = config["endpoint"]
-        job_dict["target"]["service_name"] = config["s3_service_name"]
-        job_dict["target"]["region"] = config["s3_region"]
-        job_dict["target"]["access_key"] = credentials_config["access_key"]
-        job_dict["target"]["secret_key"] = credentials_config["secret_key"]
+        # XXX: Change after S3 changes are ready for replication.
+        if fdmi_record["User-Defined"]["x-amz-meta-target-site"] == "cortxs3":
+            job_dict["target"]["endpoint"] = cortx_s3["endpoint"]
+            job_dict["target"]["service_name"] = cortx_s3["s3_service_name"]
+            job_dict["target"]["region"] = cortx_s3["s3_region"]
+            job_dict["target"]["access_key"] = cortx_credentials["access_key"]
+            job_dict["target"]["secret_key"] = cortx_credentials["secret_key"]
+        elif fdmi_record["User-Defined"]["x-amz-meta-target-site"] == "awss3":
+            job_dict["target"]["endpoint"] = aws_s3["endpoint"]
+            job_dict["target"]["service_name"] = aws_s3["s3_service_name"]
+            job_dict["target"]["region"] = aws_s3["s3_region"]
+            job_dict["target"]["access_key"] = \
+                aws_s3_credentials["default"]["aws_access_key_id"]
+            job_dict["target"]["secret_key"] = \
+                aws_s3_credentials["default"]["aws_secret_access_key"]
+        else:
+            # Invalid record.
+            return None
 
-        job_dict["target"]["Bucket-Name"] = config["target_bucket_name"]
+        job_dict["target"]["Bucket-Name"] = \
+            fdmi_record["User-Defined"]["x-amz-meta-target-bucket"]
 
         return job_dict

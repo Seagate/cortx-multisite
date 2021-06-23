@@ -43,10 +43,28 @@ Install the package.
 python3 setup.py install
 ```
 
+Replication manager currently provides ability to define target sites using
+following config files. These files needs to be updated to point to your test
+target sites. This is eventually be replaced using Bucket replication configuration
+from S3 server.
+
+Files to be modified.
+`~/.cortxs3/cortx_s3.yaml` and `~/.cortxs3/aws_s3.yaml`
+These can also be modified in source or use reference from source from
+`manager/src/config/` folder.
+
 Start the replicator.
 ```sh
 python3 -m s3replicationmanager
 ```
+
+Following sections specify how to test replication manager.
+Tests use some sample data, and one of the files used is
+`manager/tests/system/data/fdmi_test_job.json`
+
+Modify appropriate values to run a specific test. Most attributes are
+self explanatory. But `x-amz-meta-target-site` takes 2 different values
+as `cortxs3` for cortx target and `awss3` for aws s3 target.
 
 Run system tests after starting the Replication manager.
 ```sh
@@ -63,4 +81,13 @@ To run specific test.
 ```sh
 py.test tests/system -k 'test_post_job[valid_job-201]'
 py.test tests/system -k 'test_post_subscriber[valid_payload-201]'
+```
+
+For testing with cortx s3, following user defined attributes can be specified
+to simulate replication events.
+```sh
+s3cmd put --add-header x-amz-meta-replication:true \
+          --add-header x-amz-meta-target-site:awss3 \
+          --add-header x-amz-meta-target-bucket:targetbucket \
+          someobject.jpg s3://sourcebucket
 ```

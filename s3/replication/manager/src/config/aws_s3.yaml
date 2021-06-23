@@ -1,0 +1,3 @@
+endpoint: "http://s3.amazonaws.com"
+s3_service_name: s3
+s3_region: us-east-1
