@@ -246,7 +246,7 @@ class Jobs:
         self._jobs_queued[job.get_replication_id()] = None
 
         if self._timeout is not None:
-            asyncio.create_task(
+            asyncio.ensure_future(
                 self.schedule_clear_cache(job.get_job_id())
             )
         return True
