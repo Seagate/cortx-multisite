@@ -101,7 +101,7 @@ class JobDistributor:
                     replicator_client = ReplicatorClient(subscriber)
 
                     # Schedule async job send using http POST.
-                    task = asyncio.create_task(replicator_client.post(
+                    task = asyncio.ensure_future(replicator_client.post(
                         jobs_to_send))
                     task_list.append(task)
                     jobs_list_per_task.append(jobs_to_send)

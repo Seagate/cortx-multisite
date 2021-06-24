@@ -195,7 +195,7 @@ async def setup_source(session, bucket_name, transfer_chunk_size):
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
 
         # Perform the PUT operation on source and capture md5.
-        task = asyncio.create_task(
+        task = asyncio.ensure_future(
             async_put_object(session, bucket_name, object_name,
                              object_size, transfer_chunk_size))
         put_task_list.append(task)
@@ -242,7 +242,7 @@ async def run_load_test():
             s3_config, object_info)
         replication_jobs = [replication_job]
         logger.debug("POST {}/jobs {}".format(url, replication_jobs))
-        transfer_task = asyncio.create_task(replicator_session.post(
+        transfer_task = asyncio.ensure_future(replicator_session.post(
             url + '/jobs', json=replication_jobs))
         transfer_task_list.append(transfer_task)
     # jobs info contains list of response from POST /jobs for each transfer
@@ -273,7 +273,7 @@ async def run_load_test():
             logger.debug(
                 "Checking status for job: job_id= {}".format(job_id))
 
-            job_status_task = asyncio.create_task(replicator_session.get(
+            job_status_task = asyncio.ensure_future(replicator_session.get(
                 url + '/jobs/' + job_id))
             job_status_task_list.append(job_status_task)
 
