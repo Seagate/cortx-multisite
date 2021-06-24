@@ -36,7 +36,7 @@ async def on_startup(app):
 
     distributor = JobDistributor(app)
     app["job_distributor"] = distributor
-    asyncio.create_task(distributor.start())
+    asyncio.ensure_future(distributor.start())
 
 
 async def on_shutdown(app):
