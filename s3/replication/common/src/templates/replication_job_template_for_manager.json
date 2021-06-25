@@ -1,0 +1,35 @@
+{
+  "ACL": "base64-encoded-acl-json",
+  "Bucket-Name": "sourcebucket",
+  "Object-Name": "test_object_0_sz1223",
+  "Object-URI": "sourcebucket\\\\test_object_0_sz1223",
+  "System-Defined": {
+    "Content-Length": "1223",
+    "Content-MD5": "6a7ef642e08c2ca64ac644d3ed7b847d",
+    "Content-Type": "",
+    "Date": "2021-05-05T08:10:14.000Z",
+    "Last-Modified": "2021-05-05T08:10:14.000Z",
+    "Owner-Account": "cloud",
+    "Owner-Account-id": "708741171239",
+    "Owner-Canonical-id": "f5810cae61af4d8d99b113cdc3c55443c7f6eb36fec041f88b05f9704daeed47",
+    "Owner-User": "root",
+    "Owner-User-id": "BJo5ILHCTOiXYrWrkitJeg",
+    "x-amz-server-side-encryption": "None",
+    "x-amz-server-side-encryption-aws-kms-key-id": "",
+    "x-amz-server-side-encryption-customer-algorithm": "",
+    "x-amz-server-side-encryption-customer-key": "",
+    "x-amz-server-side-encryption-customer-key-MD5": "",
+    "x-amz-storage-class": "STANDARD",
+    "x-amz-version-id": "MTg0NDY3NDI0NTM1MDczNDEwMjU",
+    "x-amz-website-redirect-location": "None"
+  },
+  "User-Defined": {
+    "x-amz-meta-replication": "true",
+    "x-amz-meta-target-site": "cortxs3",
+    "x-amz-meta-target-bucket": "targetbucket"
+  },
+  "create_timestamp": "2021-05-05T08:10:15.000Z",
+  "layout_id": 1,
+  "motr_oid": "kQxABAAAAAA=-QgCQAQAAbJY="
+}
+
