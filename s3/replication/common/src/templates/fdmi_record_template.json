@@ -1,10 +1,10 @@
 {
   "ACL": "base64-encoded-acl-json",
-  "Bucket-Name": "sourcebucket",
-  "Object-Name": "test_object_0_sz1223",
-  "Object-URI": "sourcebucket\\\\test_object_0_sz1223",
+  "Bucket-Name": "seagatebucket",
+  "Object-Name": "seagate-hdd.jpg",
+  "Object-URI": "seagatebucket\\\\seagate-hdd.jpg",
   "System-Defined": {
-    "Content-Length": "1223",
+    "Content-Length": "0",
     "Content-MD5": "6a7ef642e08c2ca64ac644d3ed7b847d",
     "Content-Type": "",
     "Date": "2021-05-05T08:10:14.000Z",

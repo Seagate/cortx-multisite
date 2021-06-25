@@ -34,12 +34,12 @@ def replication_job_template():
     return template
 
 
-def replication_job_template_for_manager():
-    """Returns Replication job for manager template loaded from json file."""
+def fdmi_record_template():
+    """Returns fdmi record template loaded from json file."""
     template_path = os.path.join(
         os.path.dirname(__file__),
         '..', 'templates',
-        'replication_job_template_for_manager.json')
+        'fdmi_record_template.json')
 
     with open(template_path, 'r') as template_file:
         template = json.load(template_file)

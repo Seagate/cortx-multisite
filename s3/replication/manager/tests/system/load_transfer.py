@@ -26,7 +26,6 @@
 
 import aiohttp
 import asyncio
-# import datetime
 import hashlib
 import os
 import sys
@@ -38,7 +37,7 @@ from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_common import S3RequestState
-from s3replicationcommon.templates import replication_job_template_for_manager
+from s3replicationcommon.templates import fdmi_record_template
 from s3replicationmanager.config import Config as ManagerConfig
 from s3_config import S3Config
 
@@ -119,18 +118,20 @@ def init_logger():
     return logger
 
 
-def create_replication_job_for_manager(s3_config, object_info):
-    job_dict = replication_job_template_for_manager()
+def create_job_with_fdmi_record(s3_config, object_info):
+    job_dict = fdmi_record_template()
 
     # Update the fields in template.
     job_dict["Object-Name"] = object_info["object_name"]
-    job_dict["Object-URI"] = s3_config.source_bucket_name + \
+    job_dict["Object-URI"] = TestConfig.source_bucket + \
         '\\\\' + object_info["object_name"]
     job_dict["System-Defined"]["Content-Length"] = object_info["size"]
     job_dict["System-Defined"]["Content-MD5"] = object_info["md5"]
 
     job_dict["User-Defined"]["x-amz-meta-target-site"] = \
         s3_config.s3_service_name
+    job_dict["User-Defined"]["x-amz-meta-target-bucket"] = \
+        TestConfig.target_bucket
 
     return job_dict
 
@@ -209,7 +210,7 @@ async def run_load_test():
         s3_config.secret_key)
 
     # Prepare the source data
-    objects_info = await setup_source(s3_session, s3_config.source_bucket_name,
+    objects_info = await setup_source(s3_session, TestConfig.source_bucket,
                                       s3_config.transfer_chunk_size)
 
     manager_session = aiohttp.ClientSession()
@@ -219,12 +220,11 @@ async def run_load_test():
         if object_info["status"] == "failed":
             logger.error("\n\nFailed preparing source object!\n")
             sys.exit(-1)
-        replication_job_dict = create_replication_job_for_manager(
+        manager_job = create_job_with_fdmi_record(
             s3_config, object_info)
-        replication_job = replication_job_dict
-        logger.debug("POST {}/jobs {}".format(url, replication_job))
+        logger.debug("POST {}/jobs {}".format(url, manager_job))
         transfer_task = asyncio.ensure_future(manager_session.post(
-            url + '/jobs', json=replication_job))
+            url + '/jobs', json=manager_job))
         transfer_task_list.append(transfer_task)
     # jobs info contains list of response from POST /jobs for each transfer
     logger.debug("Waiting for all POST {}/jobs response...".format(url))
@@ -243,7 +243,7 @@ async def run_load_test():
 
     # Poll for replication jobs completion.
     jobs_running = True  # if at least one job is running, keep polling.
-    polling_count = 5  # Max poll for 5 iterations to avoid infinite loop
+    polling_count = 10  # Max poll for 10 iterations to avoid infinite loop
 
     while jobs_running and polling_count != 0:
         job_status_task_list = []
