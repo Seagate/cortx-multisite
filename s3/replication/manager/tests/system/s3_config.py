@@ -24,7 +24,6 @@ import yaml
 
 
 class S3Config:
-
     """Configuration for S3 tests."""
 
     def __init__(self):

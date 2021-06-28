@@ -122,6 +122,7 @@ def create_job_with_fdmi_record(s3_config, object_info):
     job_dict = fdmi_record_template()
 
     # Update the fields in template.
+    job_dict["Bucket-Name"] = TestConfig.source_bucket
     job_dict["Object-Name"] = object_info["object_name"]
     job_dict["Object-URI"] = TestConfig.source_bucket + \
         '\\\\' + object_info["object_name"]
