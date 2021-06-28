@@ -32,6 +32,10 @@ class Jobs:
         """Helper to format json."""
         return json.dumps(obj._jobs, cls=JobJsonEncoder)
 
+    @staticmethod
+    def list_dumps(obj):
+        return json.dumps(obj, cls=JobJsonEncoder)
+
     def __init__(self, logger, label, timeout=None):
         """
         Initialises collection with given label used for logging. Entries in
