@@ -31,6 +31,7 @@ import os
 import sys
 import time
 import uuid
+import yaml
 from random import randrange
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
 from s3replicationcommon.s3_site import S3Site
@@ -40,7 +41,7 @@ from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.templates import fdmi_record_template
 from s3replicationmanager.config import Config as ManagerConfig
 from s3_config import S3Config
-import yaml
+
 
 
 class TestConfig:
@@ -48,10 +49,9 @@ class TestConfig:
 
     def __init__(self):
         """Initialise."""
-
         # Read the test config fite.
         with open(os.path.join(os.path.dirname(__file__),
-                  'config/load_xfer_test_config.yaml'), 'r') as config:
+                  'config/load_transfer_test_config.yaml'), 'r') as config:
             self._config = yaml.safe_load(config)
 
         self.count_of_obj = self._config["count_of_obj"]
