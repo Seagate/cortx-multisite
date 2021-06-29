@@ -32,6 +32,7 @@ import os
 import sys
 import time
 import uuid
+import yaml
 from random import randrange
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
 from s3replicationcommon.s3_site import S3Site
@@ -43,18 +44,27 @@ from s3replicator.config import Config as ReplicatorConfig
 from s3_config import S3Config
 
 
-class TestConfig:
-    count_of_obj = 2  # 100
-    min_obj_size = 1024  # 1k - size in bytes
-    max_obj_size = 2048  # 2k - size in bytes
-    fixed_size = 1024  # 1k - size in bytes
-    # True use random size objects, False fixed size.
-    random_size_enabled = True
-    source_bucket = "sourcebucket"
-    target_bucket = "targetbucket"
-    polling_wait_time = 2  # 2 secs wait between polling job status.
-
 # Helper methods
+
+
+class TestConfig:
+    """Configuration for load transfer test."""
+
+    def __init__(self):
+        """Initialise."""
+        # Read the test config fite.
+        with open(os.path.join(os.path.dirname(__file__),
+                  'config/load_transfer_test_config.yaml'), 'r') as config:
+            self._config = yaml.safe_load(config)
+
+        self.count_of_obj = self._config["count_of_obj"]
+        self.min_obj_size = self._config["min_obj_size"]
+        self.max_obj_size = self._config["max_obj_size"]
+        self.fixed_size = self._config["fixed_size"]
+        self.random_size_enabled = self._config["random_size_enabled"]
+        self.source_bucket = self._config["source_bucket"]
+        self.target_bucket = self._config["target_bucket"]
+        self.polling_wait_time = self._config["polling_wait_time"]
 
 
 class ObjectDataGenerator:
@@ -119,11 +129,11 @@ def init_logger():
     return logger
 
 
-def create_replication_job(s3_config, object_info):
+def create_replication_job(s3_config, test_config, object_info):
     job_dict = replication_job_template()
     # Update the fields in template.
     epoch_t = datetime.datetime.utcnow()
-    job_dict["replication-id"] = s3_config.source_bucket_name + \
+    job_dict["replication-id"] = test_config.source_bucket + \
         object_info["object_name"] + str(epoch_t)
     job_dict["replication-event-create-time"] = epoch_t.strftime(
         '%Y%m%dT%H%M%SZ')
@@ -135,7 +145,7 @@ def create_replication_job(s3_config, object_info):
     job_dict["source"]["secret_key"] = s3_config.secret_key
 
     job_dict["source"]["operation"]["attributes"]["Bucket-Name"] = \
-        s3_config.source_bucket_name
+        test_config.source_bucket
     job_dict["source"]["operation"]["attributes"]["Object-Name"] = \
         object_info["object_name"]
     job_dict["source"]["operation"]["attributes"]["Content-Length"] = \
@@ -149,7 +159,7 @@ def create_replication_job(s3_config, object_info):
     job_dict["target"]["access_key"] = s3_config.access_key
     job_dict["target"]["secret_key"] = s3_config.secret_key
 
-    job_dict["target"]["Bucket-Name"] = s3_config.target_bucket_name
+    job_dict["target"]["Bucket-Name"] = test_config.target_bucket
 
     return job_dict
 
@@ -177,26 +187,26 @@ async def async_put_object(session, bucket_name, object_name, object_size,
             }
 
 
-async def setup_source(session, bucket_name, transfer_chunk_size):
+async def setup_source(session, test_config, transfer_chunk_size):
     # Create objects at source and returns list with object info
 
     # [{"object_name": "object-name1", "size": 4096, "md5": abcd},
     #  {"object_name": "object-name2", "size": 8192, "md5": pqrs}]
     put_task_list = []
-    for i in range(TestConfig.count_of_obj):
+    for i in range(test_config.count_of_obj):
         # Generate object size
-        object_size = TestConfig.fixed_size
-        if TestConfig.random_size_enabled:
+        object_size = test_config.fixed_size
+        if test_config.random_size_enabled:
             object_size = randrange(
-                TestConfig.min_obj_size,
-                TestConfig.max_obj_size)
+                test_config.min_obj_size,
+                test_config.max_obj_size)
 
         # Generate object name
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
 
         # Perform the PUT operation on source and capture md5.
         task = asyncio.ensure_future(
-            async_put_object(session, bucket_name, object_name,
+            async_put_object(session, test_config.source_bucket, object_name,
                              object_size, transfer_chunk_size))
         put_task_list.append(task)
     objects_info = await asyncio.gather(*put_task_list)
@@ -215,6 +225,8 @@ async def run_load_test():
 
     logger = init_logger()
 
+    test_config = TestConfig()
+
     s3_config = S3Config()
     s3_site = S3Site(
         s3_config.endpoint,
@@ -228,7 +240,7 @@ async def run_load_test():
         s3_config.secret_key)
 
     # Prepare the source data
-    objects_info = await setup_source(s3_session, s3_config.source_bucket_name,
+    objects_info = await setup_source(s3_session, test_config,
                                       s3_config.transfer_chunk_size)
 
     replicator_session = aiohttp.ClientSession()
@@ -239,7 +251,7 @@ async def run_load_test():
             logger.error("\n\nFailed preparing source object!\n")
             sys.exit(-1)
         replication_job = create_replication_job(
-            s3_config, object_info)
+            s3_config, test_config, object_info)
         replication_jobs = [replication_job]
         logger.debug("POST {}/jobs {}".format(url, replication_jobs))
         transfer_task = asyncio.ensure_future(replicator_session.post(
@@ -302,8 +314,8 @@ async def run_load_test():
         else:
             # There are atleast some running jobs, give time to complete.
             logger.info("Waiting for {} secs before polling job status...".
-                        format(TestConfig.polling_wait_time))
-            time.sleep(TestConfig.polling_wait_time)
+                        format(test_config.polling_wait_time))
+            time.sleep(test_config.polling_wait_time)
 
         polling_count -= 1
 

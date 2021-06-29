@@ -1,0 +1,10 @@
+# Load tranfer test configs for replicator
+count_of_obj: 2
+min_obj_size: 1024  # 1k - size in bytes
+max_obj_size: 2048  # 2k - size in bytes
+fixed_size: 1024  # 1k - size in bytes
+# True use random size objects, False fixed size.
+random_size_enabled: true
+source_bucket: "sourcebucket"
+target_bucket: "targetbucket"
+polling_wait_time: 5  # 5 secs wait between polling job status.
