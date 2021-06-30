@@ -43,6 +43,7 @@ class Config:
 
         self.host = '127.0.0.1'
         self.port = 8081
+        self.max_connections_per_s3_session = 100
 
     def load(self):
         """Load the configuration data."""
@@ -53,12 +54,17 @@ class Config:
             self.port = config_props['replicator']['port']
             self.ssl = config_props['replicator']['ssl']
             self.service_name = config_props['replicator']['service_name']
+
             self.max_replications = \
                 config_props['transfer']["max_replications"]
             self.transfer_chunk_size_bytes = \
                 config_props['transfer']["transfer_chunk_size_bytes"]
+            self.max_connections_per_s3_session = \
+                config_props['transfer']['max_connections_per_s3_session']
+
             self.job_cache_enabled = config_props['jobs']['enable_cache']
             self.job_cache_timeout_secs = config_props['jobs']['cache_timeout']
+
             self.manager_host = config_props['manager']['host']
             self.manager_port = config_props['manager']['port']
             self.manager_ssl = config_props['manager']['ssl']
@@ -92,6 +98,8 @@ class Config:
             logger.info("transfer_chunk_size_bytes: {}".format(
                 self.transfer_chunk_size_bytes))
             logger.info("max_replications: {}".format(self.max_replications))
+            logger.info("max_connections_per_s3_session: {}".format(
+                self.max_connections_per_s3_session))
 
             logger.info("manager_host: {}".format(self.manager_host))
             logger.info("manager_port: {}".format(self.manager_port))

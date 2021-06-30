@@ -7,6 +7,7 @@ transfer:
    max_replications: 100  # Maximum number of replications that can run in parallel
    transfer_chunk_size_bytes: 512  # Per replication job bytes in flight
    total_in_flight_bytes: 1073741824   # 1GB = transfer_chunk_size_bytes * no of running replication jobs
+   max_connections_per_s3_session: 100
 jobs:
    enable_cache: true  # cache for completed or aborted jobs, primarily for testing
    cache_timeout: 300  # timeout in secs. completed/aborted jobs will be cached for max 5 mins.

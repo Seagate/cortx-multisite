@@ -100,6 +100,7 @@ class S3AsyncPutObject:
                     headers=headers,
                     # Read all data from data_reader
                     data=data_reader.fetch(transfer_size)) as resp:
+                self._timer.stop()
 
                 if data_reader.get_state() != S3RequestState.ABORTED:
                     self._http_status = resp.status
@@ -118,11 +119,12 @@ class S3AsyncPutObject:
                             'Error Response: {}'.format(error_msg))
                         self._state = S3RequestState.FAILED
         except aiohttp.client_exceptions.ClientConnectorError as e:
+            self._timer.stop()
             self.remote_down = True
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
-        self._timer.stop()
+        return self._state
 
     def pause(self):
         self._state = S3RequestState.PAUSED

@@ -69,19 +69,22 @@ class TransferInitiator:
     async def start(job, app):
         operation_type = job.get_operation_type()
         _logger.debug("Replication operation = {}".format(operation_type))
+        app_config = app["config"]
 
         # Reuse the sessions.
         source_session = get_session(
             app,
             job.get_source_s3_site(),
             job.get_source_access_key(),
-            job.get_source_secret_key())
+            job.get_source_secret_key(),
+            app_config.max_connections_per_s3_session)
 
         target_session = get_session(
             app,
             job.get_target_s3_site(),
             job.get_target_access_key(),
-            job.get_target_secret_key())
+            job.get_target_secret_key(),
+            app_config.max_connections_per_s3_session)
 
         if operation_type == ReplicationJobType.OBJECT_REPLICATION:
             object_replicator = ObjectReplicator(

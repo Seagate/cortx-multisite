@@ -10,5 +10,5 @@ file:
 
 console:
    enabled: true
-   log_level: DEBUG  # https://docs.python.org/3/library/logging.html#levels
+   log_level: INFO  # https://docs.python.org/3/library/logging.html#levels
    log_format: '%(asctime)s [%(levelname)s] [%(filename)s: %(lineno)d] %(message)s'

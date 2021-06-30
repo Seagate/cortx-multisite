@@ -21,7 +21,8 @@ import aiohttp
 
 
 class S3Session:
-    def __init__(self, logger, s3_site, access_key, secret_key):
+    def __init__(self, logger, s3_site, access_key, secret_key,
+                 number_of_connections=100):
         """Initialise S3 session."""
         self.logger = logger
         self.endpoint = s3_site.endpoint
@@ -31,7 +32,8 @@ class S3Session:
         self.access_key = access_key
         self.secret_key = secret_key
 
-        self._client_session = aiohttp.ClientSession()
+        connector = aiohttp.TCPConnector(limit=number_of_connections)
+        self._client_session = aiohttp.ClientSession(connector=connector)
 
     def get_client_session(self):
         return self._client_session

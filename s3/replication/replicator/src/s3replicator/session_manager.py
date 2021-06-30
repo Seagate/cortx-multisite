@@ -26,7 +26,7 @@ _logger = logging.getLogger('s3replicator')
 # access key to uniquely identify each session for an IAM account/user.
 
 
-def get_session(app, s3_site, access_key, secret_key):
+def get_session(app, s3_site, access_key, secret_key, max_connections):
 
     # example "s3.seagate.com|someaccesskey"
     session_key = s3_site.get_netloc() + "|" + access_key
@@ -36,7 +36,12 @@ def get_session(app, s3_site, access_key, secret_key):
         _logger.debug("Creating new session for session_key {}".
                       format(session_key))
         # Create New session
-        session = S3Session(_logger, s3_site, access_key, secret_key)
+        session = S3Session(
+            _logger,
+            s3_site,
+            access_key,
+            secret_key,
+            max_connections)
 
         # Cache it
         app["sessions"][session_key] = session

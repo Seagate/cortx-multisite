@@ -5,4 +5,5 @@ source_bucket_name: sourcebucket
 target_bucket_name: targetbucket
 object_name_prefix: foo_
 object_size: 1024
-transfer_chunk_size: 128
+transfer_chunk_size: 4096
+max_s3_connections: 100
