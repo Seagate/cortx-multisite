@@ -42,18 +42,19 @@ def upload_object(logger, work_item):
     timer.start()
     response = work_item.s3_client.put_object(
         Body=data,
+        ContentLength=work_item.object_size,
         Bucket=work_item.bucket_name,
         Key=work_item.object_name)
     timer.stop()
-
-    work_item.status = "success"
-    logger.info("Completed upload for object {}".format(work_item.object_name))
 
     returned_etag = response['ETag'].strip('"')
     assert returned_etag == md5, "Upload failed for object " + \
         work_item.object_name + \
         "\nReturned Etag: {}".format(returned_etag) + \
         "\nUploaded data md5 {}".format(md5)
+
+    work_item.status = "success"
+    logger.info("Completed upload for object {}".format(work_item.object_name))
 
     work_item.time_for_upload = timer.elapsed_time_ms()
 
@@ -73,7 +74,7 @@ def main():
     config = Config()
 
     bucket_name = "boto3bucket"
-    total_count = 200  # Number of objects to upload.
+    total_count = 100  # Number of objects to upload.
     object_size = 4096  # Bytes.
 
     # Setup logging and get logger
@@ -85,6 +86,9 @@ def main():
     if logger is None:
         print("Failed to configure logging.\n")
         sys.exit(-1)
+
+    # Init Global.
+    GlobalTestDataBlock.create(object_size)
 
     # Create resources for each thread.
     sessions = []
@@ -117,15 +121,18 @@ def main():
 
     # Wait for threads to complete.
     total_time_ms = 0
+    failed_count = 0
     for i in range(total_count):
         request_threads[i].join()
         if work_items[i].status == "success":
             total_time_ms += work_items[i].time_for_upload
+        else:
+            failed_count += 1
 
     logger.info("Total time to upload {} objects = {} ms.".format(
-        total_count, total_time_ms))
+        total_count - failed_count, total_time_ms))
     logger.info("Avg time per upload = {} ms.".format(
-        total_time_ms / total_count))
+        total_time_ms / total_count - failed_count))
 
 
 # Run the test

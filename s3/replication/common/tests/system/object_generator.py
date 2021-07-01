@@ -27,11 +27,13 @@ from s3replicationcommon.s3_common import S3RequestState
 
 
 class GlobalTestDataBlock:
+    _block = None
+    _block_size = 0
+    _md5 = None
+
     @classmethod
     def create(cls, block_size):
         assert block_size, "block_size should be non zero."
-        assert block_size == cls._block_size, \
-            "Invalid use. Only one size supported."
 
         if cls._block is None:
             cls._block_size = block_size
@@ -40,6 +42,9 @@ class GlobalTestDataBlock:
             hash = hashlib.md5()
             hash.update(cls._block)
             cls._md5 = hash.hexdigest()
+
+        assert block_size == cls._block_size, \
+            "Invalid use. Only one size supported."
 
         return cls._block
 
@@ -87,4 +92,3 @@ class FixedObjectDataGenerator:
         self._state = S3RequestState.RUNNING
         yield self._data
         self._state = S3RequestState.COMPLETED
-        return self._state

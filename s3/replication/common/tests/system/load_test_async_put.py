@@ -23,7 +23,7 @@ import asyncio
 from config import Config
 import os
 import sys
-from object_generator import ObjectDataGenerator
+from object_generator import FixedObjectDataGenerator
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
@@ -66,7 +66,8 @@ async def main():
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
 
         request_id = "request-id" + str(i)
-        object_reader = ObjectDataGenerator(logger, object_name, object_size)
+        object_reader = FixedObjectDataGenerator(
+            logger, object_name, object_size)
         object_writer = S3AsyncPutObject(session, request_id, bucket_name,
                                          object_name, object_size)
         reader_list.append(object_reader)
@@ -76,7 +77,7 @@ async def main():
     # Trigger upload.
     for i in range(total_count):
         task = asyncio.ensure_future(
-            writer_list[i].send(reader_list[i], reader_list[i].object_size()))
+            writer_list[i].send(reader_list[i], reader_list[i].object_size))
         put_task_list.append(task)
 
     # Wait for uploads to complete.
