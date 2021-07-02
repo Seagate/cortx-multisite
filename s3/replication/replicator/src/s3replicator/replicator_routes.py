@@ -21,6 +21,7 @@ import asyncio
 from aiohttp import web
 import json
 import logging
+from urllib.parse import urlparse, parse_qs
 from s3replicationcommon.jobs import Job
 from s3replicationcommon.jobs import Jobs
 from s3replicationcommon.job import JobJsonEncoder
@@ -35,12 +36,21 @@ routes = web.RouteTableDef()
 @routes.get('/jobs')  # noqa: E302
 async def list_jobs(request):
     """List all in-progress jobs."""
+    url = request.path_qs
+    url_ob = urlparse(url)
+    query = parse_qs(url_ob.query, keep_blank_values=True)
+
     _logger.debug('API: GET /jobs')
     jobs = request.app['all_jobs']
+    completed_jobs = request.app['completed_jobs']
 
-    _logger.debug('Number of jobs in-progress {}'.format(jobs.count()))
-    # _logger.debug('List of jobs in-progress {}'.format(Jobs.dumps(jobs)))
-    return web.json_response(jobs, dumps=Jobs.dumps, status=200)
+    if 'all' in query:
+        return web.json_response({'count': jobs.count()}, status=200)
+    elif 'completed' in query:
+        return web.json_response({'count': completed_jobs.count()}, status=200)
+    else:
+        _logger.debug('Number of jobs in-progress {}'.format(jobs.count()))
+        return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 
 @routes.get('/jobs/{job_id}')  # noqa: E302
