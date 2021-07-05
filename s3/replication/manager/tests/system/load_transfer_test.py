@@ -43,7 +43,6 @@ from s3replicationmanager.config import Config as ManagerConfig
 from s3_config import S3Config
 
 
-
 class TestConfig:
     """Configuration for load transfer test."""
 
