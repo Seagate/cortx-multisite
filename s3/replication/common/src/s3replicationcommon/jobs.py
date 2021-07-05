@@ -207,7 +207,7 @@ class Jobs:
         Returns in-progress jobs in collection.
 
         Returns:
-            int: Count of jobs in collection.
+            int: Count of in-progress jobs in collection.
         """
         return len(self._jobs_inprogress)
 
