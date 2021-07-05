@@ -202,6 +202,15 @@ class Jobs:
         """
         return len(self._jobs_queued)
 
+    def inprogress_count(self):
+        """
+        Returns in-progress jobs in collection.
+
+        Returns:
+            int: Count of jobs in collection.
+        """
+        return len(self._jobs_inprogress)
+
     def is_job_present(self, replication_id):
         """
         Checks if given replication id is present.
