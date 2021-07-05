@@ -46,13 +46,13 @@ async def list_jobs(request):
 
     if 'count' in query:
         if 'inprogress' in query:
-            return web.json_response({'In-progress jobs count':
+            return web.json_response({'inprogress-count':
                                   jobs.inprogress_count()}, status=200)
         elif 'completed' in query:
-            return web.json_response({'Completed jobs count':
+            return web.json_response({'completed-count':
                                   completed_jobs.count()}, status=200)
         else:
-            return web.json_response({'All jobs count': jobs.count()}, status=200)
+            return web.json_response({'count': jobs.count()}, status=200)
     else:
         _logger.debug('Total replication jobs {}'.format(jobs.count()))
         return web.json_response(jobs, dumps=Jobs.dumps, status=200)
