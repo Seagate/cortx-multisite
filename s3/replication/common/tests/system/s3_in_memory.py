@@ -49,10 +49,33 @@ async def put_object(request):
     hash = hashlib.md5()
     hash.update(data)
     md5 = hash.hexdigest()
-
+    headers = {
+        "ETag": "\"{}\"".format(md5)
+    }
     print("API: PUT /{}/{} - md5 = {}".format(bucket_name, object_name, md5))
 
-    return web.json_response(status=200)
+    return web.json_response(status=200, headers=headers)
+
+# GET Object API.
+@routes.get('/{bucket_name}/{object_name}')  # noqa: E302
+async def get_object(request):
+    """Handler to Update job attributes."""
+
+    bucket_name = request.match_info['bucket_name']
+    object_name = request.match_info['object_name']
+    print('API: GET /{}/{}'.format(bucket_name, object_name))
+
+    object_size = int(object_name.rsplit("_sz")[1])
+
+    data = bytearray(object_size)
+    hash = hashlib.md5()
+    hash.update(data)
+    md5 = hash.hexdigest()
+    headers = {
+        "ETag": "\"{}\"".format(md5)
+    }
+
+    return web.Response(body=data, status=200, headers=headers)
 
 
 if __name__ == '__main__':
@@ -66,4 +89,4 @@ if __name__ == '__main__':
     app.on_shutdown.append(on_shutdown)
 
     # Start the REST server.
-    web.run_app(app, host="localhost", port="8080")
+    web.run_app(app, host="0.0.0.0", port="80")

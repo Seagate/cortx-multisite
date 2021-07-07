@@ -80,7 +80,7 @@ class FixedObjectDataGenerator:
         """Returns current request state."""
         return self._state
 
-    def get_md5(self):
+    def get_etag(self):
         if self._state == S3RequestState.COMPLETED:
             return self._md5
         return None
