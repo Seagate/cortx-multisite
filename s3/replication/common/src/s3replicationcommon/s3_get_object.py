@@ -52,6 +52,10 @@ class S3AsyncGetObject:
         """Return total time for GET Object operation."""
         return self._timer.elapsed_time_ms()
 
+    def get_etag(self):
+        "Returns ETag for object."
+        return self._response_headers["ETag"].strip("\"")
+
     # yields data chunk for given size
     async def fetch(self, chunk_size):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
@@ -97,7 +101,7 @@ class S3AsyncGetObject:
                         'GET Object failed with http status: {}'.
                         format(resp.status) +
                         'Error Response: {}'.format(error_msg))
-
+                self._response_headers = resp.headers
                 self._state = S3RequestState.RUNNING
                 while True:
                     # If abort requested, stop the loop and return.

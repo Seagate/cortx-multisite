@@ -23,6 +23,7 @@ import asyncio
 from config import Config
 import os
 import sys
+import time
 from object_generator import FixedObjectDataGenerator
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.log import setup_logger
@@ -36,7 +37,7 @@ async def main():
     config = Config()
 
     bucket_name = "sourcebucket"
-    total_count = 200  # Number of objects to upload.
+    total_count = 100  # Number of objects to upload.
     object_size = 4096  # Bytes.
 
     # Setup logging and get logger
@@ -60,6 +61,8 @@ async def main():
 
     reader_list = []
     writer_list = []
+    put_task_list = []
+    start_time = time.perf_counter()
     # Prepare for upload.
     for i in range(total_count):
         # Generate object name
@@ -73,30 +76,23 @@ async def main():
         reader_list.append(object_reader)
         writer_list.append(object_writer)
 
-    put_task_list = []
-    # Trigger upload.
-    for i in range(total_count):
         task = asyncio.ensure_future(
             writer_list[i].send(reader_list[i], reader_list[i].object_size))
         put_task_list.append(task)
 
-    # Wait for uploads to complete.
-    upload_states = await asyncio.gather(*put_task_list)
+    # Trigger upload and Wait for uploads to complete.
+    await asyncio.gather(*put_task_list)
+    end_time = time.perf_counter()
+    total_time_ms = int(round((end_time - start_time) * 1000))
 
-    total_time_ms = 0
-    index = 0
-    for state in upload_states:
+    for index in range(total_count):
         # Validate object uploaded successfully.
-        assert state == S3RequestState.COMPLETED
+        assert writer_list[index].get_state() == S3RequestState.COMPLETED
 
-        upload_etag = writer_list[index].get_response_header("Etag").strip('"')
-        data_md5 = reader_list[index].get_md5()
-        assert upload_etag == data_md5, \
-            "PUT Etag = {} and Data MD5 = {}".format(upload_etag, data_md5)
-
-        total_time_ms += writer_list[index].get_execution_time()
-
-        index += 1
+        source_etag = reader_list[index].get_etag()
+        target_etag = writer_list[index].get_etag()
+        assert target_etag == source_etag, \
+            "PUT ETag = {} and Data ETag = {}".format(target_etag, source_etag)
 
     logger.info("Total time to upload {} objects = {} ms.".format(
         total_count, total_time_ms))

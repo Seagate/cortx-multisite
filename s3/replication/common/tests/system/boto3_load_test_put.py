@@ -23,6 +23,7 @@ import os
 import sys
 import boto3
 import threading
+import time
 from config import Config
 from object_generator import GlobalTestDataBlock
 from s3replicationcommon.log import setup_logger
@@ -30,8 +31,6 @@ from s3replicationcommon.timer import Timer
 
 
 def upload_object(logger, work_item):
-    logger.debug("upload_object()")
-
     data = GlobalTestDataBlock.create(work_item.object_size)
     md5 = GlobalTestDataBlock.get_md5()
 
@@ -111,6 +110,7 @@ def main():
 
     # Start threads to upload objects.
     request_threads = []
+    start_time = time.perf_counter()
     for i in range(total_count):
 
         t = threading.Thread(
@@ -120,19 +120,27 @@ def main():
         t.start()
 
     # Wait for threads to complete.
-    total_time_ms = 0
+    total_time_ms_requests = 0
     failed_count = 0
     for i in range(total_count):
         request_threads[i].join()
         if work_items[i].status == "success":
-            total_time_ms += work_items[i].time_for_upload
+            total_time_ms_requests += work_items[i].time_for_upload
         else:
             failed_count += 1
+    end_time = time.perf_counter()
+    total_time_ms_threads_requests = int(round((end_time - start_time) * 1000))
 
     logger.info("Total time to upload {} objects = {} ms.".format(
-        total_count - failed_count, total_time_ms))
+        total_count - failed_count, total_time_ms_requests))
     logger.info("Avg time per upload = {} ms.".format(
-        total_time_ms / total_count - failed_count))
+        total_time_ms_requests / total_count - failed_count))
+
+    logger.info(
+        "Total time to upload {} objects including thread creation = {} ms.".
+        format(total_count - failed_count, total_time_ms_threads_requests))
+    logger.info("Avg time per upload = {} ms.".format(
+        total_time_ms_threads_requests / total_count - failed_count))
 
 
 # Run the test
