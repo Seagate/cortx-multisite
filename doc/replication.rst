@@ -58,6 +58,11 @@ Multisite-specific
 
 - scalability
 - failure handling
+
+  - it MUST be possible to fully lose persistence of a Motr process without
+    losing replications for objects.
+  - we MUST NOT scan all objects every time a transient failure happens.
+
 - no read/write to the same index from different processes at the same time
 - change # of replicator dynamically
 - describe how to define replication policies and what to support
@@ -69,6 +74,9 @@ S3server writes a piece of metadata when a new object is uploaded or some
 information about the object is updated. This piece of metadata is collected by
 replication logic using FDMI, and it's also used to determine what to replicate
 and where to replicate to.
+
+Workflow overview for an S3 PUT request
+---------------------------------------
 
 - S3 client sends PUT request to S3 server
 - S3 server looks at replication policies and decides if the data needs to
@@ -91,6 +99,31 @@ and where to replicate to.
   metadata is updated to reflect this when needed
 - Replicators just do whatever scheduler tells them to do. They don't have
   persistent state.
+
+
+Implementation
+--------------
+
+- having access to the scheduler's own distributed index from only a single
+  scheduler and a single Motr process at a time allows to avoid
+  synchronisation when accessing the index from different places at the
+  same time
+- it's better to have schedulers close to the source, to avoid log pruning
+  delays because of waiting for acknowledgement from schedulers about
+  persisting the FDMI records
+- there is an option to add Motr-level replication: in this case ioservice
+  or CAS would (explicitly or implicitly) generate an FDMI record that
+  would be sent to a scheduler to do replication job
+- # of schedulers change is a relatively rare operation, so replicator
+  crash wouldn't require distributed algorithms to handle it (like
+  redirecting the load to another replicator), because there is only a
+  single place on the cluster at any given moment of time where such
+  decision is made
+- there is a list of servers where each scheduler instance is running, and
+  Hare ensures that each scheduler instance is running on at most one of
+  such server and it's restarted (on another server if needed) if for some
+  reason it stops working
+
 
 Functional specification
 ========================
@@ -204,6 +237,32 @@ TODO describe failure handling for each kind of S3 request and for each
 possible combination of S3 requests. Take Motr DIX eventual consistency into
 account.
 
+Transient failure handling
+..........................
+
+- If S3 client fails before PUT operation is complete the PUT operation is
+  interrupted and there is nothing to replicate
+- If S3 server fails before the last DIX record is persisted - same as S3
+  client
+- If CAS fails before scheduler replies with "the FDMI record is no longer
+  needed" the log would be replayed and the FDMI record would be resent.
+  It's not a problem because scheduler does deduplication.
+- If scheduler fails it:
+
+  - doesn't lose any FDMI record from CASes, because all such records would
+    hold tx reference until the scheduler replies that FDMI record is no
+    longer needed
+  - has all replication operations (pending to be sent to the replicators
+    and that are being processed by the replicator) persisted, so after
+    restart it could ask replicators about their state and deal with each
+    in-progress replication
+  - restarts on another server and continues to accept FDMI records, which
+    are now sent to it
+
+- If replicator fails, it just restarts and waits for the new operations
+  scheduler sends them to do.
+
+
 Analysis
 ========
 
@@ -211,7 +270,37 @@ Scalability
 -----------
 
 TODO describe Scheduler scalability price
+
 TODO describe Replicator scalability
+
+- each pool could have an arbitrary number of schedulers attached to it. If
+  there are different operations about the same object (or even the same
+  operations) they are sent to the same scheduler. Same for kv pair.
+- if there is a need to change # of schedulers it could be done in the
+  following way:
+
+  - new set of schedulers is added to the Motr configuration
+  - old schedulers are stopped (so there are no FDMI records sent to them)
+  - scheduler configuration in an index is changed to point to the new set
+    of schedulers
+  - new schedulers are started, they start receiving FDMI records
+  - old schedulers send their records to the new schedulers
+  - when there is no work for the old schedulers they are removed from Motr
+    configuration
+
+- replicators could be added, removed, they could crash&restart without
+  affecting Motr client I/O - FDMI records are sent to the schedulers
+  anyway. For each replication item there is a single scheduler that
+  manages it
+- there is no time or space limit on queue size for replication other than
+  space for an index for each scheduler to store replication state to
+- there is no requirement for replicators where to be (source side,
+  destination side)
+- FDMI records are not kept too long on the CAS side. There is no
+  requirement for non-blocking availability for the scheduler, so it's fine
+  for FDMI source to wait until Motr HA restarts the scheduler somewhere
+  else in case of failure
+
 
 Other
 -----
@@ -293,6 +382,7 @@ Configuration
   - look for replication stream of events
   - get all logs
 
+
 Installation
 ------------
 
@@ -302,6 +392,97 @@ Upgrade
 -------
 
 TODO describe upgrade procedures (persistent state, network)
+
+Implementation plan
+===================
+
+List of tasks
+-------------
+
+- create a list of all operations that have to be replicated (it's not only
+  S3 PUT operation)
+- design & implement a way for S3 server to pass "it has to be replicated"
+  flag with DIX requests
+- move FDMI configuration from conf to DIX
+- design & implement scheduler
+
+  - FDMI plugin to receive FDMI records from CASes
+  - code to store the records in a distributed index
+  - persistent state machines to do the replication for every use case
+  - query assigned replicators on restart
+  - code to read scheduler configuration from an index
+  - code & API to write scheduler configuration to an index
+  - code & API to change # of schedulers per pool as described above
+  - policies for sending the tasks to replicators (throttling, priorities
+    etc.)
+  - Motr HA code to restart (possibly somewhere else) in case of failure
+  - code & API to get replication progress (query each replicator and
+    aggregate) and relevant code in the scheduler to give this info
+  - code & API to control replication (start/stop/pause/resume)
+
+- design & implement replicator
+
+  - code to do replication operation for each use case
+  - code to reply with it's current state on query from scheduler
+
+
+Unsorted
+========
+
+- Things to consider
+
+  - Where to store replication status.
+  - S3 level object metadata has to be replicated as well
+  - Replication could be used for rebalancing for capacity feature
+
+- FDMI features that are needed
+
+  - FDMI records persistence. FDMI app has to survive transient failures.
+  - "At most once" delivery. Resend in case of failures.
+  - Something to deal with permanent failures of FDMI source or FDMI plugin.
+  - We can have replication from one Motr cluster to another Motr cluster if
+    we allow FDMI app to contain 2 Motr processes that belong to different
+    Motr clusters.
+
+ - Single Motr cluster replication
+
+   - Object level, trivial, async: Get list of objects in one Motr pool and
+     objects in another Motr pool. Replicate missing. Repeat with configurable
+     interval. Do the same for metadata.
+   - Motr client level: each Motr client I/O spawns I/Os for more than 1
+     object.
+   - Object level, async: there are FDMI applications that are watching for
+     "Object had been written" FDMI record. Motr client produces this record
+     and returns that I/O is successful only when FDMI apps confirm that they
+     have persisted the record. Then FDMI application moves the data.
+   - DTM way, new dtx, both sync and async: Motr client creates a dtx to
+     replicate the object before returning "SUCCESS" for object I/O. Push/pull
+     options. Servers involved will initiate the I/O to complete dtx. DTM0 is
+     enough for this.
+
+     - failure cases, how to handle them (transient and permanent)
+     - DTM0 for transient, integrate with SNS for permanent
+
+   - DTM way, same dtx, sync replication: all object I/O requests (including
+     replication) are parts of the same dtx.
+   - cob level: each cob I/O spawns
+
+     - Push: FDMI app on the same server as ioservice initiates cob I/O to
+       replicate the object whenever ioservice on that server it has incoming
+       cob I/O. Allows to read the data from source ioservice only once, FDMI
+       apps caches the data until it's transferred to all the targets.
+     - Pull: FDMI records are consumed by FDMI apps on the target servers.
+       They tell target ioservices to pull the data from source ioservices.
+     - Dedicated replicators: FDMI app may live outside of storage nodes. It
+       would consume FDMI records about objects and read/write the data as
+       usual clients or it could send fops that would move data from one
+       server to another.
+     - limitations: same striping on both pools.
+
+   Notes
+
+   - FDMI app could either push/pull the data on it's own or tell ioservices
+     to do the data movement.
 
 References
 ==========
