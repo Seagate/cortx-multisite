@@ -125,6 +125,48 @@ Implementation
   reason it stops working
 
 
+Workload distribution
+---------------------
+
+Workload distribution
+
+- CAS -> scheduler
+
+  - There is always a primary entity for a replication task:
+
+    - object - for object operations
+    - bucket - for bucket operations
+    - etc.
+
+  - There is always a single identifier for each entity (single namespace
+    case):
+
+    - object - it’s Motr FID or “bucket_name/object_name”
+    - bucket - just bucket name or concatenation of object list index fid and
+      key in the index
+
+  - distribution: hash of the identifier % number of schedulers for Motr pool
+  - scheduler group abstraction to simplify configuration (alternative name:
+    scheduler squad)
+  - each scheduler may be a part of zero, one or more scheduler groups
+
+- scheduler -> replicator
+
+  - simple way: round-robin for each replication task
+  - limit # of replication tasks in progress
+  - each replication task has it’s own persistent state machine
+  - replicator group abstraction to simplify configuration (alternative name:
+    replicator flock)
+  - each replicator may be a part of zero, one or more replicator groups
+  - not so simple way:
+
+    - define maximum bandwidth/# of tasks in progress/etc. for each replicator
+    - send the remaining bandwidth/# of tasks/etc. to replication managers on
+      request
+    - replications managers would use this feedback to decide where to send the
+      tasks to
+
+
 Functional specification
 ========================
 
