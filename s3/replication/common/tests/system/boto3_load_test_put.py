@@ -22,7 +22,8 @@
 import os
 import sys
 import boto3
-import threading
+import botocore
+import concurrent.futures
 import time
 from config import Config
 from object_generator import GlobalTestDataBlock
@@ -56,6 +57,7 @@ def upload_object(logger, work_item):
     logger.info("Completed upload for object {}".format(work_item.object_name))
 
     work_item.time_for_upload = timer.elapsed_time_ms()
+    return
 
 
 class WorkItem:
@@ -74,7 +76,15 @@ def main():
 
     bucket_name = "boto3bucket"
     total_count = 100  # Number of objects to upload.
+    max_pool_connections = 100  # Must be multiple of total_count
+    max_threads = 100  # Must be less than and multiple of total_count
     object_size = 4096  # Bytes.
+
+    assert total_count % max_pool_connections == 0, \
+        "max_pool_connections must be multiple of total_count"
+
+    assert max_threads <= total_count and total_count % max_threads == 0, \
+        "max_threads must be less than or equal to and multiple of total_count"
 
     # Setup logging and get logger
     log_config_file = os.path.join(os.path.dirname(__file__),
@@ -89,58 +99,39 @@ def main():
     # Init Global.
     GlobalTestDataBlock.create(object_size)
 
+    session = boto3.session.Session()
+
+    client = session.client("s3", use_ssl=False,
+                            endpoint_url=config.endpoint,
+                            aws_access_key_id=config.access_key,
+                            aws_secret_access_key=config.secret_key,
+                            config=botocore.client.Config(max_pool_connections=max_pool_connections))
+
     # Create resources for each thread.
-    sessions = []
-    clients = []
     work_items = []
-    for i in range(total_count):
-        session = boto3.session.Session()
-        sessions.append(session)
-
-        client = session.client("s3", use_ssl=False,
-                                endpoint_url=config.endpoint,
-                                aws_access_key_id=config.access_key,
-                                aws_secret_access_key=config.secret_key)
-        clients.append(client)
-
-        # Generate object name
-        object_name = "test_object_" + str(i) + "_sz" + str(object_size)
-        work_item = WorkItem(bucket_name, object_name, object_size, client)
-        work_items.append(work_item)
-
-    # Start threads to upload objects.
-    request_threads = []
     start_time = time.perf_counter()
-    for i in range(total_count):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
+        futures = []
+        for i in range(total_count):
+            # Generate object name
+            object_name = "test_object_" + str(i) + "_sz" + str(object_size)
+            work_item = WorkItem(bucket_name, object_name, object_size, client)
+            work_items.append(work_item)
+            futures.append(
+                executor.submit(upload_object, logger=logger, work_item=work_items[i])
+            )
+        # Wait for all threads to complete.
+        for future in concurrent.futures.as_completed(futures):
+            future.result()
 
-        t = threading.Thread(
-            target=upload_object, args=(
-                logger, work_items[i],))
-        request_threads.append(t)
-        t.start()
-
-    # Wait for threads to complete.
-    total_time_ms_requests = 0
-    failed_count = 0
-    for i in range(total_count):
-        request_threads[i].join()
-        if work_items[i].status == "success":
-            total_time_ms_requests += work_items[i].time_for_upload
-        else:
-            failed_count += 1
     end_time = time.perf_counter()
     total_time_ms_threads_requests = int(round((end_time - start_time) * 1000))
 
-    logger.info("Total time to upload {} objects = {} ms.".format(
-        total_count - failed_count, total_time_ms_requests))
-    logger.info("Avg time per upload = {} ms.".format(
-        total_time_ms_requests / total_count - failed_count))
-
     logger.info(
         "Total time to upload {} objects including thread creation = {} ms.".
-        format(total_count - failed_count, total_time_ms_threads_requests))
+        format(total_count, total_time_ms_threads_requests))
     logger.info("Avg time per upload = {} ms.".format(
-        total_time_ms_threads_requests / total_count - failed_count))
+        total_time_ms_threads_requests / total_count))
 
 
 # Run the test
