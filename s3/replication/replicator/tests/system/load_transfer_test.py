@@ -80,7 +80,7 @@ class ObjectDataGenerator:
         """Returns current request state."""
         return self._state
 
-    def get_md5(self):
+    def get_etag(self):
         if self._state == S3RequestState.COMPLETED:
             return self._md5
         return None
@@ -181,7 +181,7 @@ async def async_put_object(session, bucket_name, object_name, object_size,
         status = "failed"
 
     return {"object_name": object_name, "size": object_size,
-            "md5": object_reader.get_md5(),
+            "md5": object_reader.get_etag(),
             "etag": object_writer.get_response_header("ETag"),
             "status": status
             }
@@ -313,6 +313,9 @@ async def run_load_test():
             jobs_running = False
         else:
             # There are atleast some running jobs, give time to complete.
+            logger.debug(
+                "Pending status for total {} jobs.".format(
+                    len(posted_jobs_set)))
             logger.info("Waiting for {} secs before polling job status...".
                         format(test_config.polling_wait_time))
             time.sleep(test_config.polling_wait_time)

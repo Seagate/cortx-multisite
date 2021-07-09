@@ -33,7 +33,7 @@ from s3replicationcommon.timer import Timer
 
 def upload_object(logger, work_item):
     data = GlobalTestDataBlock.create(work_item.object_size)
-    md5 = GlobalTestDataBlock.get_md5()
+    md5 = GlobalTestDataBlock.get_etag()
 
     logger.info("Starting upload for object {}".format(work_item.object_name))
     work_item.status = "failed"
@@ -101,16 +101,20 @@ def main():
 
     session = boto3.session.Session()
 
-    client = session.client("s3", use_ssl=False,
-                            endpoint_url=config.endpoint,
-                            aws_access_key_id=config.access_key,
-                            aws_secret_access_key=config.secret_key,
-                            config=botocore.client.Config(max_pool_connections=max_pool_connections))
+    client = session.client(
+        "s3",
+        use_ssl=False,
+        endpoint_url=config.endpoint,
+        aws_access_key_id=config.access_key,
+        aws_secret_access_key=config.secret_key,
+        config=botocore.client.Config(
+            max_pool_connections=max_pool_connections))
 
     # Create resources for each thread.
     work_items = []
     start_time = time.perf_counter()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) \
+            as executor:
         futures = []
         for i in range(total_count):
             # Generate object name
@@ -118,8 +122,10 @@ def main():
             work_item = WorkItem(bucket_name, object_name, object_size, client)
             work_items.append(work_item)
             futures.append(
-                executor.submit(upload_object, logger=logger, work_item=work_items[i])
-            )
+                executor.submit(
+                    upload_object,
+                    logger=logger,
+                    work_item=work_items[i]))
         # Wait for all threads to complete.
         for future in concurrent.futures.as_completed(futures):
             future.result()

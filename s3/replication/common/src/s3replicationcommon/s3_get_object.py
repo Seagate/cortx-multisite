@@ -160,7 +160,7 @@ class S3AsyncGetObject:
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
         self._timer.stop()
-        return self._state
+        return
 
     def pause(self):
         self._state = S3RequestState.PAUSED

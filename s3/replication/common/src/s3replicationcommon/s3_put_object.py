@@ -137,7 +137,7 @@ class S3AsyncPutObject:
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
-        return self._state
+        return
 
     def pause(self):
         self._state = S3RequestState.PAUSED

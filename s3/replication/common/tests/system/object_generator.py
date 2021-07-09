@@ -49,7 +49,7 @@ class GlobalTestDataBlock:
         return cls._block
 
     @classmethod
-    def get_md5(cls):
+    def get_etag(cls):
         assert cls._md5, "Class instance not initialised by calling create()."
         return cls._md5
 
@@ -72,7 +72,7 @@ class FixedObjectDataGenerator:
 
         self._hash = hashlib.md5()
         self._data = GlobalTestDataBlock.create(object_size)
-        self._md5 = GlobalTestDataBlock.get_md5()
+        self._md5 = GlobalTestDataBlock.get_etag()
 
         self._state = S3RequestState.INITIALISED
 
