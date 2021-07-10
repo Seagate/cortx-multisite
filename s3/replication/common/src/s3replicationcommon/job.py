@@ -320,6 +320,7 @@ class Job:
     def get_subscriber_id(self):
         return self._obj["subscriber_id"]
 
+
 class JobJsonEncoder(json.JSONEncoder):
     def default(self, o):  # pylint: disable=E0202
         if isinstance(o, Job):

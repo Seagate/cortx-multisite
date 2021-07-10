@@ -47,10 +47,10 @@ async def list_jobs(request):
     if 'count' in query:
         if 'inprogress' in query:
             return web.json_response({'inprogress-count':
-                                  jobs.inprogress_count()}, status=200)
+                                      jobs.inprogress_count()}, status=200)
         elif 'completed' in query:
             return web.json_response({'completed-count':
-                                  completed_jobs.count()}, status=200)
+                                      completed_jobs.count()}, status=200)
         else:
             return web.json_response({'count': jobs.count()}, status=200)
     else:

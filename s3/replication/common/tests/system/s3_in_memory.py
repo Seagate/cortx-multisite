@@ -55,6 +55,7 @@ async def put_object(request):
 
     return web.json_response(status=200, headers=headers)
 
+
 # GET Object API.
 @routes.get('/{bucket_name}/{object_name}')  # noqa: E302
 async def get_object(request):
