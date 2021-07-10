@@ -60,7 +60,7 @@ class S3AsyncPutObject:
         return self._timer.elapsed_time_ms()
 
     def get_etag(self):
-        "Returns ETag for object."
+        """Returns ETag for object."""
         return self._response_headers["ETag"].strip("\"")
 
     # data_reader is object with fetch method that can yeild data

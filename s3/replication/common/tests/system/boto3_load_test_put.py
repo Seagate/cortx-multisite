@@ -62,6 +62,7 @@ def upload_object(logger, work_item):
 
 class WorkItem:
     def __init__(self, bucket_name, object_name, object_size, s3_client):
+        """Initialise."""
         self.bucket_name = bucket_name
         self.object_name = object_name
         self.object_size = object_size

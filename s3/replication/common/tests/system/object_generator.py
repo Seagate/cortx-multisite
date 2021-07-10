@@ -39,9 +39,9 @@ class GlobalTestDataBlock:
             cls._block_size = block_size
             cls._block = os.urandom(block_size)
 
-            hash = hashlib.md5()
-            hash.update(cls._block)
-            cls._md5 = hash.hexdigest()
+            hash_obj = hashlib.md5()
+            hash_obj.update(cls._block)
+            cls._md5 = hash_obj.hexdigest()
 
         assert block_size == cls._block_size, \
             "Invalid use. Only one size supported."
