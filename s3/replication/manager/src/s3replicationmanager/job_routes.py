@@ -90,6 +90,10 @@ async def update_job_attr(request):
         return web.json_response(
             {'ErrorResponse': 'Job Not Found!'}, status=404)
     else:
+        subscriber_id = job.get_subscriber_id()
+        subscriber = request.app['subscribers'].get_subscriber(subscriber_id)
+        subscriber.job_acknowledged(1)
+
         if job_record["status"] == "completed":
             job.mark_completed()
         elif job_record["status"] == "failed":
