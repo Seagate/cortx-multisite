@@ -124,13 +124,13 @@ class JobDistributor:
                         # Job was posted successfully.
                         _logger.debug(
                             "Jobs posted successfully to subscriber id {}".
-                            format(subscriber_id))
-                        subscriber.jobs_sent(1)
+                            format(client.get_subscriber_id()))
+                        subscriber.jobs_sent(len(client.jobs_to_send))
                     else:
                         # Job post failed, move back to queued.
                         _logger.debug(
                             "Failed to post jobs to subscriber id {}".
-                            format(subscriber_id))
+                            format(client.get_subscriber_id()))
 
                         for job in client.jobs_to_send:
                             jobs_list.move_to_queued(job.get_replication_id())
