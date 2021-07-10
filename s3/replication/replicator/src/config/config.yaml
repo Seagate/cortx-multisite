@@ -3,6 +3,7 @@ replicator:
    port: 8081
    ssl: false
    service_name: "s3replicator"
+   max_payload: 52428800  # 50 mb, depends on max_replications = max jobs posted
 transfer:
    max_replications: 100  # Maximum number of replications that can run in parallel
    transfer_chunk_size_bytes: 4096  # Per replication job bytes in flight

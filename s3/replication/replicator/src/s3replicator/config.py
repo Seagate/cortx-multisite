@@ -54,6 +54,7 @@ class Config:
             self.port = config_props['replicator']['port']
             self.ssl = config_props['replicator']['ssl']
             self.service_name = config_props['replicator']['service_name']
+            self.max_payload = config_props['replicator']['max_payload']
 
             self.max_replications = \
                 config_props['transfer']["max_replications"]
