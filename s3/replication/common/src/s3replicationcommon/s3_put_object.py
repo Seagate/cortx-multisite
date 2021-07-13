@@ -59,6 +59,10 @@ class S3AsyncPutObject:
         """Return total time for PUT Object operation."""
         return self._timer.elapsed_time_ms()
 
+    def get_etag(self):
+        """Returns ETag for object."""
+        return self._response_headers["ETag"].strip("\"")
+
     # data_reader is object with fetch method that can yeild data
     async def send(self, data_reader, transfer_size):
         self._state = S3RequestState.RUNNING
@@ -100,6 +104,7 @@ class S3AsyncPutObject:
                     headers=headers,
                     # Read all data from data_reader
                     data=data_reader.fetch(transfer_size)) as resp:
+                self._timer.stop()
 
                 if data_reader.get_state() != S3RequestState.ABORTED:
                     self._http_status = resp.status
@@ -109,6 +114,15 @@ class S3AsyncPutObject:
                         fmt_reqid_log(self._request_id) +
                         'PUT Object completed with http status: {}'.format(
                             resp.status))
+
+                    # Validate if upload object etag matches.
+                    if self.get_etag() != data_reader.get_etag():
+                        self._state = S3RequestState.FAILED
+                        error_msg = "ETag mismatch."
+                        self._logger.error(
+                            fmt_reqid_log(self._request_id) +
+                            'Error Response: {}'.format(error_msg))
+
                     if resp.status == 200:
                         self._state = S3RequestState.COMPLETED
                     else:
@@ -118,11 +132,12 @@ class S3AsyncPutObject:
                             'Error Response: {}'.format(error_msg))
                         self._state = S3RequestState.FAILED
         except aiohttp.client_exceptions.ClientConnectorError as e:
+            self._timer.stop()
             self.remote_down = True
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
-        self._timer.stop()
+        return
 
     def pause(self):
         self._state = S3RequestState.PAUSED

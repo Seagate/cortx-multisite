@@ -39,6 +39,9 @@ class ReplicatorClient:
 
         self._timer = Timer()
 
+    def get_subscriber_id(self):
+        return self._subscriber.id
+
     def get_execution_time(self):
         """Return total time for PUT Object operation."""
         return self._timer.elapsed_time_ms()

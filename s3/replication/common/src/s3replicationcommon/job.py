@@ -87,6 +87,9 @@ class Job:
             self._remote_job_id = self._obj['job_id']
         self._obj['job_id'] = self._id
 
+        # Set when job is sent from manager to replicator(subscriber)
+        self._obj["subscriber_id"] = None
+
         self._replicator = None
         self._update_state(JobState.INITIAL)
 
@@ -310,6 +313,12 @@ class Job:
 
     def get_target_secret_key(self):
         return self._obj["target"]["secret_key"]
+
+    def set_subscriber_id(self, sub_id):
+        self._obj["subscriber_id"] = sub_id
+
+    def get_subscriber_id(self):
+        return self._obj["subscriber_id"]
 
 
 class JobJsonEncoder(json.JSONEncoder):

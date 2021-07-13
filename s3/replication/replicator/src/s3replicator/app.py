@@ -85,7 +85,7 @@ class ReplicatorApp:
 
     def run(self):
         """Start replicator."""
-        app = web.Application()
+        app = web.Application(client_max_size=self._config.max_payload)
         # Setup the global context store.
         # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config
 
