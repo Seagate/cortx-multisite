@@ -311,6 +311,7 @@ async def run_load_test():
         if len(posted_jobs_set) == 0:
             # No jobs pending.
             jobs_running = False
+            logger.debug("All jobs completed.")
         else:
             # There are atleast some running jobs, give time to complete.
             logger.debug(
