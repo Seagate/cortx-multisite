@@ -99,7 +99,9 @@ class TransferInitiator:
             job.mark_started()
 
             # Start the replication.
-            await object_replicator.start()
+            semaphore = app['semaphore']
+            async with semaphore:
+                await object_replicator.start()
         else:
             _logger.error(
                 "Operation type [{}] not supported.".format(operation_type))

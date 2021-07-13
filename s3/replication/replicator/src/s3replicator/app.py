@@ -17,6 +17,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+import asyncio
 import sys
 from aiohttp import web
 import logging
@@ -102,6 +103,10 @@ class ReplicatorApp:
         # completed = successfully completed, failed, or aborted and cached
         app['completed_jobs'] = self._completed_jobs
         app['replication-managers'] = self._replication_managers
+
+        # Throttle:  Allow only Max replications to run at a moment.
+        # Alternative design option is to use queued requests.
+        app['semaphore'] = asyncio.Semaphore(self._config.max_replications)
 
         # Setup application routes.
         app.add_routes(routes)
