@@ -98,7 +98,7 @@ class S3AsyncGetObject:
                     self._logger.info(
                         fmt_reqid_log(self._request_id) +
                         'GET Object completed with http status: {}'.format(
-                        resp.status))
+                            resp.status))
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()

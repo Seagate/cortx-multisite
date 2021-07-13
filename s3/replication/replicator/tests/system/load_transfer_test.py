@@ -65,6 +65,7 @@ class TestConfig:
         self.source_bucket = self._config["source_bucket"]
         self.target_bucket = self._config["target_bucket"]
         self.polling_wait_time = self._config["polling_wait_time"]
+        self.polling_count = self._config["polling_count"]
 
 
 class ObjectDataGenerator:
@@ -278,7 +279,8 @@ async def run_load_test():
 
     # Poll for replication jobs completion.
     jobs_running = True  # if at least one job is running, keep polling.
-    polling_count = 5  # Max poll for 3 iterations to avoid infinite loop
+    # Max polling iterations to avoid infinite loop
+    polling_count = test_config.polling_count
     while jobs_running and polling_count != 0:
         job_status_task_list = []
         for job_id in posted_jobs_set:

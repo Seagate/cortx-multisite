@@ -77,8 +77,10 @@ def main():
 
     bucket_name = config.source_bucket
     total_count = config.total_objects  # Number of objects to upload.
-    max_pool_connections = config.max_s3_connections  # Must be multiple of total_count
-    max_threads = config.max_threads_for_boto3  # Must be less than and multiple of total_count
+    # Must be multiple of total_count
+    max_pool_connections = config.max_s3_connections
+    # Must be less than and multiple of total_count
+    max_threads = config.max_threads_for_boto3
     object_size = config.object_size  # Bytes.
 
     assert total_count % max_pool_connections == 0, \
