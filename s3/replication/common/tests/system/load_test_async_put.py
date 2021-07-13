@@ -36,7 +36,7 @@ async def main():
 
     config = Config()
 
-    bucket_name = config.source_bucket
+    bucket_name = config.source_bucket_name
     total_count = config.total_objects  # Number of objects to upload.
     object_size = config.object_size  # Bytes.
 

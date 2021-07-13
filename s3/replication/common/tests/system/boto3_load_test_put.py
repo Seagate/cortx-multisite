@@ -75,7 +75,7 @@ def main():
 
     config = Config()
 
-    bucket_name = config.source_bucket
+    bucket_name = config.source_bucket_name
     total_count = config.total_objects  # Number of objects to upload.
     # Must be multiple of total_count
     max_pool_connections = config.max_s3_connections
