@@ -60,9 +60,11 @@ class TranferEventHandler:
                 replication_manager = \
                     list(self._app['replication-managers'].values())[0]
 
-                await replication_manager.send_update(
-                    job.get_remote_job_id(),
-                    "completed")
+                # In tests, replication manager acks are not required.
+                if job.get_remote_job_id() is not None:
+                    await replication_manager.send_update(
+                        job.get_remote_job_id(),
+                        "completed")
 
 
 class TransferInitiator:
