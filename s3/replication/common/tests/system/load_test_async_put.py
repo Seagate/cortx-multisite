@@ -36,9 +36,9 @@ async def main():
 
     config = Config()
 
-    bucket_name = "sourcebucket"
-    total_count = 100  # Number of objects to upload.
-    object_size = 4096  # Bytes.
+    bucket_name = config.source_bucket
+    total_count = config.total_objects  # Number of objects to upload.
+    object_size = config.object_size  # Bytes.
 
     # Setup logging and get logger
     log_config_file = os.path.join(os.path.dirname(__file__),

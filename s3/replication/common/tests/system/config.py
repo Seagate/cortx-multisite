@@ -53,5 +53,7 @@ class Config:
         self.target_bucket_name = self._config["target_bucket_name"]
         self.object_name_prefix = self._config["object_name_prefix"]
         self.object_size = self._config["object_size"]
+        self.total_objects = self._config["total_objects"]
         self.transfer_chunk_size = self._config["transfer_chunk_size"]
         self.max_s3_connections = self._config["max_s3_connections"]
+        self.max_threads_for_boto3 = self._config["max_threads_for_boto3"]
