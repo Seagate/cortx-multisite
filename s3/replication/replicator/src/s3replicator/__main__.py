@@ -29,7 +29,9 @@ def setup_args(parser):
         '--configfile',
         type=str,
         metavar='path',
-        help='Path to configuration file(format: yaml)')
+        help='Path to configuration file(format: yaml).\n'
+            'Provide config file path starting with root "/".\n'
+            'e.g. : "/home/path/to/my_config.yaml"')
 
     parser.add_argument(
         '--logconfig',
@@ -40,7 +42,9 @@ def setup_args(parser):
 
 if __name__ == '__main__':
     # create parser object
-    parser = argparse.ArgumentParser(description='''Replicator server help''')
+    parser = argparse.ArgumentParser(
+            description='''Replicator server help''',
+            formatter_class=argparse.RawTextHelpFormatter)
 
     # Define the args
     setup_args(parser)

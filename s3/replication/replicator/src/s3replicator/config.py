@@ -36,55 +36,69 @@ class Config:
     def __init__(self, configfile):
         """Initialise."""
         if configfile is None:
-            self.configfile = os.path.join(os.path.dirname(__file__),
-                                           '..', 'config', 'config.yaml')
+            # default configfile directory. ~/.cortxs3/replicator
+            config_home = os.path.join(
+                os.path.expanduser('~'), '.cortxs3', 'replicator')
+            configfile = os.path.join(config_home, 'config.yaml')
+            if os.path.isfile(configfile):
+                self.configfile = configfile
+                print(
+                    "Config read from default location : {}".format(
+                        self.configfile))
+            else:
+                self.configfile=os.path.join(os.path.dirname(__file__),
+                                               '..', 'config', 'config.yaml')
+                print(
+                    "Config read from source : {}".format(
+                        self.configfile))
         else:
-            self.configfile = configfile
+            self.configfile=configfile
+            print(
+                "Config read from user location : {}".format(
+                    self.configfile))
 
-        self.host = '127.0.0.1'
-        self.port = 8081
-        self.max_connections_per_s3_session = 100
+        self.host='127.0.0.1'
+        self.port=8081
+        self.max_connections_per_s3_session=100
 
     def load(self):
         """Load the configuration data."""
         with open(self.configfile, 'r') as file_config:
-            config_props = yaml.safe_load(file_config)
+            config_props=yaml.safe_load(file_config)
 
-            self.host = config_props['replicator']['host']
-            self.port = config_props['replicator']['port']
-            self.ssl = config_props['replicator']['ssl']
-            self.service_name = config_props['replicator']['service_name']
-            self.max_payload = config_props['replicator']['max_payload']
+            self.host=config_props['replicator']['host']
+            self.port=config_props['replicator']['port']
+            self.ssl=config_props['replicator']['ssl']
+            self.service_name=config_props['replicator']['service_name']
+            self.max_payload=config_props['replicator']['max_payload']
 
-            self.max_replications = \
-                config_props['transfer']["max_replications"]
-            self.transfer_chunk_size_bytes = \
-                config_props['transfer']["transfer_chunk_size_bytes"]
-            self.max_connections_per_s3_session = \
-                config_props['transfer']['max_connections_per_s3_session']
+            self.max_replications=config_props['transfer']["max_replications"]
+            self.transfer_chunk_size_bytes=config_props['transfer']["transfer_chunk_size_bytes"]
+            self.max_connections_per_s3_session=config_props[
+                'transfer']['max_connections_per_s3_session']
 
-            self.job_cache_enabled = config_props['jobs']['enable_cache']
-            self.job_cache_timeout_secs = config_props['jobs']['cache_timeout']
+            self.job_cache_enabled=config_props['jobs']['enable_cache']
+            self.job_cache_timeout_secs=config_props['jobs']['cache_timeout']
 
-            self.manager_host = config_props['manager']['host']
-            self.manager_port = config_props['manager']['port']
-            self.manager_ssl = config_props['manager']['ssl']
-            self.manager_service_name = config_props['manager']['service_name']
+            self.manager_host=config_props['manager']['host']
+            self.manager_port=config_props['manager']['port']
+            self.manager_ssl=config_props['manager']['ssl']
+            self.manager_service_name=config_props['manager']['service_name']
         return self
 
     def get_replicator_endpoint(self):
         """Returns replicator endpoint."""
-        scheme = "http"
+        scheme="http"
         if self.ssl:
-            scheme = "https"
+            scheme="https"
         # example http://localhost:8080
         return make_baseurl(scheme, self.host, self.port)
 
     def get_replication_manager_endpoint(self):
         """Returns replication manager endpoint."""
-        scheme = "http"
+        scheme="http"
         if self.manager_ssl:
-            scheme = "https"
+            scheme="https"
         # example http://localhost:8080
         return make_baseurl(scheme, self.manager_host, self.manager_port)
 
