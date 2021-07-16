@@ -30,8 +30,7 @@ def setup_args(parser):
         type=str,
         metavar='path',
         help='Path to configuration file(format: yaml).\n'
-        'Provide config file path starting with root "/".\n'
-        'e.g. : "/home/path/to/my_config.yaml"')
+        'e.g: ~/.cortxs3/credentials.yaml')
 
     parser.add_argument(
         '--logconfig',

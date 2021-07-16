@@ -42,20 +42,15 @@ class Config:
             configfile = os.path.join(config_home, 'config.yaml')
             if os.path.isfile(configfile):
                 self.configfile = configfile
-                print(
-                    "Config read from default location : {}".format(
-                        self.configfile))
             else:
                 self.configfile = os.path.join(os.path.dirname(__file__),
                                                '..', 'config', 'config.yaml')
-                print(
-                    "Config read from source : {}".format(
-                        self.configfile))
         else:
-            self.configfile = configfile
-            print(
-                "Config read from user location : {}".format(
-                    self.configfile))
+            self.configfile = os.path.expanduser(configfile)
+
+        print(
+            "Config file location : {}".format(
+                self.configfile))
 
         self.host = '127.0.0.1'
         self.port = 8081
