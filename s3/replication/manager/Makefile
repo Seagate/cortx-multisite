@@ -5,7 +5,7 @@ PYTHON_SCRIPTS :=
 # By default, search for --filename=*.py
 # Add --exit-zero to ignore flake8 exit status
 FLAKE8_OPTS :=
-AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
+AUTOPEP8_OPTS := --in-place --aggressive --recursive
 
 check: flake8
 

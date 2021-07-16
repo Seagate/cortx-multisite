@@ -36,10 +36,26 @@ class Config:
     def __init__(self, configfile):
         """Initialise."""
         if configfile is None:
-            self.configfile = os.path.join(os.path.dirname(__file__),
-                                           '..', 'config', 'config.yaml')
+            # default configfile directory. ~/.cortxs3/replicator
+            config_home = os.path.join(
+                os.path.expanduser('~'), '.cortxs3', 'replicator')
+            configfile = os.path.join(config_home, 'config.yaml')
+            if os.path.isfile(configfile):
+                self.configfile = configfile
+                print(
+                    "Config read from default location : {}".format(
+                        self.configfile))
+            else:
+                self.configfile = os.path.join(os.path.dirname(__file__),
+                                               '..', 'config', 'config.yaml')
+                print(
+                    "Config read from source : {}".format(
+                        self.configfile))
         else:
             self.configfile = configfile
+            print(
+                "Config read from user location : {}".format(
+                    self.configfile))
 
         self.host = '127.0.0.1'
         self.port = 8081
