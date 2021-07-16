@@ -29,10 +29,21 @@ class Config:
     def __init__(self, configfile):
         """Initialise."""
         if configfile is None:
-            self.configfile = os.path.join(os.path.dirname(__file__),
-                                           '..', 'config', 'config.yaml')
+            # Default config file directory : ~/.cortxs3/manager
+            config_home = os.path.join(
+                os.path.expanduser('~'), '.cortxs3', 'manager')
+            configfile = os.path.join(config_home, 'config.yaml')
+            if os.path.isfile(configfile):
+                self.configfile = configfile
+            else:
+                self.configfile = os.path.join(os.path.dirname(__file__),
+                                               '..', 'config', 'config.yaml')
         else:
-            self.configfile = configfile
+            self.configfile = os.path.expanduser(configfile)
+
+        print(
+            "Config file location : {}".format(
+                self.configfile))
 
         self.host = '127.0.0.1'
         self.port = 8080
