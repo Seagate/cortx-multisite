@@ -121,19 +121,16 @@ async def get_jobs(request):
     all_jobs_list = request.app['all_jobs']
 
     if 'count' in query:
-        if 'queued' in query['count']:
+        if 'queued' in query:
             # Return queued jobs count
-            queued_jobs = all_jobs_list.get_queued()
             return web.json_response(
                 {'count': all_jobs_list.queued_count()}, status=200)
-        elif 'inprogress' in query['count']:
+        elif 'inprogress' in query:
             # Return in-progress jobs count
-            inprogress_jobs = all_jobs_list.get_inprogress()
             return web.json_response(
                 {'count': all_jobs_list.inprogress_count()}, status=200)
-        elif 'completed' in query['count']:
+        elif 'completed' in query:
             # Return completed jobs count
-            completed_jobs = all_jobs_list.get_completed()
             return web.json_response(
                 {'count': all_jobs_list.completed_count()}, status=200)
         else:
@@ -168,10 +165,8 @@ async def get_jobs(request):
 
     else:
         # return jobs that are not yet distributed.
-        _logger.debug('Returning All Jobs, count = {}'.format(
+        _logger.debug('Returning All Jobs count = {}'.format(
             all_jobs_list.count()))
-        _logger.debug('Returning All Jobs = {}'.format(
-            all_jobs_list.get_inprogress()))
         return web.json_response(
             all_jobs_list, dumps=Jobs.dumps, status=200)
 

@@ -278,26 +278,28 @@ async def run_load_test():
 
         posted_jobs_set.add(job_id)
 
-
     # Poll for replication jobs completion.
     jobs_running = True  # if at least one job is running, keep polling.
     # Max polling iterations to avoid infinite loop
     polling_count = test_config.polling_count
 
+    response = {}
     while jobs_running and polling_count != 0:
-        async with replicator_session.get(url + '/jobs?count=inprogress') as response:
+        async with replicator_session.get(
+                url + '/jobs?count&inprogress') as resp:
             logger.info(
-                'GET jobs returned http Status: {}'.format(response.status))
-            jobs = await response.json()
+                'GET jobs returned http Status: {}'.format(resp.status))
+            response = await resp.json()
 
-        logger.info("jobs is : {}".format(jobs))
-        inprogress_count = jobs['count']
+        logger.info("jobs is : {}".format(response))
+        inprogress_count = response['inprogress-count']
         logger.info("inprogress_count is : {}".format(inprogress_count))
 
         if inprogress_count == 0:
-            # No jobs pending.
+            # No jobs pending then exit here.
             jobs_running = False
             logger.debug("All jobs completed.")
+            sys.exit(0)
         else:
             # There are atleast some running jobs, give time to complete.
             logger.debug(
@@ -309,17 +311,19 @@ async def run_load_test():
 
         polling_count -= 1
 
+    # Execute this if all jobs are not completed.
     if inprogress_count != 0:
-        in_progress_list = []
-        async with replicator_session.get(url + '/jobs') as response:
+        async with replicator_session.get(
+                url + '/jobs?count&inprogress') as resp:
             logger.info(
-                'GET jobs returned http Status: {}'.format(response.status))
-            jobs = await response.json()
+                'GET jobs returned http Status: {}'.format(resp.status))
+            response = await resp.json()
 
-        in_progress_list = [job["job_id"] for job in jobs.values()]
-        #logger.info("in_progress_list is : {}".format(in_progress_list))
-    else:
-        logger.info("All jobs replicated !")
+            logger.info(
+                "In-progress jobs count : {}".format(
+                    response['inprogress-count']))
+            logger.info(
+                "To get inprogres jobs :\n '{}/jobs?inprogress'".format(url))
 
     await s3_session.close()
     await replicator_session.close()

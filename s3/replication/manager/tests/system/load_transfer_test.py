@@ -261,21 +261,22 @@ async def run_load_test():
     polling_count = test_config.polling_count
 
     while jobs_running and polling_count != 0:
-        async with manager_session.get(url + '/jobs?count=completed') as response:
+        async with manager_session.get(url + '/jobs?count&completed') as resp:
             logger.info(
-                'GET jobs returned http Status: {}'.format(response.status))
-            jobs = await response.json()
+                'GET jobs returned http Status: {}'.format(resp.status))
+            response = await resp.json()
 
-        completed_count = jobs['count']
+        completed_count = response['count']
         logger.info("completed jobs count : {}".format(completed_count))
 
         if completed_count == test_config.count_of_obj:
-            # No jobs pending.
+            # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")
+            sys.exit(0)
+
         else:
             # There are atleast some running jobs, give time to complete.
-            print("CCOUNT OF OBJES ARE : {}".format(test_config.count_of_obj))
             logger.debug(
                 "Pending status for total {} jobs.".format(
                     test_config.count_of_obj - completed_count))
@@ -285,46 +286,33 @@ async def run_load_test():
 
         polling_count -= 1
 
+    # Execute this if all jobs are not completed.
     inprogress_count = 0
     queued_count = 0
-    async with manager_session.get(url + '/jobs?count=inprogress') as response:
+
+    # Get inprogress jobs count
+    async with manager_session.get(url + '/jobs?count&inprogress') as resp:
         logger.info(
-            'GET jobs returned http Status: {}'.format(response.status))
-        jobs = await response.json()
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
 
-        inprogress_count = jobs['count']
-        logger.info("INPROGRESS COUNT is : {}".format(inprogress_count))
-        #inprogress_count = jobs['count']
+        inprogress_count = response['count']
+        logger.info("In-progress jobs count : {}".format(inprogress_count))
 
-    async with manager_session.get(url + '/jobs?count=queued') as response:
+    async with manager_session.get(url + '/jobs?count&queued') as resp:
         logger.info(
-            'GET jobs returned http Status: {}'.format(response.status))
-        jobs = await response.json()
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
 
-        queued_count = jobs['count']
-        logger.info("QUEUED COUNT is : {}".format(queued_count))
-        #queued_count = jobs['count']
+        queued_count = response['count']
+        logger.info("Queueud jobs count: {}".format(queued_count))
 
-    pending_jobs = []
-
-    if  (queued_count == 0) and (inprogress_count== 0):
-        logger.info("All jobs replicated !")
-    else:
-        async with manager_session.get(url + '/jobs?inprogress') as response:
-            jobs = await response.json()
-            print("Json responsea for inprogress")
-            #print("Json responsea for inprogress is : {}".format(jobs))
-            #pending_jobs = [job['job_id'] for job in jobs.values()]
-            pending_jobs = jobs
-        async with manager_session.get(url + '/jobs?queued') as response:
-            jobs = await response.json()
-            print("Json response for queued")
-            #print("Json response for queued is : {}".format(jobs))
-            #pending_jobs.appned([job['job_id'] for job in jobs.values()])
-            pending_jobs += jobs
-
-        #print("Pending jobs are : {}".format(pending_jobs))
-        print("Pending jobs printed")
+    logger.info(
+        "Pending jobs count : {}".format(
+            queued_count +
+            inprogress_count))
+    logger.info("To get in-progress jobs :\n '{}/jobs?inprogress'".format(url))
+    logger.info("To get queued jobs :\n '{}/jobs?queued'".format(url))
 
     await s3_session.close()
     await manager_session.close()
