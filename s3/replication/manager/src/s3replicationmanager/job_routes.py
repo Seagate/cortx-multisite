@@ -165,7 +165,7 @@ async def get_jobs(request):
 
     else:
         # return jobs that are not yet distributed.
-        _logger.debug('Returning All Jobs count = {}'.format(
+        _logger.debug('Returning All Jobs, count = {}'.format(
             all_jobs_list.count()))
         return web.json_response(
             all_jobs_list, dumps=Jobs.dumps, status=200)

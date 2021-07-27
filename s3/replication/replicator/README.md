@@ -57,8 +57,8 @@ Run load transfer tests.
 python3 tests/system/load_transfer_test.py
 ```
 
+# Configurations
 
-Note :
 Number of connections should be greater than count of replications run
 in parallel, and ideally it should be twice.
 In replicator config.yaml, its recommended to have

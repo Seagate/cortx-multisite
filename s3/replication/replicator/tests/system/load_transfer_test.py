@@ -291,9 +291,8 @@ async def run_load_test():
                 'GET jobs returned http Status: {}'.format(resp.status))
             response = await resp.json()
 
-        logger.info("jobs is : {}".format(response))
         inprogress_count = response['inprogress-count']
-        logger.info("inprogress_count is : {}".format(inprogress_count))
+        logger.info("In-progress jobs count : {}".format(inprogress_count))
 
         if inprogress_count == 0:
             # No jobs pending then exit here.
@@ -311,19 +310,8 @@ async def run_load_test():
 
         polling_count -= 1
 
-    # Execute this if all jobs are not completed.
-    if inprogress_count != 0:
-        async with replicator_session.get(
-                url + '/jobs?count&inprogress') as resp:
-            logger.info(
-                'GET jobs returned http Status: {}'.format(resp.status))
-            response = await resp.json()
-
-            logger.info(
-                "In-progress jobs count : {}".format(
-                    response['inprogress-count']))
-            logger.info(
-                "To get inprogres jobs :\n '{}/jobs?inprogress'".format(url))
+    logger.info(
+        "To get inprogres jobs : '{}/jobs?inprogress'".format(url))
 
     await s3_session.close()
     await replicator_session.close()
