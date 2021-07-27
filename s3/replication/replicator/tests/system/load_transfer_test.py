@@ -311,7 +311,7 @@ async def run_load_test():
         polling_count -= 1
 
     logger.info(
-        "To get inprogres jobs : '{}/jobs?inprogress'".format(url))
+        "To get in-progress jobs : '{}/jobs?inprogress'".format(url))
 
     await s3_session.close()
     await replicator_session.close()

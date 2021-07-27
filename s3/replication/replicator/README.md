@@ -57,7 +57,7 @@ Run load transfer tests.
 python3 tests/system/load_transfer_test.py
 ```
 
-# Configurations
+## Configurations
 
 Number of connections should be greater than count of replications run
 in parallel, and ideally it should be twice.

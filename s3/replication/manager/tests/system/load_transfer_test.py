@@ -261,12 +261,15 @@ async def run_load_test():
     polling_count = test_config.polling_count
 
     while jobs_running and polling_count != 0:
+
+        completed_count = 0
+
         async with manager_session.get(url + '/jobs?count&completed') as resp:
             logger.info(
                 'GET jobs returned http Status: {}'.format(resp.status))
             response = await resp.json()
+            completed_count = response['count']
 
-        completed_count = response['count']
         logger.info("completed jobs count : {}".format(completed_count))
 
         if completed_count == test_config.count_of_obj:
