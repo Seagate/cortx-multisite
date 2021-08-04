@@ -29,6 +29,12 @@ Run basic tests for each module. Clean, Build and test.
 make test
 ```
 
+## Jenkins build & test script
+Jenkins script to create virtual environment, build all modules and also starts s3-in-memory server, s3replicationmanager and s3replicator as systemd proccesses and then run load transfer tests for s3replicationmanager and s3replicator.
+```sh
+sh build-runalltest.sh
+```
+
 ## Design documents
 For more understanding on replication process checkout these [sequence diagrams](doc/README.md).
 
