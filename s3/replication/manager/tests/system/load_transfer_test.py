@@ -261,48 +261,61 @@ async def run_load_test():
     polling_count = test_config.polling_count
 
     while jobs_running and polling_count != 0:
-        job_status_task_list = []
-        for job_id in posted_jobs_set:
-            logger.debug(
-                "Checking status for job: job_id= {}".format(job_id))
 
-            job_status_task = asyncio.ensure_future(manager_session.get(
-                url + '/jobs/' + job_id))
-            job_status_task_list.append(job_status_task)
+        completed_count = 0
 
-        # jobs status contains list of response from GET /jobs/<job_id> for
-        # each
-        logger.debug("Waiting for all GET {}/jobs/<job_id> response...".
-                     format(url))
-        get_job_response_list = await asyncio.gather(*job_status_task_list)
-        # logger.debug("get_job_response_list: {}".format(
-        #     get_job_response_list))
+        async with manager_session.get(url + '/jobs?count&completed') as resp:
+            logger.info(
+                'GET jobs returned http Status: {}'.format(resp.status))
+            response = await resp.json()
+            completed_count = response['count']
 
-        for get_job_resp in get_job_response_list:
-            job_status = await get_job_resp.json()
-            job_id = job_status["job"]["job_id"]
-            job_state = job_status["job"]["state"]
-            logger.debug(
-                "job_state = {} for job_id {}".format(
-                    job_state, job_id))
-            if job_state == "COMPLETED":
-                # remove completed job from polling list
-                posted_jobs_set.remove(job_id)
+        logger.info("completed jobs count : {}".format(completed_count))
 
-        if len(posted_jobs_set) == 0:
-            # No jobs pending.
+        if completed_count == test_config.count_of_obj:
+            # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")
+            sys.exit(0)
+
         else:
             # There are atleast some running jobs, give time to complete.
             logger.debug(
                 "Pending status for total {} jobs.".format(
-                    len(posted_jobs_set)))
+                    test_config.count_of_obj - completed_count))
             logger.info("Waiting for {} secs before polling job status...".
                         format(test_config.polling_wait_time))
             time.sleep(test_config.polling_wait_time)
 
         polling_count -= 1
+
+    # Execute this if all jobs are not completed.
+    inprogress_count = 0
+    queued_count = 0
+
+    # Get inprogress jobs count
+    async with manager_session.get(url + '/jobs?count&inprogress') as resp:
+        logger.info(
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
+
+        inprogress_count = response['count']
+        logger.info("In-progress jobs count : {}".format(inprogress_count))
+
+    async with manager_session.get(url + '/jobs?count&queued') as resp:
+        logger.info(
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
+
+        queued_count = response['count']
+        logger.info("Queueud jobs count: {}".format(queued_count))
+
+    logger.info(
+        "Pending jobs count : {}".format(
+            queued_count +
+            inprogress_count))
+    logger.info("To get in-progress jobs :\n '{}/jobs?inprogress'".format(url))
+    logger.info("To get queued jobs :\n '{}/jobs?queued'".format(url))
 
     await s3_session.close()
     await manager_session.close()

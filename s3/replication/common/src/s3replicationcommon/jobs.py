@@ -195,7 +195,7 @@ class Jobs:
 
     def queued_count(self):
         """
-        Returns total jobs in queued state.
+        Returns total jobs count in queued state.
 
         Returns:
             int: Count of queued jobs in collection.
@@ -204,12 +204,21 @@ class Jobs:
 
     def inprogress_count(self):
         """
-        Returns in-progress jobs in collection.
+        Returns in-progress jobs count in collection.
 
         Returns:
             int: Count of in-progress jobs in collection.
         """
         return len(self._jobs_inprogress)
+
+    def completed_count(self):
+        """
+        Returns completed jobs count in collection.
+
+        Returns:
+            int: Count of completed jobs in collection.
+        """
+        return len(self._jobs_completed)
 
     def is_job_present(self, replication_id):
         """

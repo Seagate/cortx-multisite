@@ -53,8 +53,11 @@ async def list_jobs(request):
                                       completed_jobs.count()}, status=200)
         else:
             return web.json_response({'count': jobs.count()}, status=200)
+    elif 'completed' in query:
+        _logger.debug('Completed jobs count {}'.format(completed_jobs.count()))
+        return web.json_response(completed_jobs, dumps=Jobs.dumps, status=200)
     else:
-        _logger.debug('Total replication jobs {}'.format(jobs.count()))
+        _logger.debug('Total replication jobs count {}'.format(jobs.count()))
         return web.json_response(jobs, dumps=Jobs.dumps, status=200)
 
 

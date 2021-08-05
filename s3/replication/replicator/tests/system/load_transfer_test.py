@@ -265,6 +265,7 @@ async def run_load_test():
         post_jobs_response_list))
 
     # Prepare a list of posted job_id's
+    # Not required TODO -- OR -- Can be used with in_prgoress_list later
     posted_jobs_set = set()
     for post_job_resp in post_jobs_response_list:
         job_status = await post_job_resp.json()
@@ -281,49 +282,36 @@ async def run_load_test():
     jobs_running = True  # if at least one job is running, keep polling.
     # Max polling iterations to avoid infinite loop
     polling_count = test_config.polling_count
+
+    response = {}
     while jobs_running and polling_count != 0:
-        job_status_task_list = []
-        for job_id in posted_jobs_set:
-            logger.debug(
-                "Checking status for job: job_id= {}".format(job_id))
+        async with replicator_session.get(
+                url + '/jobs?count&inprogress') as resp:
+            logger.info(
+                'GET jobs returned http Status: {}'.format(resp.status))
+            response = await resp.json()
 
-            job_status_task = asyncio.ensure_future(replicator_session.get(
-                url + '/jobs/' + job_id))
-            job_status_task_list.append(job_status_task)
+        inprogress_count = response['inprogress-count']
+        logger.info("In-progress jobs count : {}".format(inprogress_count))
 
-        # jobs status contains list of response from GET /jobs/<job_id> for
-        # each
-        logger.debug("Waiting for all GET {}/jobs/<job_id> response...".
-                     format(url))
-        get_job_response_list = await asyncio.gather(*job_status_task_list)
-        # logger.debug("get_job_response_list: {}".format(
-        #     get_job_response_list))
-
-        for get_job_resp in get_job_response_list:
-            job_status = await get_job_resp.json()
-            job_id = job_status["job"]["job_id"]
-            job_state = job_status["job"]["state"]
-            logger.debug(
-                "job_state = {} for job_id {}".format(
-                    job_state, job_id))
-            if job_state != "RUNNING":
-                # remove completed job from polling list
-                posted_jobs_set.remove(job_id)
-
-        if len(posted_jobs_set) == 0:
-            # No jobs pending.
+        if inprogress_count == 0:
+            # No jobs pending then exit here.
             jobs_running = False
             logger.debug("All jobs completed.")
+            sys.exit(0)
         else:
             # There are atleast some running jobs, give time to complete.
             logger.debug(
                 "Pending status for total {} jobs.".format(
-                    len(posted_jobs_set)))
+                    inprogress_count))
             logger.info("Waiting for {} secs before polling job status...".
                         format(test_config.polling_wait_time))
             time.sleep(test_config.polling_wait_time)
 
         polling_count -= 1
+
+    logger.info(
+        "To get in-progress jobs : '{}/jobs?inprogress'".format(url))
 
     await s3_session.close()
     await replicator_session.close()

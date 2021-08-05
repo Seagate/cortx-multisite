@@ -56,3 +56,10 @@ Run load transfer tests.
 ```sh
 python3 tests/system/load_transfer_test.py
 ```
+
+## Configurations
+
+Number of connections should be greater than count of replications run
+in parallel, and ideally it should be twice.
+In replicator config.yaml, its recommended to have
+max_connections_per_s3_session = 2 * max_replications
