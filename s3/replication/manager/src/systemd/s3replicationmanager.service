@@ -1,13 +1,10 @@
 [Unit]
-Description=s3replicationmanager service file to start a daemon instance.
+Description=systemd service file for s3replicationmanager.
 
 [Install]
 WantedBy=multi-user.target
 
 [Service]
-User=root
 Restart=on-failure
 Type=simple
-ExecStart=/usr/bin/python3 -m s3replicationmanager
-WorkingDirectory=/root/cortx-multisite/s3/replication/manager/src
-Environment="PYTHONPATH=/root/cortx-multisite/s3/replication/common/src"
+ExecStart=$(REPLICATION_VENV)/python3 -m s3replicationmanager

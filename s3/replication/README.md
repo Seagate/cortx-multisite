@@ -29,10 +29,10 @@ Run basic tests for each module. Clean, Build and test.
 make test
 ```
 
-## Jenkins build & test script
-Jenkins script to create virtual environment, build all modules and also starts s3-in-memory server, s3replicationmanager and s3replicator as systemd proccesses and then run load transfer tests for s3replicationmanager and s3replicator.
+## Build & test script
+A script which facilitates users to create virtual environment, build all modules and also starts s3-in-memory server, s3replicationmanager and s3replicator as systemd proccesses and then run load transfer tests for s3replicationmanager and s3replicator. This script will also be used by jenkins to build and run tests.
 ```sh
-sh build-runalltest.sh
+sh build_and_test.sh
 ```
 
 ## Design documents
