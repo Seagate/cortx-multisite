@@ -39,7 +39,7 @@ async def list_jobs(request):
     url = request.path_qs
     url_ob = urlparse(url)
     query = parse_qs(url_ob.query, keep_blank_values=True)
-    _logger.debug('API: GET /jobs\n Query: {}'.format(query))
+    #_logger.debug('API: GET /jobs\n Query: {}'.format(query))
 
     jobs = request.app['all_jobs']
     completed_jobs = request.app['completed_jobs']
@@ -51,16 +51,14 @@ async def list_jobs(request):
         elif 'completed' in query:
             return web.json_response({'completed-count':
                                       completed_jobs.count()}, status=200)
-        else:
-            return web.json_response({'count': jobs.count()}, status=200)
-    elif 'completed' in query:
-        _logger.debug('Completed jobs count {}'.format(completed_jobs.count()))
-        return web.json_response(completed_jobs, dumps=Jobs.dumps, status=200)
+    """
     else:
-        _logger.debug('Total replication jobs count {}'.format(jobs.count()))
+            return web.json_response({'count': jobs.count()}, status=200)
+    else:
+        _logger.debug('Total replication jobs {}'.format(jobs.count()))
         return web.json_response(jobs, dumps=Jobs.dumps, status=200)
-
-
+    """
+        
 @routes.get('/jobs/{job_id}')  # noqa: E302
 async def get_job(request):
     """Get job details for given job_id."""

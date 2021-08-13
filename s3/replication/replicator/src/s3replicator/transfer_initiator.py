@@ -54,7 +54,7 @@ class TranferEventHandler:
                     _logger.debug("Moved job after completion for job_id {}"
                                   " to app['completed_jobs']".format(job_id))
                     self._app['completed_jobs'].add_job(job)
-
+                #   _logger.debug("Moved job after completion for job_id {} to app['completed_jobs']".format(job_id))
                 # Update the replication manager about job completion.
                 # XXX Support to pick out of multiple replication managers.
                 replication_manager = \

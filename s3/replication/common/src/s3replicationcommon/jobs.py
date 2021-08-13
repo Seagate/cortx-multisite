@@ -19,6 +19,7 @@
 
 import asyncio
 from collections import OrderedDict
+import re
 from .job import Job
 from .job import JobState
 from .job import JobJsonEncoder
@@ -52,7 +53,7 @@ class Jobs:
         self._logger = logger
         self._label = label
         self._timeout = timeout
-
+       
         # Additionally store job_id and replication_id mapping.
         self._job_id_to_replication_id_map = {}
 
@@ -130,28 +131,16 @@ class Jobs:
 
             self._jobs_queued.pop(replication_id)
             self._jobs_inprogress.add(replication_id)
+            
         elif replication_id in self._jobs_paused:
             self._logger.debug(
                 "State change [Paused to Inprogress] for replication-id {},".
                 format(replication_id))
             move_across_sets(self._jobs_paused, self._jobs_inprogress,
                              replication_id)
+                             
         else:
             # If was not in queued/paused, then invalid state.
-            assert False, "Bug: Invalid state transition for job {}".format(
-                replication_id
-            )
-
-    def move_to_pause(self, replication_id):
-        """Move job to paused list."""
-        if replication_id in self._jobs_inprogress:
-            self._logger.debug(
-                "State change [Inprogress to Paused] for replication-id {},".
-                format(replication_id))
-            move_across_sets(self._jobs_inprogress, self._jobs_paused,
-                             replication_id)
-        else:
-            # If was not in inprogress, then invalid state.
             assert False, "Bug: Invalid state transition for job {}".format(
                 replication_id
             )
@@ -170,14 +159,29 @@ class Jobs:
                 replication_id
             )
 
-    def move_to_complete(self, replication_id):
+    def move_to_pause(self, replication_id):
         """Move job to paused list."""
+        if replication_id in self._jobs_inprogress:
+            self._logger.debug(
+                "State change [Inprogress to Paused] for replication-id {},".
+                format(replication_id))
+            move_across_sets(self._jobs_inprogress, self._jobs_paused,
+                             replication_id)
+        else:
+            # If was not in inprogress, then invalid state.
+            assert False, "Bug: Invalid state transition for job {}".format(
+                replication_id
+            )
+
+    def move_to_complete(self, replication_id):
+        """Move job to completed list."""
         if replication_id in self._jobs_inprogress:
             self._logger.debug(
                 "State change [Inprogress to Complete]" +
                 " for replication-id {},".format(replication_id))
             move_across_sets(self._jobs_inprogress, self._jobs_completed,
                              replication_id)
+            self._logger.debug("completed jobs after across sets {}".format(self._jobs_completed))
         else:
             # If was not in inprogress, then invalid state.
             assert False, "Bug: Invalid state transition for job {}".format(
@@ -195,7 +199,7 @@ class Jobs:
 
     def queued_count(self):
         """
-        Returns total jobs count in queued state.
+        Returns total jobs in queued state.
 
         Returns:
             int: Count of queued jobs in collection.
@@ -204,21 +208,12 @@ class Jobs:
 
     def inprogress_count(self):
         """
-        Returns in-progress jobs count in collection.
+        Returns in-progress jobs in collection.
 
         Returns:
             int: Count of in-progress jobs in collection.
         """
         return len(self._jobs_inprogress)
-
-    def completed_count(self):
-        """
-        Returns completed jobs count in collection.
-
-        Returns:
-            int: Count of completed jobs in collection.
-        """
-        return len(self._jobs_completed)
 
     def is_job_present(self, replication_id):
         """
@@ -264,9 +259,18 @@ class Jobs:
         self._jobs[job.get_replication_id()] = job
         self._job_id_to_replication_id_map[job.get_job_id()] = \
             job.get_replication_id()
-        # Initial state is queued.
-        self._jobs_queued[job.get_replication_id()] = None
-
+    
+        if self._label == "completed-jobs":
+            # As the state of job is changed to completed, add the job in jobs_completed 
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into COMPLETED QUEUE".
+                           format(self._label, job.get_job_id()))
+            self._jobs_completed.add(job.get_replication_id())
+        else:
+            # Initial state is queued.
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into QUEUED QUEUE".
+                           format(self._label, job.get_job_id()))
+            self._jobs_queued[job.get_replication_id()] = None
+           
         if self._timeout is not None:
             asyncio.ensure_future(
                 self.schedule_clear_cache(job.get_job_id())
@@ -303,15 +307,16 @@ class Jobs:
         """
         Removes a given job from collection and returns a reference.
         to removed Job entry.
-
+        
         Args:
             replication_id (str): Job identifier.
-
         Returns:
             Job: Removed job record, None if job not present.
         """
         job = self._jobs.pop(replication_id, None)
+        
         if job is not None:
+            
             if job.get_state() == JobState.INITIAL:
                 self._jobs_queued.pop(replication_id)
             elif job.get_state() == JobState.RUNNING:
@@ -320,9 +325,10 @@ class Jobs:
                 self._jobs_paused.remove(replication_id)
             else:
                 # COMPLETED/ABORTED/FAILED.
-                self._jobs_completed.remove(replication_id)
-
+                self._logger.debug("Removed job with job_id [{}]".format(job.get_job_id()))
+               	self._jobs_completed.remove(replication_id)
         return job
+        
 
     def remove_job_by_job_id(self, job_id):
         """
@@ -334,8 +340,8 @@ class Jobs:
         replication_id = self._job_id_to_replication_id_map.pop(job_id, None)
         if replication_id is None:
             return None
-        self._logger.debug("Jobs[{}]: Removing job with job_id {}.".
-                           format(self._label, job_id))
+        self._logger.debug("Jobs[{}]: Removing job with job_id [{}]".
+                           format(self._label, job_id, replication_id))
         return self._remove_job(replication_id)
 
     async def schedule_clear_cache(self, job_id):
@@ -351,7 +357,9 @@ class Jobs:
                 "Jobs[{}]: Schedule job_id [{}] to be expired after {} secs".
                 format(self._label, job_id, self._timeout))
             await asyncio.sleep(self._timeout)
+            
             self._logger.debug(
                 "Jobs[{}]: job_id [{}] entry expired.".
                 format(self._label, job_id))
+
             self.remove_job_by_job_id(job_id)
