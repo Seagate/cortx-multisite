@@ -264,8 +264,18 @@ class Jobs:
         self._jobs[job.get_replication_id()] = job
         self._job_id_to_replication_id_map[job.get_job_id()] = \
             job.get_replication_id()
-        # Initial state is queued.
-        self._jobs_queued[job.get_replication_id()] = None
+
+        if self._label == "completed-jobs":
+            # As the state of job is changed to completed, add the job in
+            # jobs_completed
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_completed".
+                               format(self._label, job.get_job_id()))
+            self._jobs_completed.add(job.get_replication_id())
+        else:
+            # Initial state is queued.
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_queued".
+                               format(self._label, job.get_job_id()))
+            self._jobs_queued[job.get_replication_id()] = None
 
         if self._timeout is not None:
             asyncio.ensure_future(
@@ -320,6 +330,8 @@ class Jobs:
                 self._jobs_paused.remove(replication_id)
             else:
                 # COMPLETED/ABORTED/FAILED.
+                self._logger.debug("Jobs[{}]: Removed job with job_id {}.".
+                                   format(self._label, job.get_job_id()))
                 self._jobs_completed.remove(replication_id)
 
         return job
