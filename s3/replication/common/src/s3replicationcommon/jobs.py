@@ -266,13 +266,13 @@ class Jobs:
             job.get_replication_id()
 
         if self._label == "completed-jobs":
-            # As the state of job is changed to completed, add the job in
-            # jobs_completed
+            # If calling object is having label of "completed-jobs" type,
+            # then add the job in the jobs_completed set.
             self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_completed".
                                format(self._label, job.get_job_id()))
             self._jobs_completed.add(job.get_replication_id())
         else:
-            # Initial state is queued.
+            # Initial state is queued for "all-jobs" type object.
             self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_queued".
                                format(self._label, job.get_job_id()))
             self._jobs_queued[job.get_replication_id()] = None
@@ -322,18 +322,16 @@ class Jobs:
         """
         job = self._jobs.pop(replication_id, None)
         if job is not None:
-            if job.get_state() == JobState.INITIAL:
+            state = job.get_state()
+            if state == JobState.INITIAL:
                 self._jobs_queued.pop(replication_id)
-            elif job.get_state() == JobState.RUNNING:
+            elif state == JobState.RUNNING:
                 self._jobs_inprogress.remove(replication_id)
-            elif job.get_state() == JobState.PAUSED:
+            elif state == JobState.PAUSED:
                 self._jobs_paused.remove(replication_id)
             else:
                 # COMPLETED/ABORTED/FAILED.
-                self._logger.debug("Jobs[{}]: Removed job with job_id {}.".
-                                   format(self._label, job.get_job_id()))
                 self._jobs_completed.remove(replication_id)
-
         return job
 
     def remove_job_by_job_id(self, job_id):
