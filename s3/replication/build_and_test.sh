@@ -27,15 +27,16 @@
 # Usage : sh ./build_and_test.sh
 # 
 
-# Project root directory
-MULTISITE_ROOT_DIR="$(cd ../../; pwd)"
-echo "Project directory : "$MULTISITE_ROOT_DIR
-
+BUILD_SCRIPT_PATH=$(readlink -f "$0")
 # Replication directory
-REPLICATION_DIR="$(pwd)"
-echo "Replication directory :" $REPLICATION_DIR
-
+REPLICATION_DIR=$(dirname "$BUILD_SCRIPT_PATH")
+# Project root source directory
+MULTISITE_ROOT_DIR="$REPLICATION_DIR/../.."
+# Virtual environment directory
 REPLICATION_VENV=$REPLICATION_DIR/s3env/bin
+
+echo "Project root source directory : "$MULTISITE_ROOT_DIR
+echo "Replication directory :" $REPLICATION_DIR
 echo "Virtual environment directory : "$REPLICATION_VENV
 
 # Module directory
@@ -59,16 +60,6 @@ stop_replication_services()
     systemctl stop s3_in_memory.service
     systemctl stop s3replicationmanager.service
     systemctl stop s3replicator.service
-
-    # Check if any service name is passed or not.
-    # If passed then it's an error case. Print an error message and exit.
-    if [ $# -eq 0 ]; then
-        echo "Shut down all processes!"
-    else
-        FAILED_SVC=$1
-        echo "ERROR : $FAILED_SVC service activation failed!"
-        exit -1
-    fi
 }
 
 # Active an environment
@@ -114,9 +105,9 @@ rm -f $SYSD_REPLICATION_MANAGER_SVC_FILE
 rm -f $SYSD_REPLICATOR_SVC_FILE
 
 # Strip hardcoded lines
-head -n -1 $S3_IN_MEMRORY_SVC_FILE > $SYSD_S3_IN_MEMORY_SVC_FILE
-head -n -1 $MANGER_SVC_FILE > $SYSD_REPLICATION_MANAGER_SVC_FILE
-head -n -1 $REPLICATOR_SVC_FILE > $SYSD_REPLICATOR_SVC_FILE
+sed "/ExecStart/d" $S3_IN_MEMRORY_SVC_FILE > $SYSD_S3_IN_MEMORY_SVC_FILE
+sed "/ExecStart/d" $MANGER_SVC_FILE > $SYSD_REPLICATION_MANAGER_SVC_FILE
+sed "/ExecStart/d" $REPLICATOR_SVC_FILE > $SYSD_REPLICATOR_SVC_FILE
 
 echo "ExecStart=$REPLICATION_VENV/python3 $S3_REPLICATION_COMMON_TEST_DIR/s3_in_memory.py" >> $SYSD_S3_IN_MEMORY_SVC_FILE
 echo "ExecStart=$REPLICATION_VENV/python3 -m s3replicationmanager" >> $SYSD_REPLICATION_MANAGER_SVC_FILE
@@ -134,7 +125,9 @@ systemctl start s3_in_memory.service
 svc_status=$(systemctl is-active s3_in_memory.service)
 if [ $svc_status != "active" ]
 then
-    stop_replication_services "s3_in_memory"
+    echo "ERROR : s3_in_memory service activation failed!"
+    stop_replication_services
+    exit -1
 fi
 
 # Starting s3replicationmanager service 
@@ -142,7 +135,9 @@ systemctl start s3replicationmanager.service
 svc_status=$(systemctl is-active s3replicationmanager.service)
 if [ $svc_status != "active" ]
 then
-    stop_replication_services "s3replicationmanager"
+    echo "ERROR : s3replicationmanager service activation failed!"
+    stop_replication_services
+    exit -1
 fi
 
 # Starting s3replictor service 
@@ -150,14 +145,16 @@ systemctl start s3replicator.service
 svc_status=$(systemctl is-active s3replicator.service)
 if [ $svc_status != "active" ]
 then
-    stop_replication_services "s3replicator"
+    echo "ERROR : s3replicator service activation failed!"
+    stop_replication_services
+    exit -1
 fi
 
 # Start load transfer tests
 echo "----------------- s3replicationmanager test started -------------------"
 sleep 2 # For better logging
 $REPLICATION_VENV/python3 $S3_REPLICATION_MANAGER_TEST_DIR/load_transfer_test.py
-if [[ $? = 0 ]]; then
+if [[ $? == 0 ]]; then
     echo "success"
     MANAGER_LOAD_TRANSFER_TEST_RESULT="PASSED"
 else
@@ -171,7 +168,7 @@ echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 echo "---------------------- s3replicator test started ----------------------"
 sleep 2
 $REPLICATION_VENV/python3 $S3_REPLICATOR_TEST_DIR/load_transfer_test.py
-if [[ $? = 0 ]]; then
+if [[ $? == 0 ]]; then
     echo "success"
     REPLICATOR_LOAD_TRANSFER_TEST_RESULT="PASSED"
 else
