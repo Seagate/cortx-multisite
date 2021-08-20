@@ -7,4 +7,4 @@ WantedBy=multi-user.target
 [Service]
 Restart=on-failure
 Type=simple
-ExecStart=REPLICATION_VENV_PLACEHOLDER/python3 S3_REPLICATION_COMMON_TEST_DIR_PLACEHOLDER/s3_in_memory.py
+ExecStart=__REPLICATION_VENV_PLACEHOLDER__/python3 __S3_REPLICATION_COMMON_TEST_DIR_PLACEHOLDER__/s3_in_memory.py
