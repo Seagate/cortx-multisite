@@ -19,31 +19,19 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import aiohttp
 import asyncio
 import sys
-from os import urandom
-from os.path import abspath, join, dirname
-from s3replicationcommon.aws_v4_signer import AWSV4Signer
-
-# Import config module from '../tests/system'
-sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
+import aiohttp
 from config import Config
-
-
-async def data_generator(object_sz, chunk_size):
-    total_chunks = int(object_sz / chunk_size)
-    for _ in range(0, total_chunks):
-        yield urandom(chunk_size)
+from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 
 async def main():
     async with aiohttp.ClientSession() as session:
-
         config = Config()
 
         bucket_name = config.source_bucket_name
-        object_name = config.object_name_prefix + "test"
+        object_name = config.object_name_prefix
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
         query_params = ""
@@ -55,7 +43,7 @@ async def main():
             config.s3_region,
             config.access_key,
             config.secret_key).prepare_signed_header(
-            'PUT',
+            'HEAD',
             request_uri,
             query_params,
             body)
@@ -64,21 +52,11 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        headers["Content-Length"] = str(config.object_size)
+        print('HEAD on {}'.format(config.endpoint + request_uri))
 
-        url = config.endpoint + request_uri
-        data = data_generator(config.object_size,config.object_size)
-        print('PUT on {} for object size {} bytes.'.format(url, config.object_size))
-
-        async with session.put(url, headers=headers, data=data) as resp:
-            http_status = resp.status
-
-        if http_status == 200:
-            print("HTTP status {} OK!".format(http_status))
-        else:
-            print("ERROR : BAD RESPONSE! status = {}".format(http_status))
-
-
+        async with session.head(config.endpoint + request_uri,
+                                headers=headers) as resp:
+            print("Response of HEAD request {} ".format(resp))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
