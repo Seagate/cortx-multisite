@@ -1,0 +1,10 @@
+[Unit]
+Description=systemd service file for in memory s3 server.
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-failure
+Type=simple
+ExecStart=__REPLICATION_VENV_PLACEHOLDER__/python3 __S3_REPLICATION_COMMON_TEST_DIR_PLACEHOLDER__/s3_in_memory.py

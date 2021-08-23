@@ -1,0 +1,10 @@
+[Unit]
+Description=systemd service file for s3replicator.
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-failure
+Type=simple
+ExecStart=__REPLICATION_VENV_PLACEHOLDER__/python3 -m s3replicator
