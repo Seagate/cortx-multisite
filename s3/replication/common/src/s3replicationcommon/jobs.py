@@ -264,8 +264,18 @@ class Jobs:
         self._jobs[job.get_replication_id()] = job
         self._job_id_to_replication_id_map[job.get_job_id()] = \
             job.get_replication_id()
-        # Initial state is queued.
-        self._jobs_queued[job.get_replication_id()] = None
+
+        if self._label == "completed-jobs":
+            # If calling object is having label of "completed-jobs" type,
+            # then add the job in the jobs_completed set.
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_completed".
+                               format(self._label, job.get_job_id()))
+            self._jobs_completed.add(job.get_replication_id())
+        else:
+            # Initial state is queued for "all-jobs" type object.
+            self._logger.debug("Jobs[{}]: Adding job with job_id {} into jobs_queued".
+                               format(self._label, job.get_job_id()))
+            self._jobs_queued[job.get_replication_id()] = None
 
         if self._timeout is not None:
             asyncio.ensure_future(
@@ -312,16 +322,16 @@ class Jobs:
         """
         job = self._jobs.pop(replication_id, None)
         if job is not None:
-            if job.get_state() == JobState.INITIAL:
+            state = job.get_state()
+            if state == JobState.INITIAL:
                 self._jobs_queued.pop(replication_id)
-            elif job.get_state() == JobState.RUNNING:
+            elif state == JobState.RUNNING:
                 self._jobs_inprogress.remove(replication_id)
-            elif job.get_state() == JobState.PAUSED:
+            elif state == JobState.PAUSED:
                 self._jobs_paused.remove(replication_id)
             else:
                 # COMPLETED/ABORTED/FAILED.
                 self._jobs_completed.remove(replication_id)
-
         return job
 
     def remove_job_by_job_id(self, job_id):
