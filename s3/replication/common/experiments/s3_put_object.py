@@ -22,8 +22,18 @@
 import aiohttp
 import asyncio
 import sys
-from config import Config
+from os.path import *
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+
+# Import config module from '../tests/system'
+sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
+from config import Config
+
+
+async def data_generator(object_sz, chunk_size):
+    total_chunks = int(object_sz / chunk_size)
+    for _ in range(0, total_chunks):
+        yield os.urandom(chunk_size)
 
 
 async def main():
@@ -31,7 +41,6 @@ async def main():
 
         config = Config()
 
-        # Ensure bucket and object exists before test.
         bucket_name = config.source_bucket_name
         object_name = config.object_name_prefix + "test"
 
@@ -45,7 +54,7 @@ async def main():
             config.s3_region,
             config.access_key,
             config.secret_key).prepare_signed_header(
-            'GET',
+            'PUT',
             request_uri,
             query_params,
             body)
@@ -54,20 +63,18 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        total_received = 0
+        headers["Content-Length"] = str(config.object_size)
 
-        print('GET on {}'.format(config.endpoint + request_uri))
-        async with session.get(config.endpoint + request_uri,
-                               headers=headers) as resp:
-            while True:
-                chunk = await resp.content.read(1024)
-                if not chunk:
-                    break
-                total_received += len(chunk)
-                print("Received chunk of size {} bytes.".format(len(chunk)))
+        print('PUT on {} for object size {} bytes.'.format(
+            config.endpoint + request_uri, config.object_size))
+        async with session.put(config.endpoint + request_uri,
+                               headers=headers,
+                               data=data_generator(
+                                   config.object_size,
+                                   config.transfer_chunk_size)) as resp:
+            print(resp.status)
+            print(await resp.text())
 
-            print("Total object size received {} bytes.".format(
-                total_received))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
