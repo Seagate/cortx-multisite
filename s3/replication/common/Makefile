@@ -29,5 +29,7 @@ test:
 	python tests/system/test_put_object.py
 	@(printf "\n\nTest case: Reads test object\n")
 	python tests/system/test_get_object.py
+	@(printf "\n\nTest case: Reads test head object\n")
+	python tests/system/test_head_object.py
 	@(printf "\n\nTest case: Transfers test object\n")
 	python tests/system/s3_async_transfer_object.py

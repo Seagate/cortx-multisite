@@ -19,11 +19,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import asyncio
-from config import Config
 import os
 import sys
-from s3replicationcommon.s3_head_object import S3AsyncHeadObject
+from config import Config
 from s3replicationcommon.log import setup_logger
+from s3replicationcommon.s3_head_object import S3AsyncHeadObject
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 
@@ -46,13 +46,22 @@ async def main():
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate object name
-    # source_object_name = config.object_name_prefix + "test"
+    object_name = config.object_name_prefix + "test"
+    bucket_name = config.source_bucket_name
     request_id = "dummy-request-id"
 
-    obj = S3AsyncHeadObject(session, request_id,
-                            config.source_bucket_name,
-                            config.object_name_prefix)
-    await obj.get_head_object()
+    head_obj = S3AsyncHeadObject(session, request_id,
+                                 bucket_name,
+                                 object_name)
+    await head_obj.get()
+
+    # Validate if content length matches to object size
+    if config.object_size == head_obj.get_contentlength():
+        logger.info("Content-Length matched!")
+        logger.info("S3AsyncHeadObject test passed!")
+    else:
+        logger.error("Error : Content-Length mismatched")
+
     await session.close()
 
 loop = asyncio.get_event_loop()

@@ -17,11 +17,10 @@
 #
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-#
 
+import aiohttp
 import asyncio
 import sys
-import aiohttp
 from config import Config
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
@@ -31,7 +30,7 @@ async def main():
         config = Config()
 
         bucket_name = config.source_bucket_name
-        object_name = config.object_name_prefix
+        object_name = config.object_name_prefix + "test"
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
         query_params = ""

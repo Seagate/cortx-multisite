@@ -79,6 +79,5 @@ async def main():
             print("ERROR : BAD RESPONSE! status = {}".format(http_status))
 
 
-
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

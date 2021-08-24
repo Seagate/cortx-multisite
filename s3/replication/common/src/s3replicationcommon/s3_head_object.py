@@ -16,18 +16,18 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+import aiohttp
+import sys
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
-import sys
-import aiohttp
 
 
 class S3AsyncHeadObject:
     def __init__(self, session, request_id,
                  bucket_name, object_name):
-        # initialize
+        """Initialise."""
         self._session = session
         # Request id for better logging.
         self._request_id = request_id
@@ -42,7 +42,19 @@ class S3AsyncHeadObject:
         self._timer = Timer()
         self._state = S3RequestState.INITIALISED
 
-    async def get_head_object(self):
+    def get_contentlength(self):
+        """Returns content length for object."""
+        return self._response_headers["Content-Length"]
+
+    def get_state(self):
+        """Returns current request state."""
+        return self._state
+
+    def get_execution_time(self):
+        """Return total time for HEAD Object operation."""
+        return self._timer.elapsed_time_ms()
+
+    async def get(self):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
@@ -76,10 +88,17 @@ class S3AsyncHeadObject:
             async with self._session.get_client_session().head(
                     self._session.endpoint + request_uri,
                     headers=headers) as resp:
+
                 if resp.status == 200:
+                    self._response_headers = resp.headers
                     self._logger.info(
-                        fmt_reqid_log(self._request_id) +
-                        'HEAD Object received response: {}'.format(resp))
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'HEAD Object response received with" \
+                        "status code: {}'.format(resp.status))
+                    self._logger.info(
+                        'received reponse header {}'.format(
+                            self._response_headers))
 
                 else:
                     self._state = S3RequestState.FAILED
@@ -100,14 +119,6 @@ class S3AsyncHeadObject:
                                "Failed to connect to S3: " + str(e))
         self._timer.stop()
         return
-
-    def get_state(self):
-        """Returns current request state."""
-        return self._state
-
-    def get_execution_time(self):
-        """Return total time for GET Object operation."""
-        return self._timer.elapsed_time_ms()
 
     def pause(self):
         self._state = S3RequestState.PAUSED
