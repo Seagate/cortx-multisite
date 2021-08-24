@@ -56,6 +56,10 @@ class S3AsyncGetObject:
         """Returns ETag for object."""
         return self._response_headers["ETag"].strip("\"")
 
+    def get_content_length(self):
+        """Get content length."""
+        return int(self._response_headers["Content-Length"])
+
     # yields data chunk for given size
     async def fetch(self, chunk_size):
         request_uri = AWSV4Signer.fmt_s3_request_uri(

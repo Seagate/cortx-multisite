@@ -22,7 +22,8 @@
 import aiohttp
 import asyncio
 import sys
-from os.path import *
+from os import urandom
+from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
@@ -33,7 +34,7 @@ from config import Config
 async def data_generator(object_sz, chunk_size):
     total_chunks = int(object_sz / chunk_size)
     for _ in range(0, total_chunks):
-        yield os.urandom(chunk_size)
+        yield urandom(chunk_size)
 
 
 async def main():
@@ -65,15 +66,17 @@ async def main():
 
         headers["Content-Length"] = str(config.object_size)
 
-        print('PUT on {} for object size {} bytes.'.format(
-            config.endpoint + request_uri, config.object_size))
-        async with session.put(config.endpoint + request_uri,
-                               headers=headers,
-                               data=data_generator(
-                                   config.object_size,
-                                   config.transfer_chunk_size)) as resp:
-            print(resp.status)
-            print(await resp.text())
+        url = config.endpoint + request_uri
+        data = data_generator(config.object_size,config.object_size)
+        print('PUT on {} for object size {} bytes.'.format(url, config.object_size))
+
+        async with session.put(url, headers=headers, data=data) as resp:
+            http_status = resp.status
+
+        if http_status == 200:
+            print("HTTP status {} OK!".format(http_status))
+        else:
+            print("ERROR : BAD RESPONSE! status = {}".format(http_status))
 
 
 loop = asyncio.get_event_loop()

@@ -22,7 +22,7 @@
 import aiohttp
 import asyncio
 import sys
-from os.path import *
+from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
@@ -63,6 +63,7 @@ async def main():
         print('GET on {}'.format(config.endpoint + request_uri))
         async with session.get(config.endpoint + request_uri,
                                headers=headers) as resp:
+            http_status = resp.status
             while True:
                 chunk = await resp.content.read(1024)
                 if not chunk:
@@ -72,6 +73,11 @@ async def main():
 
             print("Total object size received {} bytes.".format(
                 total_received))
+
+        if http_status == 200:
+            print("HTTP status {} OK!".format(http_status))
+        else:
+            print("ERROR : BAD RESPONSE! status = {}".format(http_status))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
