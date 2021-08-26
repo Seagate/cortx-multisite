@@ -17,9 +17,9 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import aiohttp
 import sys
 import urllib
+import xml.etree.ElementTree as ET
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
@@ -54,12 +54,30 @@ class S3AsyncGetBucketReplication:
         """Returns ETag for object."""
         return self._response_headers["ETag"].strip("\"")
 
-    # yields data chunk for given size
-    async def get(self):
+    def get_replicatin_priority(self):
+        """Returns replication priority number."""
+        return int(self._replication_priority)
 
-        request_uri = '/' + urllib.parse.quote(self._bucket_name, safe='')
-        self._logger.debug ("request_uri : {}".format(request_uri))
-        # Add bucket-replication policy query
+    def get_replication_status(self):
+        """Returns replication status."""
+        return self._replication_status
+
+    def get_replication_prefix(self):
+        """Returns replication prefix used as a filter."""
+        return self._replication_prefix
+
+    def get_replication_dest_bucket(self):
+        """Returns replication destination bucket name."""
+        return self._replication_dest_bucket
+
+    # yields data chunk for given size
+
+    async def get(self):
+        request_uri = AWSV4Signer.fmt_s3_request_uri(self._bucket_name)
+        self._logger.debug(
+            fmt_reqid_log(
+                self._request_id) +
+            "request_uri : {}".format(request_uri))
         query_params = urllib.parse.urlencode({'replication': None})
         body = ""
 
@@ -84,30 +102,103 @@ class S3AsyncGetBucketReplication:
             # Request url
             url = self._session.endpoint + request_uri
 
-            self._logger.info('GET on {}'.format(url))
-            async with self._session.get_client_session().get(url, params=query_params, headers=headers) as resp:
-                self._logger.info("Response url {}".format((resp.url)))
-                self._logger.info("Received response url {}".format(resp))
+            self._logger.info(
+                fmt_reqid_log(
+                    self._request_id) +
+                'GET on {}'.format(url))
+            async with self._session.get_client_session().get(
+                    url, params=query_params, headers=headers) as resp:
+                self._logger.info(
+                    fmt_reqid_log(
+                        self._request_id) +
+                    "Response url {}".format(
+                        (resp.url)))
+                self._logger.info(
+                    fmt_reqid_log(
+                        self._request_id) +
+                    "Received response url {}".format(resp))
 
                 if resp.status == 200:
-                    self._logger.info("Received reponse [{} OK]".format(resp.status))
+                    self._logger.info(fmt_reqid_log(self._request_id) +
+                                      "Received reponse [{} OK]".format(
+                        resp.status))
 
-                    total_received = 0
-                    while True:
-                        chunk = await resp.content.read(1024)
-                        if not chunk:
-                            break
-                        total_received += len(chunk)
-                        self._logger.info("Received data {}".format(chunk))
+                    # parse xml response and set all the bucket replication
+                    # attributes for this object.
+                    xml_resp = await resp.text()
+                    response = ET.fromstring(xml_resp)
+
+                    self._replication_rule = response[1].text
+                    self._replication_id = response[0][0].text
+                    self._replication_priority = response[0][1].text
+                    self._replication_status = response[0][2].text
+                    self._dlt_marker_replication_status = response[0][3][0].text
+                    self._replication_prefix = response[0][4][0].text
+                    self._replication_role = response[1].text
+
+                    # Dest bucket is having fully querlified name
+                    # e.g. arn::aws::s3:target-bucket-name. so strip only
+                    # last token after splitting string using ':'.
+                    self._replication_dest_bucket = (response[0][5][0].text).split(':')[-1]
+
+                    # print all the replcation attributes
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'rule : {}'.format(
+                            self._replication_rule))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'id : {}'.format(
+                            self._replication_id))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'priority : {}'.format(
+                            self._replication_priority))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'status : {}'.format(
+                            self._replication_status))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'dlt_marker_status :{}'.format(
+                            self._dlt_marker_replication_status))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'prefix : {}'.format(
+                            self._replication_prefix))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'dest_bucket : {}'.format(
+                            self._replication_dest_bucket))
+                    self._logger.info(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'role : {}'.format(
+                            self._replication_role))
+
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
-                    self._logger.error('Error Response: {}'.format(error_msg))
-
-        except:
-            self._logger.error("Error: Exception occured!")
+                    self._logger.error(
+                        fmt_reqid_log(
+                            self._request_id) +
+                        'Error Response: {}'.format(error_msg))
+        except Exception as e:
+            self._logger.error(
+                fmt_reqid_log(
+                    self._request_id) +
+                "Error: Exception '{}' occured!".format(e))
 
         self._timer.stop()
-        self._logger.debug("execution time is : {}".format(self.get_execution_time()))
+        self._logger.debug(fmt_reqid_log(self._request_id) +
+                           "execution time is : {}".format(
+            self.get_execution_time()))
 
         return

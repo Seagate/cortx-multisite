@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -31,7 +30,8 @@ from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
-from s3replicationcommon.s3_get_bucket_replication import S3AsyncGetBucketReplication
+from s3replicationcommon.s3_get_bucket_replication \
+    import S3AsyncGetBucketReplication
 
 
 async def main():
@@ -48,17 +48,30 @@ async def main():
         print("Failed to configure logging.\n")
         sys.exit(-1)
 
+    # Read configs for future comparision
+    replication_status = 'Enabled'
+    replication_prefix = config.object_name_prefix
+    replication_dest_bucket = config.target_bucket_name
+
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
 
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate object names
     request_id = "dummy-request-id"
-    get_bucket_replication_obj = S3AsyncGetBucketReplication(session, request_id,
-                                     config.source_bucket_name)
+    obj = S3AsyncGetBucketReplication(
+        session, request_id, config.source_bucket_name)
 
     # Start transfer
-    await get_bucket_replication_obj.get()
+    await obj.get()
+
+    if obj.get_replication_status() == replication_status:
+       print ('replication status matched!')
+    if obj.get_replication_prefix() == replication_prefix:
+       print ('replication prefix matched!')
+    if obj.get_replication_dest_bucket() == replication_dest_bucket:
+       print ('replication target bucket name matched!')
+
     await session.close()
 
 

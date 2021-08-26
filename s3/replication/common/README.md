@@ -39,6 +39,8 @@ python3 setup.py install
 
 Executing Tests.
 First update the configuration to point to your CORTX s3 setup. Create file `~/.cortxs3/credentials.yaml` with `access_key` and `secret_key` relevant for your S3 setup.
+For some tests 'aws cli' installation is also required for now. aws s3api is used to do some setup before running some tests.(e.g. get-bucket-replication)
+as api development will take place there will not be further need to do bucket or object related setup via aws s3api.
 
 ***Note: DO NOT accidently commit/checkin your access_key/secret_key***
 

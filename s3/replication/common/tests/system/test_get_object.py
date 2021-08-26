@@ -63,11 +63,12 @@ async def main():
         pass
 
     if object_size == object_reader.get_content_length():
-        logger.info("Content-Lenght matched!")
+        logger.info("Content-Length matched!")
+        logger.info("S3AsyncGetObject test passed!")
     else:
         logger.error("Error : size mismatched")
 
-    logger.info("S3AsyncGetObject test passed!")
+
     await session.close()
 
 

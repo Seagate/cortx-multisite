@@ -1,0 +1,14 @@
+{
+    "Role": "arn:aws:iam::456758429929:role/service-role/s3crr_role_for_source_replication_bucket",
+    "Rules": [
+        {
+            "Status": "Enabled",
+            "Priority": 1,
+            "DeleteMarkerReplication": { "Status": "Disabled" },
+            "Filter" : { "Prefix": "foo"},
+            "Destination": {
+                "Bucket": "arn:aws:s3::target-replication-bucket"
+            }
+        }
+    ]
+}
