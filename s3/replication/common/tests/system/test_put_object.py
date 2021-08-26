@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -20,13 +19,13 @@
 #
 
 import asyncio
-from config import Config
 import os
 import sys
+from config import Config
+from object_generator import FixedObjectDataGenerator
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
-from s3replicationcommon.s3_get_object import S3AsyncGetObject
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
 
 
@@ -48,22 +47,25 @@ async def main():
 
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
+    # Generate bucket names
+    bucket_name = config.source_bucket_name
+
     # Generate object names
-    source_object_name = config.object_name_prefix + "test"
-    target_object_name = config.object_name_prefix + "copy"
+    object_name = config.object_name_prefix + "test"
+    object_size = config.object_size
     request_id = "dummy-request-id"
-    object_reader = S3AsyncGetObject(session, request_id,
-                                     config.source_bucket_name,
-                                     source_object_name, config.object_size)
+
+    object_reader = FixedObjectDataGenerator(
+                        logger, object_name, object_size)
+
     object_writer = S3AsyncPutObject(session, request_id,
-                                     config.target_bucket_name,
-                                     target_object_name, config.object_size)
+                                     bucket_name,
+                                     object_name, object_size)
 
-    # Start transfer
-    await object_writer.send(object_reader, config.transfer_chunk_size)
+    # Write to the object
+    await object_writer.send(object_reader, object_size)
 
-    logger.info("S3AsyncTransferObject test passed!")
-
+    logger.info("S3AsyncPutObject test passed!")
     await session.close()
 
 
