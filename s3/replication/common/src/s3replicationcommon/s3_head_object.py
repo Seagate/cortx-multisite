@@ -44,7 +44,7 @@ class S3AsyncHeadObject:
 
     def get_contentlength(self):
         """Returns content length for object."""
-        return self._response_headers["Content-Length"]
+        return int(self._response_headers["Content-Length"])
 
     def get_state(self):
         """Returns current request state."""
@@ -94,8 +94,8 @@ class S3AsyncHeadObject:
                     self._logger.info(
                         fmt_reqid_log(
                             self._request_id) +
-                        'HEAD Object response received with" \
-                        "status code: {}'.format(resp.status))
+                        'HEAD Object response received with'
+                        +' status code: {}'.format(resp.status))
                     self._logger.info(
                         'received reponse header {}'.format(
                             self._response_headers))

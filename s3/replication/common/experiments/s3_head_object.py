@@ -18,11 +18,16 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+
 import aiohttp
 import asyncio
 import sys
-from config import Config
+from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
+
+# Import config module from '../tests/system'
+sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
+from config import Config
 
 
 async def main():
@@ -55,7 +60,13 @@ async def main():
 
         async with session.head(config.endpoint + request_uri,
                                 headers=headers) as resp:
+            http_status = resp.status
             print("Response of HEAD request {} ".format(resp))
+
+        if http_status == 200:
+            print("HTTP status {} OK!".format(http_status))
+        else:
+            print("ERROR : BAD RESPONSE! status = {}".format(http_status))
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
