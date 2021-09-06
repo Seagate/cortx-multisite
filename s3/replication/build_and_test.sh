@@ -149,14 +149,19 @@ then
 fi
 
 # Start load transfer tests
+
+# Variable to hold exit status
+ret=0
+
 echo "----------------- s3replicationmanager test started -------------------"
 sleep 2 # For better logging
 $REPLICATION_VENV/python3 $S3_REPLICATION_MANAGER_TEST_DIR/load_transfer_test.py
-if [[ $? == 0 ]]; then
+if [ $? == 0 ]; then
     echo "success"
     MANAGER_LOAD_TRANSFER_TEST_RESULT="PASSED"
 else
     echo "failure: $?"
+    $ret = -1
     MANAGER_LOAD_TRANSFER_TEST_RESULT="FAILED"
 fi
 echo "------------------ s3replicationmanager test ended --------------------"
@@ -166,11 +171,12 @@ echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 echo "---------------------- s3replicator test started ----------------------"
 sleep 2
 $REPLICATION_VENV/python3 $S3_REPLICATOR_TEST_DIR/load_transfer_test.py
-if [[ $? == 0 ]]; then
+if [ $? == 0 ]; then
     echo "success"
     REPLICATOR_LOAD_TRANSFER_TEST_RESULT="PASSED"
 else
     echo "failure: $?"
+    $ret = -1
     REPLICATOR_LOAD_TRANSFER_TEST_RESULT="FAILED"
 fi
 echo "---------------------- s3replicator test ended ------------------------"
@@ -186,8 +192,14 @@ echo "Test 1: Load transfer for s3replicationmaanger [$MANAGER_LOAD_TRANSFER_TES
 echo "Test 2: Load transfer for s3replicatior [$REPLICATOR_LOAD_TRANSFER_TEST_RESULT]"
 echo "=================================================================="
 
+
 # Exit the environment
 deactivate
 cd $MULTISITE_ROOT_DIR
 
-echo "Exiting successfully..."
+if [ $ret == 0 ]; then
+    echo "Exiting successfully..."
+else
+    echo "Exiting with failure(s)..."
+    exit $ret
+fi
