@@ -49,8 +49,8 @@ async def main():
         sys.exit(-1)
 
     # Read configs for future comparision
-    replication_status = 'Enabled'
     replication_prefix = config.object_name_prefix
+    test_replication_object = replication_prefix + 'test'
     replication_dest_bucket = config.target_bucket_name
 
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
@@ -65,14 +65,17 @@ async def main():
     # Start transfer
     await obj.get()
 
-    if obj.get_replication_status() == replication_status:
-       print ('replication status matched!')
-    if obj.get_replication_prefix() == replication_prefix:
-       print ('replication prefix matched!')
-    if obj.get_replication_dest_bucket() == replication_dest_bucket:
-       print ('replication target bucket name matched!')
+    policy_attr_obj = obj.get_replication_rule(test_replication_object)
+    print(policy_attr_obj)
+
+    assert policy_attr_obj._prefix == replication_prefix, \
+        "replication_prefix mismatched"
+    assert policy_attr_obj._dest_bucket == replication_dest_bucket, \
+        "replication_dest_bucket mismatch"
 
     await session.close()
+
+    print("AsyncS3GetBucketRepication test passed!")
 
 
 loop = asyncio.get_event_loop()

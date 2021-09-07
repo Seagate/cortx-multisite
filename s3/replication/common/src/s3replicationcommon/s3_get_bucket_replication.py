@@ -19,56 +19,118 @@
 
 import sys
 import urllib
-import xml.etree.ElementTree as ET
+import xmltodict
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
-class S3AsyncGetBucketReplication:
+class MatchedRuleAttributes:
+    def __init__(self):
+        """Instantiate the matched rule's attributes."""
+        self._delete_marker_replication_status = None
+        self._account = None
+        self._dest_bucket = None
+        self._encryption_replication_key_id = None
+        self._replicationtime_status = None
+        self._prefix = None
+        self._tag = None
+        self._priority = None
+        self._id = None
+        self._replciation_status = None
+
+    def __str__(self):
+        """Method to print object with attributes."""
+        return "_delete_marker_replication_status : {}\n_account : {}\
+                \n_dest_bucket : {}\n_encryption_replication_key_id : {}\
+                \n_replicationtime_status : {}\n_prefix : {}\n_tag : {}\
+                \n_priority : {}\n_id : {}\n_replciation_status : {}\n".format(
+            self._delete_marker_replication_status,
+            self._account, self._dest_bucket,
+            self._encryption_replication_key_id,
+            self._replicationtime_status,
+            self._prefix, self._tag,
+            self._priority,
+            self._id, self._replciation_status)
+
+
+class S3AsyncGetBucketReplication():
     def __init__(self, session, request_id, bucket_name):
         """Initialise."""
         self._session = session
         # Request id for better logging.
         self._request_id = request_id
         self._logger = session.logger
-
         self._bucket_name = bucket_name
-
         self.remote_down = False
         self._http_status = None
-
         self._timer = Timer()
         self._state = S3RequestState.INITIALISED
-
-    def get_state(self):
-        """Returns current request state."""
-        return self._state
 
     def get_execution_time(self):
         """Return total time for GET Object operation."""
         return self._timer.elapsed_time_ms()
 
-    def get_etag(self):
-        """Returns ETag for object."""
-        return self._response_headers["ETag"].strip("\"")
+    @staticmethod
+    def prepare_matched_rule_object(rule):
+        """Initialise the attributes from matched rules"""
+        policy_obj = MatchedRuleAttributes()
 
-    def get_replicatin_priority(self):
-        """Returns replication priority number."""
-        return int(self._replication_priority)
+        if 'DeleteMarkerReplication' in rule:
+            if 'Status' in rule['DeleteMarkerReplication']:
+                policy_obj._delete_marker_replication_status = \
+                        rule['DeleteMarkerReplication']['Status']
+        if 'Destination' in rule:
+            if 'Bucket' in rule['Destination']:
+                policy_obj._dest_bucket = rule['Destination']['Bucket'].split(
+                    ':')[-1]
+            if 'EncryptionConfiguration' in rule['Destination']:
+                policy_obj._encryption_replication_key_id = \
+                        rule['Destination'][
+                            'EncryptionConfiguration']['ReplicaKmsKeyID']
+            if 'Account' in rule['Destination']:
+                policy_obj._account = rule['Destination']['Account']
+            if 'ReplicationTime' in rule['Destination']:
+                policy_obj._replicationtime_status = \
+                        rule['Destination']['ReplicationTime']['Status']
+        if 'Status' in rule:
+            policy_obj._status = rule['Status']
+        if 'Filter' in rule.keys():
+            if 'Prefix' in rule['Filter'].keys():
+                policy_obj._prefix = rule['Filter']['Prefix']
+            if 'Tag' in rule['Filter'].keys():
+                policy_obj._tag = rule['Filter']['Tag']
+        if 'ID' in rule.keys():
+            policy_obj._id = rule['ID']
+        if 'Priority' in rule:
+            policy_obj._priority = rule['Priority']
+        return policy_obj
 
-    def get_replication_status(self):
-        """Returns replication status."""
-        return self._replication_status
+    def get_replication_rule(self, obj_name):
+        """Returns replication replication rule for given bucket."""
+        self._dest_bucket = None
+        try:
+            for key, value in (
+                    self._response_dict['ReplicationConfiguration']).items():
+                if key == 'Rule':
+                    # Check if whether 'value' instance is list of rules
+                    if isinstance(value, list):
+                        # Iterate through different rules
+                        for rule in value:
+                            # Check if object name marches any rule prefix
+                            if rule['Filter']['Prefix'] in obj_name:
+                                return S3AsyncGetBucketReplication.prepare_matched_rule_object(
+                                    rule)
+                    # If only one rule is present
+                    else:
+                        if value['Filter']['Prefix'] in obj_name:
+                            return S3AsyncGetBucketReplication.prepare_matched_rule_object(
+                                value)
 
-    def get_replication_prefix(self):
-        """Returns replication prefix used as a filter."""
-        return self._replication_prefix
-
-    def get_replication_dest_bucket(self):
-        """Returns replication destination bucket name."""
-        return self._replication_dest_bucket
+        except Exception as e:
+            self._logger.error(
+                "Failed to get rule! Exception type : {}".format(e))
 
     # yields data chunk for given size
 
@@ -123,65 +185,12 @@ class S3AsyncGetBucketReplication:
                                       "Received reponse [{} OK]".format(
                         resp.status))
 
-                    # parse xml response and set all the bucket replication
-                    # attributes for this object.
                     xml_resp = await resp.text()
-                    response = ET.fromstring(xml_resp)
+                    self._response_dict = xmltodict.parse(xml_resp)
 
-                    self._replication_rule = response[1].text
-                    self._replication_id = response[0][0].text
-                    self._replication_priority = response[0][1].text
-                    self._replication_status = response[0][2].text
-                    self._dlt_marker_replication_status = response[0][3][0].text
-                    self._replication_prefix = response[0][4][0].text
-                    self._replication_role = response[1].text
-
-                    # Dest bucket is having fully querlified name
-                    # e.g. arn::aws::s3:target-bucket-name. so strip only
-                    # last token after splitting string using ':'.
-                    self._replication_dest_bucket = (response[0][5][0].text).split(':')[-1]
-
-                    # print all the replcation attributes
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'rule : {}'.format(
-                            self._replication_rule))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'id : {}'.format(
-                            self._replication_id))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'priority : {}'.format(
-                            self._replication_priority))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'status : {}'.format(
-                            self._replication_status))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'dlt_marker_status :{}'.format(
-                            self._dlt_marker_replication_status))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'prefix : {}'.format(
-                            self._replication_prefix))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'dest_bucket : {}'.format(
-                            self._replication_dest_bucket))
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'role : {}'.format(
-                            self._replication_role))
+                    self._logger.debug(
+                        'Response xml : {}\n'.format(
+                            self._response_dict))
 
                 else:
                     self._state = S3RequestState.FAILED

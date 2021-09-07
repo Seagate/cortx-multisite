@@ -27,7 +27,8 @@ import aiohttp
 import asyncio
 import sys
 import urllib
-from config import Config
+import os
+from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'

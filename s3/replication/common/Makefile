@@ -35,6 +35,8 @@ test:
 	python tests/system/test_put_object_tagging.py
 	@(printf "\n\nTest case: Reads test object tag\n")
 	python tests/system/test_get_object_tagging.py
+	@(printf "\n\nTest case: put bucket replication\n")
+	python tests/system/test_put_bucket_replication.py
 	@(printf "\n\nTest case: get bucket replication\n")
 	python tests/system/test_get_bucket_replication.py
 	@(printf "\n\nTest case: Transfers test object\n")
