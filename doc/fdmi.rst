@@ -180,6 +180,26 @@ Ballpark estimates:
         is required to implement this.
       - If DTM0 has the features that are needed and exports the functions then
         it may take 1w-4w.
+    * - TDB
+      - FOL MUST be used as a persistent store for FDMI records.
+      - Some kind of persistence is required to ensure that FDMI records are
+        not lost. Originally I thought about using a separate distributed index
+        to store FDMI records on FDMI plugin side, but there is a better
+        solution. The idea is to use FOL to store the FOL records that would be
+        resent as FDMI records in case of failure. Current FOL implementation
+        doesn't allow to read the records outside of BE recovery time and it
+        doesn't allow to discard the records in the way that the fact that the
+        record is discarded becomes persistent.
+      - N
+      - We need to do the following:
+
+        - make a design for the new FOL
+        - adjust DTM0 design to include the use of the new FOL
+        - implement the new FOL, use it in the code other than DTM0 and FDMI
+        - integrate it into DTM0
+        - integrate it into FDMI
+
+      - ~1m if nothing new shows up
 
 
 Prototype
