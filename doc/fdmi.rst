@@ -199,7 +199,7 @@ Ballpark estimates:
         - integrate it into DTM0
         - integrate it into FDMI
 
-      - ~1m if nothing new shows up
+      - 1 month if nothing new shows up
 
 
 Prototype
