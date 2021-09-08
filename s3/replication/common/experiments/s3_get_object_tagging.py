@@ -56,22 +56,16 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        total_received = 0
         print('GET on {}'.format(config.endpoint + request_uri))
         async with session.get(config.endpoint + request_uri,
                         params=query_params, headers=headers) as resp:
             http_status = resp.status
-            while True:
-                chunk = await resp.content.read(1024)
-                if not chunk:
-                    break
-                total_received += len(chunk)
-                print("\nReceived tagset {}.".format(chunk))
-
+            received_tagset = await resp.text()
+            print("\nReceived Tagset {}".format(received_tagset))
         if http_status == 200:
             print("HTTP status {} OK!".format(http_status))
         else:
             print("ERROR : BAD RESPONSE! status = {}".format(http_status))
-             
+
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

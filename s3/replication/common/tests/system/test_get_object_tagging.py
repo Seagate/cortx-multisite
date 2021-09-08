@@ -57,9 +57,15 @@ async def main():
 
     await tag_object.fetch()
 
-    logger.info("S3AsyncGetObjectTagging test passed!")
-    await session.close()
+    # Validate if tags value matches to default object tag value
+    if config.object_tag_value == tag_object.get_tags_value(
+            config.object_tag_name):
+        logger.info("Tag value matched!")
+        logger.info("S3AsyncGetObjectTagging test passed!")
+    else:
+        logger.error("Error : Tag value mismatched")
 
+    await session.close()
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

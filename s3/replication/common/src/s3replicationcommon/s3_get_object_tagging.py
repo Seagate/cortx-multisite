@@ -61,6 +61,10 @@ class S3AsyncGetObjectTagging:
         """Returns tags dictionary."""
         return self._response_tags_dict
 
+    def get_tags_value(self, key):
+        """returns the value for the given key."""
+        return self._response_tags_dict[key]
+
     async def fetch(self):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
@@ -97,27 +101,17 @@ class S3AsyncGetObjectTagging:
                     params=query_params, headers=headers) as resp:
 
                 self._logger.info(
-                    fmt_reqid_log(
-                        self._request_id) +
+                    fmt_reqid_log(self._request_id) +
                     'GET response received with'
                     + ' status code: {}'.format(resp.status))
-                self._logger.info(
-                    'Response url {}'.format(
-                        self._session.endpoint + request_uri))
+                self._logger.info('Response url {}'.format(
+                    self._session.endpoint + request_uri))
 
                 if resp.status == 200:
                     self._response_headers = resp.headers
-
-                    total_received = 0
-                    received_tagset = ''
-                    while True:
-                        chunk = await resp.content.read(1024)
-                        if not chunk:
-                            break
-                        total_received += len(chunk)
-                        received_tagset += str(chunk, 'utf-8')
-                        self._logger.info(
-                            "Received tagset {}".format(received_tagset))
+                    received_tagset = await resp.text()
+                    self._logger.info(
+                        "Received tagset {}".format(received_tagset))
 
                     # Remove namespace using regular expression
                     # search and replace given pattern from the given string
@@ -134,6 +128,7 @@ class S3AsyncGetObjectTagging:
                         value = ele.find('Value').text
                         tags_dict[key] = value
                     self._response_tags_dict = tags_dict
+
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
