@@ -62,7 +62,7 @@ class S3AsyncGetObjectTagging:
         return self._response_tags_dict
 
     def get_tags_value(self, key):
-        """returns the value for the given key."""
+        """Returns the value for the given key."""
         return self._response_tags_dict[key]
 
     async def fetch(self):
