@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -62,7 +61,7 @@ async def main():
 
     await tag_object.send()
 
-    logger.info("S3AsyncPutObject test passed!")
+    logger.info("S3AsyncPutObjectTaggin test passed!")
     await session.close()
 
 loop = asyncio.get_event_loop()
