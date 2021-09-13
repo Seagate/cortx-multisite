@@ -23,8 +23,8 @@
 # Usage : python3 test_s3_get_bucket_replication.py
 #
 
+import re
 import os
-import subprocess
 import fileinput
 from config import Config
 
@@ -40,11 +40,9 @@ def main():
     iam_role = config.iam_role
 
     # Create temp replication policy file.
-    subprocess.call(['cp',
-                     './tests/system/config/replication_policy_sample.json',
-                     'temp_policy.json'])
+    os.system('cp ./tests/system/config/replication_policy_sample.json temp_policy.json')
 
-    matches = ['ROLE_ID', 'REPLICATION_ENABLED_BUCKET']
+    matches = ['_ACCOUNT_ID_', '_REPLICATION_ENABLED_BUCKET_']
 
     # Read policy and make replacements based on config options.
     with fileinput.FileInput('temp_policy.json', inplace=True) as file:
@@ -52,30 +50,20 @@ def main():
         # Read each line and match the pattern and do replacement.
         for line in file:
             if all(x in line for x in matches):
-                line2 = line.replace('ROLE_ID', str(iam_role))
-                print(
-                    line2.replace(
-                        'REPLICATION_ENABLED_BUCKET',
-                        bucket_name),
-                    end='')
-            elif 'DESTINATION_BUCKET' in line:
-                print(
-                    line.replace(
-                        'DESTINATION_BUCKET',
-                        dest_bucket_name),
-                    end='')
-
-            elif 'PREFIX' in line:
-                print(
-                    line.replace(
-                        'PREFIX',
-                        object_name_prefix),
-                    end='')
+                line = re.sub('(_ACCOUNT_ID_)', str(iam_role), line)
+                line = re.sub('(_REPLICATION_ENABLED_BUCKET_)', bucket_name, line)
+                print(line)
+            elif '_DESTINATION_BUCKET_' in line:
+                line = re.sub('(_DESTINATION_BUCKET_)', dest_bucket_name, line)
+                print(line)
+            elif '_PREFIX_' in line:
+                line = re.sub('(_PREFIX_)', object_name_prefix, line)
+                print(line)
             else:
                 print(line, end='')
 
-    # Print modified policy on console.
-    subprocess.call(['cat', 'temp_policy.json'])
+    # Print modified policy on console for quick reference of rule attributes.
+    os.system('cat temp_policy.json')
 
     command = 'aws s3api put-bucket-replication --bucket ' + \
         bucket_name + ' --replication-configuration file://temp_policy.json'
@@ -83,9 +71,10 @@ def main():
     exit_status = os.system(command)
 
     if exit_status == 0:
-        print("put-bucket-replication done! ")
+        print("\nput-bucket-replication passed! ")
     else:
-        print("put-bucket-replication failed! ")
+        os.system('rm -rf temp_policy.json')
+        print("\nput-bucket-replication failed! ")
         os._exit(exit_status)
 
     # Delete temp file.

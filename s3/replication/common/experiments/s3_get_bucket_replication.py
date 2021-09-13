@@ -27,7 +27,6 @@ import aiohttp
 import asyncio
 import sys
 import urllib
-import os
 from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 

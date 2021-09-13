@@ -26,33 +26,33 @@ from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
-class MatchedRuleAttributes:
+class ReplicationRule:
     def __init__(self):
         """Instantiate the matched rule's attributes."""
         self._delete_marker_replication_status = None
-        self._account = None
+        self._account_id = None
         self._dest_bucket = None
         self._encryption_replication_key_id = None
-        self._replicationtime_status = None
+        self._replication_time_status = None
         self._prefix = None
         self._tag = None
         self._priority = None
         self._id = None
-        self._replciation_status = None
+        self._replication_status = None
 
     def __str__(self):
         """Method to print object with attributes."""
         return "_delete_marker_replication_status : {}\n_account : {}\
                 \n_dest_bucket : {}\n_encryption_replication_key_id : {}\
-                \n_replicationtime_status : {}\n_prefix : {}\n_tag : {}\
-                \n_priority : {}\n_id : {}\n_replciation_status : {}\n".format(
+                \n_replication_time_status : {}\n_prefix : {}\n_tag : {}\
+                \n_priority : {}\n_id : {}\n_replication_status : {}\n".format(
             self._delete_marker_replication_status,
-            self._account, self._dest_bucket,
+            self._account_id, self._dest_bucket,
             self._encryption_replication_key_id,
-            self._replicationtime_status,
+            self._replication_time_status,
             self._prefix, self._tag,
             self._priority,
-            self._id, self._replciation_status)
+            self._id, self._replication_status)
 
 
 class S3AsyncGetBucketReplication():
@@ -72,10 +72,10 @@ class S3AsyncGetBucketReplication():
         """Return total time for GET Object operation."""
         return self._timer.elapsed_time_ms()
 
-    @staticmethod
-    def prepare_matched_rule_object(rule):
-        """Initialise the attributes from matched rules"""
-        policy_obj = MatchedRuleAttributes()
+
+    def prepare_matched_rule_object(self, rule):
+        """Initialise the attributes from matched rules."""
+        policy_obj = ReplicationRule()
 
         if 'DeleteMarkerReplication' in rule:
             if 'Status' in rule['DeleteMarkerReplication']:
@@ -90,9 +90,9 @@ class S3AsyncGetBucketReplication():
                         rule['Destination'][
                             'EncryptionConfiguration']['ReplicaKmsKeyID']
             if 'Account' in rule['Destination']:
-                policy_obj._account = rule['Destination']['Account']
+                policy_obj._account_id = rule['Destination']['Account']
             if 'ReplicationTime' in rule['Destination']:
-                policy_obj._replicationtime_status = \
+                policy_obj._replication_time_status = \
                         rule['Destination']['ReplicationTime']['Status']
         if 'Status' in rule:
             policy_obj._status = rule['Status']
@@ -107,8 +107,18 @@ class S3AsyncGetBucketReplication():
             policy_obj._priority = rule['Priority']
         return policy_obj
 
+
     def get_replication_rule(self, obj_name):
-        """Returns replication replication rule for given bucket."""
+        """Returns matched replication rule for given bucket.
+
+        Args:
+            obj_name (str): object name to check against all prefixes
+                in replication rules.
+
+        Returns:
+            ReplicationRule type object: Matched rule if any, else None.
+
+        """
         self._dest_bucket = None
         try:
             for key, value in (
@@ -120,21 +130,22 @@ class S3AsyncGetBucketReplication():
                         for rule in value:
                             # Check if object name marches any rule prefix
                             if rule['Filter']['Prefix'] in obj_name:
-                                return S3AsyncGetBucketReplication.prepare_matched_rule_object(
+                                return self.prepare_matched_rule_object(
                                     rule)
                     # If only one rule is present
                     else:
                         if value['Filter']['Prefix'] in obj_name:
-                            return S3AsyncGetBucketReplication.prepare_matched_rule_object(
+                            return self.prepare_matched_rule_object(
                                 value)
 
         except Exception as e:
             self._logger.error(
                 "Failed to get rule! Exception type : {}".format(e))
 
-    # yields data chunk for given size
+
 
     async def get(self):
+        """yields data chunk for given size."""
         request_uri = AWSV4Signer.fmt_s3_request_uri(self._bucket_name)
         self._logger.debug(
             fmt_reqid_log(
@@ -159,25 +170,22 @@ class S3AsyncGetBucketReplication():
                                "Failed to generate v4 signature")
             sys.exit(-1)
 
-        self._timer.start()
-        try:
-            # Request url
-            url = self._session.endpoint + request_uri
+        # Request url
+        url = self._session.endpoint + request_uri
 
-            self._logger.info(
-                fmt_reqid_log(
-                    self._request_id) +
-                'GET on {}'.format(url))
+        self._logger.info(fmt_reqid_log(self._request_id) +
+            'GET on {}'.format(url))
+
+        self._timer.start()
+
+        try:
+
             async with self._session.get_client_session().get(
                     url, params=query_params, headers=headers) as resp:
-                self._logger.info(
-                    fmt_reqid_log(
-                        self._request_id) +
+                self._logger.info(fmt_reqid_log(self._request_id) +
                     "Response url {}".format(
                         (resp.url)))
-                self._logger.info(
-                    fmt_reqid_log(
-                        self._request_id) +
+                self._logger.info(fmt_reqid_log(self._request_id) +
                     "Received response url {}".format(resp))
 
                 if resp.status == 200:
@@ -195,14 +203,10 @@ class S3AsyncGetBucketReplication():
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
-                    self._logger.error(
-                        fmt_reqid_log(
-                            self._request_id) +
+                    self._logger.error(fmt_reqid_log(self._request_id) +
                         'Error Response: {}'.format(error_msg))
         except Exception as e:
-            self._logger.error(
-                fmt_reqid_log(
-                    self._request_id) +
+            self._logger.error(fmt_reqid_log(self._request_id) +
                 "Error: Exception '{}' occured!".format(e))
 
         self._timer.stop()

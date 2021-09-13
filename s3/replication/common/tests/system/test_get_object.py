@@ -67,7 +67,7 @@ async def main():
         logger.info("S3AsyncGetObject test passed!")
     else:
         logger.error("Error : size mismatched")
-
+        logger.info("S3AsyncGetObject test failed!")
 
     await session.close()
 

@@ -65,12 +65,12 @@ async def main():
     # Start transfer
     await obj.get()
 
-    policy_attr_obj = obj.get_replication_rule(test_replication_object)
-    print(policy_attr_obj)
+    replication_rule = obj.get_replication_rule(test_replication_object)
+    print(replication_rule)
 
-    assert policy_attr_obj._prefix == replication_prefix, \
+    assert replication_rule._prefix == replication_prefix, \
         "replication_prefix mismatched"
-    assert policy_attr_obj._dest_bucket == replication_dest_bucket, \
+    assert replication_rule._dest_bucket == replication_dest_bucket, \
         "replication_dest_bucket mismatch"
 
     await session.close()
