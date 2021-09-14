@@ -43,9 +43,10 @@ class S3AsyncHeadObject:
         self._state = S3RequestState.INITIALISED
 
     def get_accept_ranges(self):
-        """ Get range of bytes for object.
+        """Get range of bytes for object.
 
-        Returns:
+        Returns
+        -------
             str: indicates that a range of bytes was specified for object.
         """
         self._resp_accept_range = self._response_headers.get(
@@ -53,10 +54,10 @@ class S3AsyncHeadObject:
         return self._resp_accept_range
 
     def get_cache_control(self):
-        """
-        Get caching behavior for object.
+        """Get caching behavior for object.
 
-        Returns:
+        Returns
+        -------
             str: if set, returns cache policy
             and maximum age before expiring.
         """
@@ -65,10 +66,10 @@ class S3AsyncHeadObject:
         return self._resp_cache_control
 
     def get_content_disposition(self):
-        """
-        Get presentational information for object.
+        """Get presentational information for object.
 
-        Returns:
+        Returns
+        -------
             str: attached filename/information for object.
         """
         self._resp_content_disposition = self._response_headers.get(
@@ -76,21 +77,22 @@ class S3AsyncHeadObject:
         return self._resp_content_disposition
 
     def get_content_encoding(self):
-        """
-        Get content encodings for object.
+        """Get content encodings for object.
 
-        Returns:
-            str: specifies content encodings applied to object.
+        Returns
+        -------
+            str: specifies content encodings applied
+            to object.
         """
         self._resp_content_encoding = self._response_headers.get(
             "Content-Encoding", None)
         return self._resp_content_encoding
 
     def get_content_language(self):
-        """
-        Get content language for object.
+        """Get content language for object.
 
-        Returns:
+        Returns
+        -------
             str: specify language the object content is in.
         """
         self._resp_content_lang = self._response_headers.get(
@@ -98,10 +100,10 @@ class S3AsyncHeadObject:
         return self._resp_content_lang
 
     def get_content_length(self):
-        """
-        Get content length of object.
+        """Get content length of object.
 
-        Returns:
+        Returns
+        -------
             int: total content length of object.
         """
         self._resp_content_length = self._response_headers.get(
@@ -111,10 +113,10 @@ class S3AsyncHeadObject:
         return self._resp_content_length
 
     def get_content_type(self):
-        """
-        Get content type for object.
+        """Get content type for object.
 
-        Returns:
+        Returns
+        -------
             str: format of object data.
         """
         self._resp_content_type = self._response_headers.get(
@@ -122,20 +124,20 @@ class S3AsyncHeadObject:
         return self._resp_content_type
 
     def get_etag(self):
-        """
-        Get etag for object.
+        """Get etag for object.
 
-        Returns:
+        Returns
+        -------
             str: opaque identifier.
         """
         self._resp_etag = self._response_headers.get("Etag", None)
         return self._resp_etag
 
     def get_expires(self):
-        """
-        Get date and time for object.
+        """Get date and time for object.
 
-        Returns:
+        Returns
+        -------
             str: date and time at which the object is no longer cacheable.
 
         """
@@ -143,10 +145,10 @@ class S3AsyncHeadObject:
         return self._resp_expires
 
     def get_last_modified(self):
-        """
-        Get last creation date of object.
+        """Get last creation date of object.
 
-        Returns:
+        Returns
+        -------
             str: date of the object.
         """
         self._resp_last_modified = self._response_headers.get(
@@ -154,10 +156,10 @@ class S3AsyncHeadObject:
         return self._resp_last_modified
 
     def get_server_name(self):
-        """
-        Get server name.
+        """Get server name.
 
-        Returns:
+        Returns
+        -------
             str: server name (SeagateS3 / AmazonS3).
         """
         self._resp_server_name = self._response_headers.get(
@@ -165,10 +167,10 @@ class S3AsyncHeadObject:
         return self._resp_server_name
 
     def get_x_amz_archive_status(self):
-        """
-        Get archive state of the object.
+        """Get archive state of the object.
 
-        Returns:
+        Returns
+        -------
             str: archieve state (ARCHIVE_ACCESS / DEEP_ARCHIVE_ACCESS)
         """
         self._resp_archive_status = self._response_headers.get(
@@ -176,10 +178,10 @@ class S3AsyncHeadObject:
         return self._resp_archive_status
 
     def get_x_amz_delete_marker(self):
-        """
-        Get delete marker status for object.
+        """Get delete marker status for object.
 
-        Returns:
+        Returns
+        -------
             bool: True if object retrived was a Delete Marker, else False.
         """
         self._resp_delete_marker = self._response_headers.get(
@@ -189,10 +191,10 @@ class S3AsyncHeadObject:
         return self._resp_delete_marker
 
     def get_x_amz_expiration(self):
-        """
-        Get expiration configuration of object.
+        """Get expiration configuration of object.
 
-        Returns:
+        Returns
+        -------
             str: expiry date and rule-id, if enabled.
         """
         self._resp_expiration = self._response_headers.get(
@@ -200,10 +202,10 @@ class S3AsyncHeadObject:
         return self._resp_expiration
 
     def get_x_amz_missing_meta(self):
-        """
-        Get missing metadata entries of object.
+        """Get missing metadata entries of object.
 
-        Returns:
+        Returns
+        -------
             int: value of the number of unprintable metadata entries.
         """
         self._resp_missing_data = self._response_headers.get(
@@ -213,10 +215,10 @@ class S3AsyncHeadObject:
         return self._resp_missing_data
 
     def get_x_amz_mp_parts_count(self):
-        """
-        Get part counts of object.
+        """Get part counts of object.
 
-        Returns:
+        Returns
+        -------
             int: total part count of an object.
         """
         self._resp_parts_count = self._response_headers.get(
@@ -226,10 +228,10 @@ class S3AsyncHeadObject:
         return self._resp_parts_count
 
     def get_x_amz_object_lock_legal_hold(self):
-        """
-        Get legal hold status value for the object.
+        """Get legal hold status value for the object.
 
-        Returns:
+        Returns
+        -------
             str: ON if a legal hold is in effect for the object, else OFF.
         """
         self._resp_legal_hold = self._response_headers.get(
@@ -237,10 +239,10 @@ class S3AsyncHeadObject:
         return self._resp_legal_hold
 
     def get_x_amz_object_lock_mode(self):
-        """
-        Get lock mode of object.
+        """Get lock mode of object.
 
-        Returns:
+        Returns
+        -------
             str: Valid response values - GOVERNANCE / COMPLIANCE.
         """
         self._resp_lock_mode = self._response_headers.get(
@@ -248,10 +250,10 @@ class S3AsyncHeadObject:
         return self._resp_lock_mode
 
     def get_x_amz_object_lock_retain_until_date(self):
-        """
-        Get date and time retention period expires of object.
+        """Get date and time retention period expires of object.
 
-        Returns:
+        Returns
+        -------
             str: date and time when retention period expires.
         """
         self._resp_lock_retention = self._response_headers.get(
@@ -259,10 +261,10 @@ class S3AsyncHeadObject:
         return self._resp_lock_retention
 
     def get_x_amz_replication_status(self):
-        """
-        Get replication status of object
+        """Get replication status of object.
 
-        Returns:
+        Returns
+        -------
             str: valid response values - PENDING, COMPLETED
             or FAILED indicating object replication status.
         """
@@ -271,10 +273,10 @@ class S3AsyncHeadObject:
         return self._resp_replication_status
 
     def get_x_amz_request_charged(self):
-        """
-        Get requester value of object.
+        """Get requester value of object.
 
-        Returns:
+        Returns
+        -------
             str: Requester of an object.
         """
         self._resp_charged = self._response_headers.get(
@@ -282,10 +284,10 @@ class S3AsyncHeadObject:
         return self._resp_charged
 
     def get_x_amz_request_id(self):
-        """
-        Get request id of object.
+        """Get request id of object.
 
-        Returns:
+        Returns
+        -------
             str: specific request id.
         """
         self._resp_id = self._response_headers.get(
@@ -293,20 +295,20 @@ class S3AsyncHeadObject:
         return self._resp_id
 
     def get_x_amz_restore(self):
-        """
-        Get the date when the restored copy expires.
+        """Get the date when the restored copy expires.
 
-        Returns:
+        Returns
+        -------
             str: ongoing-request and expiry-date of archived object.
         """
         self._resp_restore = self._response_headers.get("x-amz-restore", None)
         return self._resp_restore
 
     def get_x_amz_server_side_encryption(self):
-        """
-        Get aws kms or encryption key for object.
+        """Get aws kms or encryption key for object.
 
-        Returns:
+        Returns
+        -------
             str: aws:kms if aws kms, else AES256.
         """
         self._resp_server_encryption = self._response_headers.get(
@@ -314,10 +316,10 @@ class S3AsyncHeadObject:
         return self._resp_server_encryption
 
     def get_x_amz_server_side_encryption_aws_kms_key_id(self):
-        """
-        Get aws kms id for object.
+        """Get aws kms id for object.
 
-        Returns:
+        Returns
+        -------
             str: SSEKMSKeyId for object.
         """
         self._resp_srvenc_aws_kms = self._response_headers.get(
@@ -325,10 +327,10 @@ class S3AsyncHeadObject:
         return self._resp_srvenc_aws_kms
 
     def get_x_amz_server_side_encryption_bucket_key_enabled(self):
-        """
-        Get status of bucket key encryption for object.
+        """Get status of bucket key encryption for object.
 
-        Returns:
+        Returns
+        -------
             bool: True if bucket key enabled, else False.
         """
         self._resp_srvenc_bucketkey = self._response_headers.get(
@@ -338,10 +340,10 @@ class S3AsyncHeadObject:
         return self._resp_srvenc_bucketkey
 
     def get_x_amz_server_side_encryption_customer_algorithm(self):
-        """
-        Get encryption algorithm for object.
+        """Get encryption algorithm for object.
 
-        Returns:
+        Returns
+        -------
             str: SSECustomerAlgorithm - encryption algorithm for object.
         """
         self._resp_srvenc_cust_algo = self._response_headers.get(
@@ -349,10 +351,10 @@ class S3AsyncHeadObject:
         return self._resp_srvenc_cust_algo
 
     def get_x_amz_server_side_encryption_customer_key_MD5(self):
-        """
-        Get encryption key for object.
+        """Get encryption key for object.
 
-        Return:
+        Returns
+        -------
             str: SSECustomerKeyMD5 of object.
         """
         self._resp_srvenc_cust_key = self._response_headers.get(
@@ -360,10 +362,10 @@ class S3AsyncHeadObject:
         return self._resp_srvenc_cust_key
 
     def get_x_amz_storage_class(self):
-        """
-        Get storage class of object.
+        """Get storage class of object.
 
-        Return:
+        Returns
+        -------
             str: storage class value of object.
         """
         self._resp_storage_class = self._response_headers.get(
@@ -371,10 +373,10 @@ class S3AsyncHeadObject:
         return self._resp_storage_class
 
     def get_x_amz_version_id(self):
-        """
-        Get version id of object.
+        """Get version id of object.
 
-        Return:
+        Returns
+        -------
             str: version id an object.
         """
         self._resp_version_id = self._response_headers.get(
@@ -382,10 +384,10 @@ class S3AsyncHeadObject:
         return self._resp_version_id
 
     def get_x_amz_website_redirect_location(self):
-        """
-        Get redirection website for object.
+        """Get redirection website for object.
 
-        Return:
+        Returns
+        -------
             str: URL of redirect location.
         """
         self._resp_redirectlocation = self._response_headers.get(
@@ -437,11 +439,9 @@ class S3AsyncHeadObject:
 
                 if resp.status == 200:
                     self._response_headers = dict(resp.headers)
-                    self._logger.info(
-                        fmt_reqid_log(
-                            self._request_id) +
-                        'HEAD Object response received with'
-                        + ' status code: {}'.format(resp.status))
+                    self._logger.info(fmt_reqid_log(self._request_id)
+                                      + 'HEAD Object response received with'
+                                      + ' status code: {}'.format(resp.status))
                     self._logger.info(
                         'received reponse header {}'.format(
                             self._response_headers))
