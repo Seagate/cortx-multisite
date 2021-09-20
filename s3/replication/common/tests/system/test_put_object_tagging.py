@@ -46,6 +46,7 @@ async def main():
 
     # Generate bucket names
     bucket_name = config.source_bucket_name
+    object_name = config.object_name_prefix + "test"
 
     # Generate object names
     object_name = config.object_name_prefix + "test"

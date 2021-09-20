@@ -57,7 +57,7 @@ async def main():
 
     await tag_object.fetch()
 
-    # Validate if tags value matches to default object tag value
+    # Validate if tags value matches to object tag value in config
     if config.object_tag_value == tag_object.get_tags_value(
             config.object_tag_name):
         logger.info("Tag value matched!")
