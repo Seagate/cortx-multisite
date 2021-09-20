@@ -58,7 +58,6 @@ async def main():
                     print(line)
                 else:
                     print(line, end='')
-        
         os.system('cat tagset.xml')
 
         # open a file and read the tagset

@@ -44,7 +44,7 @@ class S3AsyncPutObjectTagging:
         self._tag_name = tag_name
         self._tag_value = tag_value
 
-        self.remote_down = False
+        self._remote_down = False
         self._http_status = None
 
         self._timer = Timer()
@@ -64,7 +64,6 @@ class S3AsyncPutObjectTagging:
 
         query_params = urllib.parse.urlencode({'tagging': ''})
         body = ""
-
         # Create temporary tagset file.
         os.system('cp ./tests/system/config/object_tagset.xml tagset.xml')
         matches = ['_TAG_KEY_', '_TAG_VALUE_']
@@ -139,21 +138,9 @@ class S3AsyncPutObjectTagging:
                     return
 
         except aiohttp.client_exceptions.ClientConnectorError as e:
-            self.remote_down = True
+            self._remote_down = True
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
         self._timer.stop()
         return
-
-    def pause(self):
-        self._state = S3RequestState.PAUSED
-        # XXX Take real pause action
-
-    def resume(self):
-        self._state = S3RequestState.PAUSED
-        # XXX Take real resume action
-
-    def abort(self):
-        self._state = S3RequestState.ABORTED
-        # XXX Take abort pause action
