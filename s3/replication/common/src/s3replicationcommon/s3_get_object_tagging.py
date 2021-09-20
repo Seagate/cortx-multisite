@@ -63,7 +63,8 @@ class S3AsyncGetObjectTagging:
 
     def get_tags_value(self, key):
         """Returns the value for the given key."""
-        return self._response_tags_dict[key]
+        self._resp_tags_value = self._response_tags_dict.get(key, None)
+        return self._resp_tags_value
 
     async def fetch(self):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
