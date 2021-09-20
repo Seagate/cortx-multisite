@@ -47,7 +47,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: indicates that a range of bytes was specified for object.
+            [str]: indicates that a range of bytes was specified for object.
         """
         self._resp_accept_range = self._response_headers.get(
             "Accept-Ranges", None)
@@ -58,7 +58,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: if set, returns cache policy
+            [str]: if set, returns cache policy
             and maximum age before expiring.
         """
         self._resp_cache_control = self._response_headers.get(
@@ -70,7 +70,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: attached filename/information for object.
+            [str]: attached filename/information for object.
         """
         self._resp_content_disposition = self._response_headers.get(
             "Content-Disposition", None)
@@ -81,7 +81,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: specifies content encodings applied
+            [str]: specifies content encodings applied
             to object.
         """
         self._resp_content_encoding = self._response_headers.get(
@@ -93,7 +93,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: specify language the object content is in.
+            [str]: specify language the object content is in.
         """
         self._resp_content_lang = self._response_headers.get(
             "Content-Language", None)
@@ -104,7 +104,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            int: total content length of object.
+            [int]: total content length of object.
         """
         self._resp_content_length = self._response_headers.get(
             "Content-Length", None)
@@ -117,7 +117,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: format of object data.
+            [str]: format of object data.
         """
         self._resp_content_type = self._response_headers.get(
             "Content-Type", None)
@@ -128,7 +128,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: opaque identifier.
+            [str]: opaque identifier.
         """
         self._resp_etag = self._response_headers.get("Etag", None)
         return self._resp_etag
@@ -138,8 +138,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: date and time at which the object is no longer cacheable.
-
+            [str]: date and time at which the object is no longer cacheable.
         """
         self._resp_expires = self._response_headers.get("Expires", None)
         return self._resp_expires
@@ -149,7 +148,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: date of the object.
+            [str]: date of the object.
         """
         self._resp_last_modified = self._response_headers.get(
             "Last-Modified", None)
@@ -160,7 +159,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: server name (SeagateS3 / AmazonS3).
+            [str]: server name (SeagateS3 / AmazonS3).
         """
         self._resp_server_name = self._response_headers.get(
             "Server", None)
@@ -171,7 +170,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: archieve state (ARCHIVE_ACCESS / DEEP_ARCHIVE_ACCESS)
+            [str]: archieve state (ARCHIVE_ACCESS / DEEP_ARCHIVE_ACCESS)
         """
         self._resp_archive_status = self._response_headers.get(
             "x-amz-archive-status", None)
@@ -182,7 +181,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            bool: True if object retrived was a Delete Marker, else False.
+            [bool]: True if object retrived was a Delete Marker, else False.
         """
         self._resp_delete_marker = self._response_headers.get(
             "x-amz-delete-marker", None)
@@ -195,7 +194,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: expiry date and rule-id, if enabled.
+            [str]: expiry date and rule-id, if enabled.
         """
         self._resp_expiration = self._response_headers.get(
             "x-amz-expiration", None)
@@ -206,7 +205,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            int: value of the number of unprintable metadata entries.
+            [int]: value of the number of unprintable metadata entries.
         """
         self._resp_missing_data = self._response_headers.get(
             "x-amz-missing-meta", None)
@@ -219,7 +218,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            int: total part count of an object.
+            [int]: total part count of an object.
         """
         self._resp_parts_count = self._response_headers.get(
             "x-amz-mp-parts-count", None)
@@ -232,7 +231,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: ON if a legal hold is in effect for the object, else OFF.
+            [str]: ON if a legal hold is in effect for the object, else OFF.
         """
         self._resp_legal_hold = self._response_headers.get(
             "x-amz-object-lock-legal-hold", None)
@@ -243,7 +242,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: Valid response values - GOVERNANCE / COMPLIANCE.
+            [str]: Valid response values - GOVERNANCE / COMPLIANCE.
         """
         self._resp_lock_mode = self._response_headers.get(
             "x-amz-object-lock-mode", None)
@@ -254,7 +253,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: date and time when retention period expires.
+            [str]: date and time when retention period expires.
         """
         self._resp_lock_retention = self._response_headers.get(
             "x-amz-object-lock-retain-until-date", None)
@@ -265,7 +264,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: valid response values - PENDING, COMPLETED
+            [str]: valid response values - PENDING, COMPLETED
             or FAILED indicating object replication status.
         """
         self._resp_replication_status = self._response_headers.get(
@@ -277,7 +276,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: Requester of an object.
+            [str]: Requester of an object.
         """
         self._resp_charged = self._response_headers.get(
             "x-amz-request-charged", None)
@@ -288,7 +287,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: specific request id.
+            [str]: specific request id.
         """
         self._resp_id = self._response_headers.get(
             "x-amz-request-id", None)
@@ -299,7 +298,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: ongoing-request and expiry-date of archived object.
+            [str]: ongoing-request and expiry-date of archived object.
         """
         self._resp_restore = self._response_headers.get("x-amz-restore", None)
         return self._resp_restore
@@ -309,7 +308,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: aws:kms if aws kms, else AES256.
+            [str]: aws:kms if aws kms, else AES256.
         """
         self._resp_server_encryption = self._response_headers.get(
             "x-amz-server-side-encryption", None)
@@ -320,7 +319,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: SSEKMSKeyId for object.
+            [str]: SSEKMSKeyId for object.
         """
         self._resp_srvenc_aws_kms = self._response_headers.get(
             "x-amz-server-side-encryption-aws-kms-key-id", None)
@@ -331,7 +330,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            bool: True if bucket key enabled, else False.
+            [bool]: True if bucket key enabled, else False.
         """
         self._resp_srvenc_bucketkey = self._response_headers.get(
             "x-amz-server-side-encryption-bucket-key-enabled", None)
@@ -344,7 +343,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: SSECustomerAlgorithm - encryption algorithm for object.
+            [str]: SSECustomerAlgorithm - encryption algorithm for object.
         """
         self._resp_srvenc_cust_algo = self._response_headers.get(
             "x-amz-server-side-encryption-customer-algorithm", None)
@@ -355,7 +354,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: SSECustomerKeyMD5 of object.
+            [str]: SSECustomerKeyMD5 of object.
         """
         self._resp_srvenc_cust_key = self._response_headers.get(
             "x-amz-server-side-encryption-customer-key-MD5", None)
@@ -366,7 +365,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: storage class value of object.
+            [str]: storage class value of object.
         """
         self._resp_storage_class = self._response_headers.get(
             "x-amz-storage-class", None)
@@ -377,7 +376,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: version id an object.
+            [str]: version id an object.
         """
         self._resp_version_id = self._response_headers.get(
             "x-amz-version-id", None)
@@ -388,7 +387,7 @@ class S3AsyncHeadObject:
 
         Returns
         -------
-            str: URL of redirect location.
+            [str]: URL of redirect location.
         """
         self._resp_redirectlocation = self._response_headers.get(
             "x-amz-website-redirect-location", None)
