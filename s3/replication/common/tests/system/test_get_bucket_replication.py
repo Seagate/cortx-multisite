@@ -66,7 +66,7 @@ async def main():
     await obj.get()
 
     replication_rule = obj.get_replication_rule(test_replication_object)
-    print(replication_rule)
+    logger.debug(replication_rule)
 
     assert replication_rule._prefix == replication_prefix, \
         "replication_prefix mismatched"
@@ -75,7 +75,7 @@ async def main():
 
     await session.close()
 
-    print("AsyncS3GetBucketRepication test passed!")
+    logger.info("AsyncS3GetBucketRepication test passed!")
 
 
 loop = asyncio.get_event_loop()

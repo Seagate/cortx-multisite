@@ -25,13 +25,25 @@
 
 import re
 import os
+import sys
 import fileinput
 from config import Config
+from s3replicationcommon.log import setup_logger
 
 
 def main():
 
     config = Config()
+
+    # Setup logging and get logger
+    log_config_file = os.path.join(os.path.dirname(__file__),
+                                   'config', 'logger_config.yaml')
+
+    print("Using log config {}".format(log_config_file))
+    logger = setup_logger('client_tests', log_config_file)
+    if logger is None:
+        print("Failed to configure logging.\n")
+        sys.exit(-1)
 
     # CONFIG OPTIONS
     bucket_name = config.source_bucket_name
@@ -62,8 +74,8 @@ def main():
             else:
                 print(line, end='')
 
-    # Print modified policy on console for quick reference of rule attributes.
-    os.system('cat temp_policy.json')
+    # updated replication policy.
+    # os.system('cat temp_policy.json')
 
     command = 'aws s3api put-bucket-replication --bucket ' + \
         bucket_name + ' --replication-configuration file://temp_policy.json'
@@ -71,10 +83,10 @@ def main():
     exit_status = os.system(command)
 
     if exit_status == 0:
-        print("\nput-bucket-replication passed! ")
+        logger.info("put-bucket-replication passed! ")
     else:
         os.system('rm -rf temp_policy.json')
-        print("\nput-bucket-replication failed! ")
+        logger.error("put-bucket-replication failed! ")
         os._exit(exit_status)
 
     # Delete temp file.

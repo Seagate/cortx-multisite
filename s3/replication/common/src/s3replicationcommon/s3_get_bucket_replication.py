@@ -72,8 +72,8 @@ class S3AsyncGetBucketReplication():
         """Return total time for GET Object operation."""
         return self._timer.elapsed_time_ms()
 
-
-    def prepare_matched_rule_object(self, rule):
+    @staticmethod
+    def prepare_matched_rule_object(rule):
         """Initialise the attributes from matched rules."""
         policy_obj = ReplicationRule()
 
@@ -111,11 +111,13 @@ class S3AsyncGetBucketReplication():
     def get_replication_rule(self, obj_name):
         """Returns matched replication rule for given bucket.
 
-        Args:
-            obj_name (str): object name to check against all prefixes
-                in replication rules.
+        Args
+        ----
+            [str]: object name to check against all prefixes
+            in replication rules.
 
-        Returns:
+        Returns
+        -------
             ReplicationRule type object: Matched rule if any, else None.
 
         """
@@ -130,7 +132,7 @@ class S3AsyncGetBucketReplication():
                         for rule in value:
                             # Check if object name marches any rule prefix
                             if rule['Filter']['Prefix'] in obj_name:
-                                return self.prepare_matched_rule_object(
+                                return S3AsyncGetBucketReplication.prepare_matched_rule_object(
                                     rule)
                     # If only one rule is present
                     else:
@@ -145,7 +147,7 @@ class S3AsyncGetBucketReplication():
 
 
     async def get(self):
-        """yields data chunk for given size."""
+        """Yields data chunk for given size."""
         request_uri = AWSV4Signer.fmt_s3_request_uri(self._bucket_name)
         self._logger.debug(
             fmt_reqid_log(
@@ -182,10 +184,10 @@ class S3AsyncGetBucketReplication():
 
             async with self._session.get_client_session().get(
                     url, params=query_params, headers=headers) as resp:
-                self._logger.info(fmt_reqid_log(self._request_id) +
+                self._logger.debug(fmt_reqid_log(self._request_id) +
                     "Response url {}".format(
                         (resp.url)))
-                self._logger.info(fmt_reqid_log(self._request_id) +
+                self._logger.debug(fmt_reqid_log(self._request_id) +
                     "Received response url {}".format(resp))
 
                 if resp.status == 200:

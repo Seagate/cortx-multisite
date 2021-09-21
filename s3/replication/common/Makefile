@@ -2,10 +2,13 @@
 
 PYTHON_SCRIPTS :=
 
+.PHONEY: tests
+
 # By default, search for --filename=*.py
 # Add --exit-zero to ignore flake8 exit status
 FLAKE8_OPTS :=
 AUTOPEP8_OPTS := --in-place --aggressive --aggressive --recursive
+TARGET :=
 
 check: flake8
 
@@ -22,9 +25,13 @@ install:
 	pip3 install  -e .[development]
 	python3 setup.py install
 
-test:
+
+test: common_tests aws_supported_tests
+	@(printf "\nAll tests done!\n")
+
+common_tests:
 	@(printf "\n\nRunning tests...\n")
-	@(printf "_________________\n\n")
+	@(printf "_________________\n")
 	@(printf "\n\nTest case: Create test object\n")
 	python tests/system/test_put_object.py
 	@(printf "\n\nTest case: Reads test object\n")
@@ -35,9 +42,17 @@ test:
 	python tests/system/test_put_object_tagging.py
 	@(printf "\n\nTest case: Reads test object tag\n")
 	python tests/system/test_get_object_tagging.py
+	@(printf "\n\nTest case: Transfers test object\n")
+	python tests/system/s3_async_transfer_object.py
+
+ifeq ($(TARGET), aws)
+aws_supported_tests:
+	@(printf "\naws supporeted tests...\n")
+	@(printf "________________________\n")
 	@(printf "\n\nTest case: put bucket replication\n")
 	python tests/system/test_put_bucket_replication.py
 	@(printf "\n\nTest case: get bucket replication\n")
 	python tests/system/test_get_bucket_replication.py
-	@(printf "\n\nTest case: Transfers test object\n")
-	python tests/system/s3_async_transfer_object.py
+else
+aws_supported_tests:
+endif
