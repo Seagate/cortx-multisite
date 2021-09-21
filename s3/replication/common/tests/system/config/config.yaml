@@ -4,6 +4,8 @@ s3_region: us-west2
 source_bucket_name: sourcebucket
 target_bucket_name: targetbucket
 object_name_prefix: foo_
+object_tag_name: user-tag
+object_tag_value: user-tag-value
 object_size: 1024
 total_objects: 100
 transfer_chunk_size: 4096
