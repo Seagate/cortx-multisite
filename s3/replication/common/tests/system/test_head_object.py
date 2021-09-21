@@ -56,11 +56,12 @@ async def main():
     await head_obj.get()
 
     # Validate if content length matches to object size
-    if config.object_size == head_obj.get_contentlength():
+    if config.object_size == head_obj.get_content_length():
         logger.info("Content-Length matched!")
         logger.info("S3AsyncHeadObject test passed!")
     else:
         logger.error("Error : Content-Length mismatched")
+        logger.info("S3AsyncHeadObject test failed!")
 
     await session.close()
 
