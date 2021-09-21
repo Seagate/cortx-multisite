@@ -16,6 +16,7 @@
 #
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
+#
 
 import asyncio
 import os
@@ -24,7 +25,7 @@ from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
-from s3replicationcommon.s3_put_object_tagging import S3AsyncPutObjectTagging
+from s3replicationcommon.s3_get_object_tagging import S3AsyncGetObjectTagging
 
 
 async def main():
@@ -46,23 +47,24 @@ async def main():
 
     # Generate bucket names
     bucket_name = config.source_bucket_name
-    object_name = config.object_name_prefix + "test"
-
     # Generate object names
     object_name = config.object_name_prefix + "test"
     request_id = "dummy-request-id"
 
-    # Get tag-name and tag-value from config
-    tag_name = config.object_tag_name
-    tag_value = config.object_tag_value
+    tag_object = S3AsyncGetObjectTagging(session, request_id,
+                                         bucket_name,
+                                         object_name)
 
-    tag_object = S3AsyncPutObjectTagging(session, request_id,
-                                         bucket_name, object_name,
-                                         tag_name, tag_value)
+    await tag_object.fetch()
 
-    await tag_object.send()
+    # Validate if tags value matches to object tag value in config
+    if config.object_tag_value == tag_object.get_tags_value(
+            config.object_tag_name):
+        logger.info("Tag value matched!")
+        logger.info("S3AsyncGetObjectTagging test passed!")
+    else:
+        logger.error("Error : Tag value mismatched")
 
-    logger.info("S3AsyncPutObjectTaggin test passed!")
     await session.close()
 
 loop = asyncio.get_event_loop()
