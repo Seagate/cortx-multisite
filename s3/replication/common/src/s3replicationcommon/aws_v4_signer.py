@@ -125,7 +125,7 @@ class AWSV4Signer(object):
         return epoch_t.strftime('%Y%m%dT%H%M%SZ')
 
     # Helper Helper method for generating request_uri for v4 signing.
-    def fmt_s3_request_uri(bucket_name, object_name):
+    def fmt_s3_request_uri(bucket_name, object_name=None):
         # The URL quoting functions focus on taking program data and making
         # it safe for use as URL components by quoting special characters
         # and appropriately encoding non-ASCII text.
@@ -134,9 +134,10 @@ class AWSV4Signer(object):
         # to a percent-encoded ASCII text string.
         # https://docs.python.org/3/library/urllib.parse.html
 
-        request_uri = '/' + urllib.parse.quote(bucket_name, safe='') + '/' + \
-            urllib.parse.quote(object_name, safe='')
-
+        request_uri = '/' + urllib.parse.quote(bucket_name, safe='')
+        if object_name is not None:
+            request_uri = request_uri + '/' + \
+                urllib.parse.quote(object_name, safe='')
         return request_uri
 
     # generating AWS v4 Authorization signature
