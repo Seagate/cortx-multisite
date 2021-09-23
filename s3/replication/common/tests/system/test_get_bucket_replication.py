@@ -18,6 +18,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+#
+# s3 get-bucket-replication api test script
+# Usage : python3 test_s3_get_bucket_replication.py
+#
+
 import asyncio
 import os
 import sys
@@ -25,7 +30,8 @@ from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
-from s3replicationcommon.s3_get_object import S3AsyncGetObject
+from s3replicationcommon.s3_get_bucket_replication \
+    import S3AsyncGetBucketReplication
 
 
 async def main():
@@ -42,34 +48,34 @@ async def main():
         print("Failed to configure logging.\n")
         sys.exit(-1)
 
+    # Read configs for future comparision
+    replication_prefix = config.object_name_prefix
+    test_replication_object = replication_prefix + 'test'
+    replication_dest_bucket = config.target_bucket_name
+
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
 
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
-    # Generate bucket names
-    bucket_name = config.source_bucket_name
-
     # Generate object names
-    object_name = config.object_name_prefix + "test"
-    object_size = config.object_size
     request_id = "dummy-request-id"
+    obj = S3AsyncGetBucketReplication(
+        session, request_id, config.source_bucket_name)
 
-    object_reader = S3AsyncGetObject(session, request_id,
-                                     bucket_name,
-                                     object_name, object_size)
+    # Start transfer
+    await obj.get()
 
-    reader_generator = object_reader.fetch(object_size)
-    async for _ in reader_generator:
-        pass
+    replication_rule = obj.get_replication_rule(test_replication_object)
+    logger.debug(replication_rule)
 
-    if object_size == object_reader.get_content_length():
-        logger.info("Content-Length matched!")
-        logger.info("S3AsyncGetObject test passed!")
-    else:
-        logger.error("Error : size mismatched")
-        logger.info("S3AsyncGetObject test failed!")
+    assert replication_rule._prefix == replication_prefix, \
+        "replication_prefix mismatched"
+    assert replication_rule._dest_bucket == replication_dest_bucket, \
+        "replication_dest_bucket mismatch"
 
     await session.close()
+
+    logger.info("AsyncS3GetBucketRepication test passed!")
 
 
 loop = asyncio.get_event_loop()

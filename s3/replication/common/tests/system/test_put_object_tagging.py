@@ -16,7 +16,6 @@
 #
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-#
 
 import asyncio
 import os
@@ -25,7 +24,7 @@ from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
-from s3replicationcommon.s3_get_object import S3AsyncGetObject
+from s3replicationcommon.s3_put_object_tagging import S3AsyncPutObjectTagging
 
 
 async def main():
@@ -43,34 +42,28 @@ async def main():
         sys.exit(-1)
 
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
-
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate bucket names
     bucket_name = config.source_bucket_name
+    object_name = config.object_name_prefix + "test"
 
     # Generate object names
     object_name = config.object_name_prefix + "test"
-    object_size = config.object_size
     request_id = "dummy-request-id"
 
-    object_reader = S3AsyncGetObject(session, request_id,
-                                     bucket_name,
-                                     object_name, object_size)
+    # Get tag-name and tag-value from config
+    tag_name = config.object_tag_name
+    tag_value = config.object_tag_value
 
-    reader_generator = object_reader.fetch(object_size)
-    async for _ in reader_generator:
-        pass
+    tag_object = S3AsyncPutObjectTagging(session, request_id,
+                                         bucket_name, object_name,
+                                         tag_name, tag_value)
 
-    if object_size == object_reader.get_content_length():
-        logger.info("Content-Length matched!")
-        logger.info("S3AsyncGetObject test passed!")
-    else:
-        logger.error("Error : size mismatched")
-        logger.info("S3AsyncGetObject test failed!")
+    await tag_object.send()
 
+    logger.info("S3AsyncPutObjectTaggin test passed!")
     await session.close()
-
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
