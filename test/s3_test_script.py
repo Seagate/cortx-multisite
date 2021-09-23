@@ -100,19 +100,29 @@ def create_iam_role(src_bucket, dest_bucket):
     print(response)
 
 def main():
-    import sys
-    args = sys.argv
+    import argparse
+   
+    parser = argparse.ArgumentParser(description='Create 2 AWS S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('bucket_name', help='This value is used as a prefix for the 2 AWS S3 buckets, the buckets are suffixed with "src" and "dest".')
+    parser.add_argument('region', help="The region you want your S3 buckets to be created in.")
+    args = parser.parse_args()
+
+    create_1GB_file()
     
-    #create_1GB_file()
-    
-    args = args[1:]
-    bucket_name = args[0]
-    region=args[1]
+    bucket_name = args.bucket_name
+    region=args.region
     
     s3_resource=get_s3(region)
     
-    src_bucket = bucket_name +'src'
-    dest_bucket = bucket_name + 'dest'
+    if(bucket_name and region):
+        src_bucket = bucket_name +'src'
+        dest_bucket = bucket_name + 'dest'
+    elif not region and not bucket_name:
+        print("Error: No region or bucket name was specified i.e. --bucket_name <name> --region <region>")
+    elif not region:
+        print("Error: No region was specified i.e. --region <region>")
+    else:
+        print("Error: No bucket name was specified i.e. --bucket_name <name>")
 
     create_bucket(src_bucket, region)
     create_bucket(dest_bucket, region)
@@ -120,10 +130,10 @@ def main():
     enable_version(src_bucket, s3_resource)
     enable_version(dest_bucket, s3_resource)
     
-    #filename=bucket_name+'-role-trust-policy.json'
+    filename=bucket_name+'-role-trust-policy.json'
 
     create_iam_role(src_bucket, dest_bucket)
-    #get_replica(src_bucket)
+    get_replica(src_bucket)
 
 
 if __name__ == '__main__':
