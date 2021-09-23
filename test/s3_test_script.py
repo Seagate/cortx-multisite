@@ -1,7 +1,9 @@
 import sys
 import boto3
 from botocore.exceptions import ClientError
-
+import json
+import os
+import argparse
 
 def get_s3(region=None):
     """
@@ -49,7 +51,6 @@ def create_1GB_file():
     f.seek(1073741824-1)
     f.write(b"\0")
     f.close()
-    import os
     print(os.stat("newfile").st_size)
 
 def list_my_buckets(s3):
@@ -65,32 +66,39 @@ def create_bucket(bucket_name, region):
             'LocationConstraint': region
         }
     )
+    enable_versioning(bucket_name, s3)
 
 
-def enable_version(bucket_name, s3_resource):
+def enable_versioning(bucket_name, s3_resource):
     versioning = s3_resource.BucketVersioning(bucket_name)
     versioning.enable()
 
 
-def create_iam_role(src_bucket, dest_bucket):
-    import json
+def create_iam_role(role_name):
     json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]}')
-    role_name='newPythonReplicationRoleTestsAgainss'
-    print(json.dumps(json_data))
+
     session = boto3.session.Session(profile_name='default')
     iam = session.client('iam')
     response = iam.create_role(
         RoleName=role_name,
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
+
+def put_replication_policy(role_name, policy_name, src_bucket, dest_bucket):
     role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
-    print(json.dumps(role_permissions_policy))
+    
     client = boto3.client('iam')
     response = client.put_role_policy(
         PolicyDocument=json.dumps(role_permissions_policy),
         PolicyName='replicationPythonRolePolicyTestsAgs',
         RoleName=role_name,
     )
+
+
+def create_replication_policy(src_bucket, dest_bucket, role_name, policy_name):
+    create_iam_role(role_name)
+    put_replication_policy(role_name, policy_name, src_bucket, dest_bucket)
+    client = boto3.client('iam')
     response=client.get_role(RoleName=role_name)
     arn = response['Role']['Arn']
     replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": { "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
@@ -99,22 +107,35 @@ def create_iam_role(src_bucket, dest_bucket):
     response = client.get_bucket_replication(Bucket=src_bucket)
     print(response)
 
+def verbose(verbose, prompt, bucket_name):
+    if not verbose:
+        return
+    print("About to create bucket %s" % bucket_name)
+    input("Press Enter to continue")
+    return
+
 def main():
-    import argparse
-   
+       
     parser = argparse.ArgumentParser(description='Create 2 AWS S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('bucket_name', help='This value is used as a prefix for the 2 AWS S3 buckets, the buckets are suffixed with "src" and "dest".')
     parser.add_argument('region', help="The region you want your S3 buckets to be created in.")
-    args = parser.parse_args()
+    parser.add_argument('--verbose', '-v', help='displays verbose output', action='store_false')
+    parser.add_argument('--prompt', '-p', help='not sure', action='store_true')
+    #parser.add_argument('header', help='the s3 header for the s3 call you wish to make')
+    parser.add_argument('role_name', help='the name of the aws iam role you want to create')
+    parser.add_argument('policy_name', help='The name of the replication policy you are creating')
 
-    create_1GB_file()
+    args = parser.parse_args()
+    
+    #create_1GB_file()
     
     bucket_name = args.bucket_name
     region=args.region
-    
-    s3_resource=get_s3(region)
+
+    verbose(args.verbose, args.prompt, bucket_name)
     
     if(bucket_name and region):
+        print('test')
         src_bucket = bucket_name +'src'
         dest_bucket = bucket_name + 'dest'
     elif not region and not bucket_name:
@@ -127,13 +148,7 @@ def main():
     create_bucket(src_bucket, region)
     create_bucket(dest_bucket, region)
 
-    enable_version(src_bucket, s3_resource)
-    enable_version(dest_bucket, s3_resource)
-    
-    filename=bucket_name+'-role-trust-policy.json'
-
-    create_iam_role(src_bucket, dest_bucket)
-    get_replica(src_bucket)
+    create_replication_policy(src_bucket, dest_bucket, args.role_name, args.policy_name)
 
 
 if __name__ == '__main__':
