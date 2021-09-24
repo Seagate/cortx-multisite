@@ -16,22 +16,19 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+
 import aiohttp
-import fileinput
-import os
-import re
 import sys
-import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
-class S3AsyncPutObjectTagging:
+class S3AsyncGetRangeRead:
     def __init__(self, session, request_id,
                  bucket_name, object_name,
-                 tag_name, tag_value):
+                 object_range):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -41,8 +38,7 @@ class S3AsyncPutObjectTagging:
         self._bucket_name = bucket_name
         self._object_name = object_name
 
-        self._tag_name = tag_name
-        self._tag_value = tag_value
+        self._object_range = object_range
 
         self._remote_down = False
         self._http_status = None
@@ -55,35 +51,25 @@ class S3AsyncPutObjectTagging:
         return self._state
 
     def get_execution_time(self):
-        """Return total time for GET operation."""
+        """Return total time for GET Object operation."""
         return self._timer.elapsed_time_ms()
 
-    async def send(self):
+    def get_etag(self):
+        """Returns ETag for object."""
+        return self._response_headers["ETag"].strip("\"")
+
+    def get_content_range(self):
+        """Get content range in bytes."""
+        return self._response_headers["Content-Range"]
+
+    # yields data chunk for given size
+    async def fetch(self):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
-        query_params = urllib.parse.urlencode({'tagging': ''})
+        query_params = ""
         body = ""
-        # Create temporary tagset file.
-        os.system('cp ./tests/system/config/object_tagset.xml tagset.xml')
-        matches = ['_TAG_KEY_', '_TAG_VALUE_']
-
-        # Read tagset and make replacements based on config options.
-        with fileinput.FileInput('tagset.xml', inplace=True) as file:
-            # Read each line and match the pattern and do replacement.
-            for line in file:
-                if all(x in line for x in matches):
-                    line = re.sub('(_TAG_KEY_)', self._tag_name, line)
-                    line = re.sub('(_TAG_VALUE_)', self._tag_value, line)
-                    print(line)
-                else:
-                    print(line, end='')
-
-        os.system('cat tagset.xml')
-
-        # open a file and read the tagset
-        file = os.open('tagset.xml', os.O_RDONLY)
-        tagset = os.read(file, os.path.getsize(file))
+        obj_range = self._object_range
 
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -91,54 +77,53 @@ class S3AsyncPutObjectTagging:
             self._session.region,
             self._session.access_key,
             self._session.secret_key).prepare_signed_header(
-            'PUT',
+            'GET',
             request_uri,
             query_params,
-            body
-        )
+            body,
+            obj_range)
 
         if (headers['Authorization'] is None):
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to generate v4 signature")
             sys.exit(-1)
 
-        self._logger.info(fmt_reqid_log(
-            self._request_id) + 'PUT on {}'.format(
-            self._session.endpoint + request_uri))
+        self._logger.info(fmt_reqid_log(self._request_id) +
+                          'GET on {}'.format(
+                              self._session.endpoint + request_uri))
         self._logger.debug(fmt_reqid_log(self._request_id) +
-                           "PUT Request Header {}".format(headers))
-
+                           "GET with headers {}".format(headers))
         self._timer.start()
         try:
-            async with self._session.get_client_session().put(
+            async with self._session.get_client_session().get(
                     self._session.endpoint + request_uri,
-                    data=tagset, params=query_params,
                     headers=headers) as resp:
 
-                self._logger.info(
-                    fmt_reqid_log(self._request_id) +
-                    'PUT response received with'
-                    + ' status code: {}'.format(resp.status))
+                self._logger.info(fmt_reqid_log(self._request_id)
+                                  + 'GET response received with'
+                                  + ' status code: {}'.format(resp.status))
                 self._logger.info('Response url {}'.format(
                     self._session.endpoint + request_uri))
 
-                if resp.status == 200:
+                if resp.status == 206:
                     self._response_headers = resp.headers
                     self._logger.info('Response headers {}'.format(
                         self._response_headers))
-
-                    # Delete temporary tagset file.
-                    os.system('rm -rf tagset.xml')
-
                 else:
                     self._state = S3RequestState.FAILED
-                    error_msg = await resp.text()
                     self._logger.error(
                         fmt_reqid_log(self._request_id) +
-                        'PUT failed with http status: {}'.
+                        'GET Object failed with http status: {}'.
                         format(resp.status) +
-                        ' Error Response: {}'.format(error_msg))
+                        '\nError Response: Invalid object range')
                     return
+
+                while True:
+                    resp_data = await resp.content.read()
+                    if not resp_data:
+                        break
+                    yield resp_data
+                # end of While True
 
         except aiohttp.client_exceptions.ClientConnectorError as e:
             self._remote_down = True

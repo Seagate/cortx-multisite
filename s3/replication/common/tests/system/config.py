@@ -54,6 +54,7 @@ class Config:
         self.object_name_prefix = self._config["object_name_prefix"]
         self.object_tag_name = self._config["object_tag_name"]
         self.object_tag_value = self._config["object_tag_value"]
+        self.object_range = self._config["object_range"]
         self.object_size = self._config["object_size"]
         self.total_objects = self._config["total_objects"]
         self.transfer_chunk_size = self._config["transfer_chunk_size"]

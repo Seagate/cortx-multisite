@@ -7,6 +7,7 @@ target_bucket_name: targetbucket # Buckets does exist on server
 object_name_prefix: foo_
 object_tag_name: user-tag
 object_tag_value: user-tag-value
+object_range: bytes=600-900
 object_size: 1024
 total_objects: 100
 transfer_chunk_size: 4096
@@ -23,6 +24,7 @@ iam_role: <user_account_number> # User's Account ID
 #object_name_prefix: foo_
 #object_tag_name: user-tag
 #object_tag_value: user-tag-value
+#object_range: bytes=600-900
 #object_size: 1024
 #total_objects: 100
 #transfer_chunk_size: 4096
