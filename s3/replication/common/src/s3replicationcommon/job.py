@@ -23,7 +23,7 @@ from enum import Enum
 from urllib.parse import urlparse
 from .s3_site import S3Site
 
-
+# operation type
 class ReplicationJobType:
     OBJECT_REPLICATION = "replicate_object"
     OBJECT_TAGS_REPLICATION = "replicate_object_tags"

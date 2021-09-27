@@ -106,3 +106,22 @@ class TransferInitiator:
             _logger.error(
                 "Operation type [{}] not supported.".format(operation_type))
             return None
+
+        if operation_type == ReplicationJobType.OBJECT_TAGS_REPLICATION:
+            object_tag_replicator = ObjectTagReplicator(
+                job, app["config"].transfer_chunk_size_bytes,
+                source_session, target_session)
+            object_replicator.setup_observers(
+                "all_events", TranferEventHandler(app))
+
+            job.set_replicator(object_tag_replicator)
+            job.mark_started()
+
+            # Start the replication.
+            semaphore = app['semaphore']
+            async with semaphore:
+                await object_tag_replicator.start()
+        else:
+            _logger.error(
+                "Operation type [{}] not supported.".format(operation_type))
+            return None
