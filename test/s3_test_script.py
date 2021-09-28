@@ -107,20 +107,21 @@ def create_replication_policy(src_bucket, dest_bucket, role_name, policy_name):
     response = client.get_bucket_replication(Bucket=src_bucket)
     print(response)
 
-def verbose(verbose, prompt, bucket_name):
+def verbose(verbose, prompt, message):
     if not verbose:
         return
-    print("About to create bucket %s" % bucket_name)
+
+    print("About to create bucket %s" % message)
     input("Press Enter to continue")
     return
 
 def main():
        
-    parser = argparse.ArgumentParser(description='Create 2 AWS S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('bucket_name', help='This value is used as a prefix for the 2 AWS S3 buckets, the buckets are suffixed with "src" and "dest".')
+    parser = argparse.ArgumentParser(description='Creates 2 S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('bucket_name', help='This value is used as a prefix for the 2 S3 buckets, the buckets are suffixed with "src" and "dest".')
     parser.add_argument('region', help="The region you want your S3 buckets to be created in.")
     parser.add_argument('--verbose', '-v', help='displays verbose output', action='store_false')
-    parser.add_argument('--prompt', '-p', help='not sure', action='store_true')
+    parser.add_argument('--prompt', '-p', help='Provides the user with a prompt message before each test', action='store_true')
     #parser.add_argument('header', help='the s3 header for the s3 call you wish to make')
     parser.add_argument('role_name', help='the name of the aws iam role you want to create')
     parser.add_argument('policy_name', help='The name of the replication policy you are creating')
