@@ -122,6 +122,11 @@ class PrepareReplicationJob:
         job_dict["source"]["operation"]["attributes"]["x-amz-version-id"] = \
             fdmi_record["System-Defined"]["x-amz-version-id"]
 
+        # if tags are present # need to remove if record lacks this field.
+        if "User-Defined-Tags" in fdmi_record: #XXX
+            job_dict["source"]["operation"]["type"] = "replicate_object_tags"
+            job_dict["User-Defined-Tags"] = fdmi_record["User-Defined-Tags"]
+
         # XXX: Change after S3 changes are ready for replication.
         if fdmi_record["User-Defined"]["x-amz-meta-target-site"] == "cortxs3":
             job_dict["target"]["endpoint"] = cortx_s3["endpoint"]

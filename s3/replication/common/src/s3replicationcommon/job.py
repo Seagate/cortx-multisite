@@ -234,6 +234,9 @@ class Job:
         return self._obj["source"]["operation"]["type"]
 
     # Source attribute accessors
+    def get_object_tagset(self): #XXX
+        return self._obj["User-Defined-Tags"]
+
     def get_source_endpoint_netloc(self):
         """
         Returns the netloc within source S3 endpoint.
@@ -277,6 +280,7 @@ class Job:
 
     def get_source_secret_key(self):
         return self._obj["source"]["secret_key"]
+
 
     # Target attribute accessors
     def get_target_endpoint_netloc(self):

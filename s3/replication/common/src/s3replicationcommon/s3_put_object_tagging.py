@@ -19,8 +19,10 @@
 import aiohttp
 import fileinput
 import os
-import re
 import sys
+from os.path import join, dirname, abspath
+import re
+from pathlib import Path
 import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
@@ -59,13 +61,29 @@ class S3AsyncPutObjectTagging:
         return self._timer.elapsed_time_ms()
 
     async def send(self):
+        print("INSIDE SEND CALL")
+
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
         query_params = urllib.parse.urlencode({'tagging': ''})
         body = ""
+
         # Create temporary tagset file.
-        os.system('cp ./tests/system/config/object_tagset.xml tagset.xml')
+        print("**********************")
+        #os.system("deactivate")
+        #print(__file__)
+        path = os.environ['VIRTUAL_ENV']
+        print("virt path : " + path)
+        #os.system("source " + path+"/bin/activate")
+        #print('getcwd:      ', os.getcwd())
+        #print(Path(__file__).absolute())
+        #print(os.popen("readlink -f ").read())
+        #print(os.system('pwd'))
+        #sourcefile = os.fspath(__file__)
+        #print(os.fspath(__file__))
+        os.system('cp '+path+'/../common/tests/system/config/object_tagset.xml tagset.xml')
+
         matches = ['_TAG_KEY_', '_TAG_VALUE_']
 
         # Read tagset and make replacements based on config options.
