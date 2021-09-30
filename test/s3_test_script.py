@@ -66,7 +66,8 @@ def create_bucket(bucket_name, region):
             'LocationConstraint': region
         }
     )
-    enable_versioning(bucket_name, s3)
+    return bucket
+    #enable_versioning(bucket_name, s3)
 
 
 def enable_versioning(bucket_name, s3_resource):
@@ -84,7 +85,7 @@ def create_iam_role(role_name):
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
 
-def put_replication_policy(role_name, policy_name, src_bucket, dest_bucket):
+def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
     role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
     
     client = boto3.client('iam')
@@ -97,7 +98,7 @@ def put_replication_policy(role_name, policy_name, src_bucket, dest_bucket):
 
 def create_replication_policy(src_bucket, dest_bucket, role_name, policy_name):
     create_iam_role(role_name)
-    put_replication_policy(role_name, policy_name, src_bucket, dest_bucket)
+    put_role_policy(role_name, policy_name, src_bucket, dest_bucket)
     client = boto3.client('iam')
     response=client.get_role(RoleName=role_name)
     arn = response['Role']['Arn']
@@ -105,7 +106,7 @@ def create_replication_policy(src_bucket, dest_bucket, role_name, policy_name):
     client = boto3.client('s3')
     client.put_bucket_replication(Bucket=src_bucket, ReplicationConfiguration=replication_config)
     response = client.get_bucket_replication(Bucket=src_bucket)
-    print(response)
+    return response
 
 def verbose(verbose, prompt, message):
     if not verbose:
@@ -115,6 +116,53 @@ def verbose(verbose, prompt, message):
     input("Press Enter to continue")
     return
 
+def delete_replication_policy(src_bucket):
+    client = boto3.client('s3')
+    print(src_bucket)
+    response = client.get_bucket_replication(Bucket=src_bucket)
+    http_status_code = (response['ResponseMetadata'])['HTTPStatusCode']
+    if http_status_code != 200:
+        return "Error this bucket does not have a replication policy"
+    response = client.delete_bucket_replication(
+        Bucket=src_bucket
+    )
+    http_status_code = (response['ResponseMetadata'])['HTTPStatusCode']
+    try:
+        response = client.get_bucket_replication(Bucket=src_bucket)
+        http_status_code = (response['ResponseMetadata'])['HTTPStatusCode']
+    except:
+        print("Replication policy has been deleted")
+    return response == 204
+
+
+def do_test(header, bucket_name, region, role_name, policy_name):
+    if(bucket_name and region):
+        src_bucket = bucket_name +'src'
+        dest_bucket = bucket_name + 'dest'
+    elif not region and not bucket_name:
+        print("Error: No region or bucket name was specified i.e. --bucket_name <name> --region <region>")
+    elif not region:
+        print("Error: No region was specified i.e. --region <region>")
+    else:
+        print("Error: No bucket name was specified i.e. --bucket_name <name>")
+        
+    if header=='replication_policy_exists':
+        create_bucket(src_bucket, region)
+        enable_versioning(src_bucket, get_s3(region))
+        
+        create_bucket(dest_bucket, region)
+        enable_versioning(dest_bucket, get_s3(region))
+        
+        response = create_replication_policy(src_bucket, dest_bucket, role_name, policy_name)
+        
+        return (200 == ((response['ResponseMetadata'])['HTTPStatusCode']))
+    elif header == 'create_bucket':
+        bucket = create_bucket(bucket_name, region)
+        return (bucket_name == bucket.name)
+    elif header == 'delete_replication_policy':
+        return delete_replication_policy(src_bucket)
+
+
 def main():
        
     parser = argparse.ArgumentParser(description='Creates 2 S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -122,7 +170,8 @@ def main():
     parser.add_argument('region', help="The region you want your S3 buckets to be created in.")
     parser.add_argument('--verbose', '-v', help='displays verbose output', action='store_false')
     parser.add_argument('--prompt', '-p', help='Provides the user with a prompt message before each test', action='store_true')
-    #parser.add_argument('header', help='the s3 header for the s3 call you wish to make')
+    parser.add_argument('header', choices=['replication_policy_exists', 'create_bucket', 'delete_replication_policy'], help='the s3 header for the s3 call you wish to make')
+    
     parser.add_argument('role_name', help='the name of the aws iam role you want to create')
     parser.add_argument('policy_name', help='The name of the replication policy you are creating')
 
@@ -135,21 +184,15 @@ def main():
 
     verbose(args.verbose, args.prompt, bucket_name)
     
-    if(bucket_name and region):
-        print('test')
-        src_bucket = bucket_name +'src'
-        dest_bucket = bucket_name + 'dest'
-    elif not region and not bucket_name:
-        print("Error: No region or bucket name was specified i.e. --bucket_name <name> --region <region>")
-    elif not region:
-        print("Error: No region was specified i.e. --region <region>")
-    else:
-        print("Error: No bucket name was specified i.e. --bucket_name <name>")
+    header=args.header
+    role_name=args.role_name
+    policy_name=args.policy_name
 
-    create_bucket(src_bucket, region)
-    create_bucket(dest_bucket, region)
+    print(do_test(header, bucket_name, region, role_name, policy_name))
+    #create_bucket(src_bucket, region)
+    #create_bucket(dest_bucket, region)
 
-    create_replication_policy(src_bucket, dest_bucket, args.role_name, args.policy_name)
+    #create_replication_policy(src_bucket, dest_bucket, args.role_name, args.policy_name)
 
 
 if __name__ == '__main__':
