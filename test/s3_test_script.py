@@ -1,4 +1,3 @@
-import sys
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -55,7 +54,7 @@ def create_1GB_file():
 
 def list_my_buckets(s3):
     print('Buckets:\n\t', *[b.name for b in s3.buckets.all()], sep="\n\t")
-
+    
 
 def create_bucket(bucket_name, region):
     s3=get_s3(region)
@@ -67,7 +66,6 @@ def create_bucket(bucket_name, region):
         }
     )
     return bucket
-    #enable_versioning(bucket_name, s3)
 
 
 def enable_versioning(bucket_name, s3_resource):
@@ -119,10 +117,13 @@ def verbose(verbose, prompt, message):
 def delete_replication_policy(src_bucket):
     client = boto3.client('s3')
     print(src_bucket)
-    response = client.get_bucket_replication(Bucket=src_bucket)
-    http_status_code = (response['ResponseMetadata'])['HTTPStatusCode']
-    if http_status_code != 200:
-        return "Error this bucket does not have a replication policy"
+    try:
+        response = client.get_bucket_replication(Bucket=src_bucket)
+        http_status_code = (response['ResponseMetadata'])['HTTPStatusCode']
+    except:
+        print("Bucket policy does not exist")
+        return False
+
     response = client.delete_bucket_replication(
         Bucket=src_bucket
     )
@@ -135,18 +136,11 @@ def delete_replication_policy(src_bucket):
     return response == 204
 
 
-def do_test(header, bucket_name, region, role_name, policy_name):
-    if(bucket_name and region):
-        src_bucket = bucket_name +'src'
-        dest_bucket = bucket_name + 'dest'
-    elif not region and not bucket_name:
-        print("Error: No region or bucket name was specified i.e. --bucket_name <name> --region <region>")
-    elif not region:
-        print("Error: No region was specified i.e. --region <region>")
-    else:
-        print("Error: No bucket name was specified i.e. --bucket_name <name>")
+def do_test(header, bucket_name=None, region=None, role_name=None, policy_name=None):
         
     if header=='replication_policy_exists':
+        src_bucket = bucket_name+'src'
+        dest_bucket = bucket_name+'dest'
         create_bucket(src_bucket, region)
         enable_versioning(src_bucket, get_s3(region))
         
@@ -160,40 +154,42 @@ def do_test(header, bucket_name, region, role_name, policy_name):
         bucket = create_bucket(bucket_name, region)
         return (bucket_name == bucket.name)
     elif header == 'delete_replication_policy':
-        return delete_replication_policy(src_bucket)
+        return delete_replication_policy(bucket_name)
 
+def print_choices():
+    choices=['replication_policy_exists', 'create_bucket', 'delete_replication_policy']
+    print("Please select a test you would like to do by entering the test header below:")
+    for i in choices:
+        print("\n- " + i)
+    print("\n")
+
+
+def prompt():
+    print("Please select a test you would like to do by entering the test header below:")
+    print_choices()
+    header=str(input("Enter test name:\n"))
+    if header == 'create_bucket':
+        bucket_name=str(input("Enter a bucket name: "))
+        region=str(input("Enter a valid region: "))
+        print(bucket_name, region)
+        #do_test(header, bucket_name, region)
+    elif header == 'replication_policy_exists':
+        print("This test will create a bucket 2 buckets 1 bucket will be called <bucket_name>src and the other <bucket_name>dest. Then there will be a replication policy created which replicates all data written to the folder 'Tax' in <bucket_name>src asynchronously to <bucket_name>dest")
+        print("Press Enter if you would wish to proceed. Otherwise enter another test name. The tests are listed below:")
+        print_choices()
+        input()
+        bucket_name=str(input("Enter a bucket name: "))
+        region=str(input("Enter a valid region: "))
+        role_name=str(input("Enter a name for your iam role: "))
+        policy_name=str(input("Enter a name for your iam policy: "))
+        do_test(header, bucket_name, region, role_name, policy_name)
+    elif header == 'delete_replication_policy':
+        bucket_name=str(input("Enter a bucket name: "))
+        do_test(header, bucket_name)
 
 def main():
-       
-    parser = argparse.ArgumentParser(description='Creates 2 S3 buckets <name>src and <name>dest a replication policy is created on bucket <name>src so everything that is added to this bucket is replicated to bucket <name>dest.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('bucket_name', help='This value is used as a prefix for the 2 S3 buckets, the buckets are suffixed with "src" and "dest".')
-    parser.add_argument('region', help="The region you want your S3 buckets to be created in.")
-    parser.add_argument('--verbose', '-v', help='displays verbose output', action='store_false')
-    parser.add_argument('--prompt', '-p', help='Provides the user with a prompt message before each test', action='store_true')
-    parser.add_argument('header', choices=['replication_policy_exists', 'create_bucket', 'delete_replication_policy'], help='the s3 header for the s3 call you wish to make')
     
-    parser.add_argument('role_name', help='the name of the aws iam role you want to create')
-    parser.add_argument('policy_name', help='The name of the replication policy you are creating')
-
-    args = parser.parse_args()
-    
-    #create_1GB_file()
-    
-    bucket_name = args.bucket_name
-    region=args.region
-
-    verbose(args.verbose, args.prompt, bucket_name)
-    
-    header=args.header
-    role_name=args.role_name
-    policy_name=args.policy_name
-
-    print(do_test(header, bucket_name, region, role_name, policy_name))
-    #create_bucket(src_bucket, region)
-    #create_bucket(dest_bucket, region)
-
-    #create_replication_policy(src_bucket, dest_bucket, args.role_name, args.policy_name)
-
+    prompt()
 
 if __name__ == '__main__':
     main()
