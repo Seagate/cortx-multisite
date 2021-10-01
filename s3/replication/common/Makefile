@@ -36,8 +36,6 @@ common_tests:
 	python tests/system/test_put_object.py
 	@(printf "\n\nTest case: Reads test object\n")
 	python tests/system/test_get_object.py
-	@(printf "\n\nTest case: Range reads test object\n")
-	python tests/system/test_range_read.py
 	@(printf "\n\nTest case: Reads test head object\n")
 	python tests/system/test_head_object.py
 	@(printf "\n\nTest case: Create test object tag\n")
