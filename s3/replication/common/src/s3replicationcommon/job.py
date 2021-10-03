@@ -24,6 +24,8 @@ from urllib.parse import urlparse
 from .s3_site import S3Site
 
 # operation type
+
+
 class ReplicationJobType:
     OBJECT_REPLICATION = "replicate_object"
     OBJECT_TAGS_REPLICATION = "replicate_object_tags"
@@ -234,7 +236,10 @@ class Job:
         return self._obj["source"]["operation"]["type"]
 
     # Source attribute accessors
-    def get_object_tagset(self): #XXX
+    def get_object_tagset(self):
+        """
+        Get object tagset
+        """
         return self._obj["User-Defined-Tags"]
 
     def get_source_endpoint_netloc(self):
@@ -281,8 +286,8 @@ class Job:
     def get_source_secret_key(self):
         return self._obj["source"]["secret_key"]
 
-
     # Target attribute accessors
+
     def get_target_endpoint_netloc(self):
         """
         Returns the netloc within target S3 endpoint.

@@ -103,10 +103,6 @@ class TransferInitiator:
             semaphore = app['semaphore']
             async with semaphore:
                 await object_replicator.start()
-       # else:
-       #     _logger.error(
-       #         "Operation type [{}] not supported.".format(operation_type))
-       #     return None
 
         elif operation_type == ReplicationJobType.OBJECT_TAGS_REPLICATION:
             object_tag_replicator = ObjectTagReplicator(

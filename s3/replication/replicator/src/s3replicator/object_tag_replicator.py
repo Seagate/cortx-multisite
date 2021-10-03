@@ -34,7 +34,7 @@ class ObjectTagReplicator:
         self._job_id = job.get_job_id()
         self._request_id = self._job_id
         self._timer = Timer()
-        self._tagset = job.get_object_tagset() #XXX
+        self._tagset = job.get_object_tagset()
         self._s3_source_session = source_session
 
         self._source_bucket = job.get_source_bucket_name()
@@ -53,7 +53,6 @@ class ObjectTagReplicator:
     def get_execution_time(self):
         """Return total time for Object replication."""
         return self._timer.elapsed_time_ms()
-
 
     def setup_observers(self, label, observer):
         self._observers[label] = observer
@@ -74,9 +73,9 @@ class ObjectTagReplicator:
                 self._timer.elapsed_time_ms(), self._job_id))
         self._tags = object_tag_reader.get_tags_dict()
 
-        print ("My tags are : {}".format(self._tags))
+        print("My tags are : {}".format(self._tags))
 
-        object_tag_writer = S3AsyncPutObjectTagging( #XXX
+        object_tag_writer = S3AsyncPutObjectTagging(
             self._s3_target_session,
             self._request_id,
             self._target_bucket,

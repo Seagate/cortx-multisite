@@ -23,6 +23,7 @@
 # Test file to get bucket's replication policy.
 #
 
+from config import Config
 import aiohttp
 import asyncio
 import sys
@@ -31,8 +32,8 @@ from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
-sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
-from config import Config
+sys.path.append(abspath(join(dirname(__file__), '..', 'tests', 'system')))
+
 
 async def main():
     async with aiohttp.ClientSession() as session:

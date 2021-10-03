@@ -70,19 +70,11 @@ class S3AsyncPutObjectTagging:
         body = ""
 
         # Create temporary tagset file.
-        print("**********************")
-        #os.system("deactivate")
-        #print(__file__)
-        path = os.environ['VIRTUAL_ENV']
-        print("virt path : " + path)
-        #os.system("source " + path+"/bin/activate")
-        #print('getcwd:      ', os.getcwd())
-        #print(Path(__file__).absolute())
-        #print(os.popen("readlink -f ").read())
-        #print(os.system('pwd'))
-        #sourcefile = os.fspath(__file__)
-        #print(os.fspath(__file__))
-        os.system('cp '+path+'/../common/tests/system/config/object_tagset.xml tagset.xml')
+        path = os.environ['VIRTUAL_ENV'] #XXX Need to figure out better way.
+        os.system(
+            'cp ' +
+            path +
+            '/../common/tests/system/config/object_tagset.xml tagset.xml')
 
         matches = ['_TAG_KEY_', '_TAG_VALUE_']
 

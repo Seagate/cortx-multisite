@@ -59,6 +59,7 @@ def fdmi_record_tag_template():
 
     return template
 
+
 def subscribe_payload_template():
     """Returns subscribe payload template loaded from json file."""
     template_path = os.path.join(

@@ -81,10 +81,11 @@ def init_logger():
     return logger
 
 
-def create_job_with_fdmi_record(s3_config, test_config, object_info): # XXX Removed md5 and lenght
+def create_job_with_fdmi_record(s3_config, test_config, object_info):
     job_dict = fdmi_record_tag_template()
 
     # Update the fields in template.
+    # XXX Removed md5 and lenght
     job_dict["Bucket-Name"] = test_config.source_bucket
     job_dict["Object-Name"] = object_info["object_name"]
     job_dict["Object-URI"] = test_config.source_bucket + \
@@ -102,13 +103,13 @@ async def async_put_object_tagging(session, bucket_name, object_name, tag_name, 
     request_id = str(uuid.uuid4())
 
     obj = S3AsyncPutObjectTagging(session, request_id, bucket_name,
-                                     object_name, tag_name, tag_value)
+                                  object_name, tag_name, tag_value)
 
     await obj.send()
 
     status = "success"
-    ## Start transfer
-    #if object_writer.get_state() != S3RequestState.COMPLETED:
+    # Start transfer
+    # if object_writer.get_state() != S3RequestState.COMPLETED:
     #    status = "failed"
 
     return {"object_name": object_name, "status": status}
@@ -130,8 +131,8 @@ async def setup_source(session, test_config):
 
         # Generate object name
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
-        tag_name = "user-tag-"+str(i) #XXX can be part of config
-        tag_value = "tag-value-"+str(i)
+        tag_name = "user-tag-" + str(i)
+        tag_value = "tag-value-" + str(i)
 
         # Perform the PUT operation on source and capture md5.
         task = asyncio.ensure_future(
@@ -208,7 +209,8 @@ async def run_load_test():
             'GET jobs returned http Status: {}'.format(resp.status))
         response = await resp.json()
         manager_completed_count = response['count']
-    logger.info("Present jobs completed by manager : {}".format(manager_completed_count))
+    logger.info("Present jobs completed by manager : {}".format(
+        manager_completed_count))
 
     while jobs_running and polling_count != 0:
 
@@ -222,7 +224,8 @@ async def run_load_test():
 
         logger.info("completed jobs count : {}".format(completed_count))
 
-        if completed_count == (test_config.count_of_obj + manager_completed_count):
+        if completed_count == (
+                test_config.count_of_obj + manager_completed_count):
             # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")

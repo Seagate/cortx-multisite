@@ -265,7 +265,8 @@ async def run_load_test():
             'GET jobs returned http Status: {}'.format(resp.status))
         response = await resp.json()
         manager_completed_count = response['count']
-    logger.info("Present completed jobs by manager : {}".format(manager_completed_count))
+    logger.info("Present completed jobs by manager : {}".format(
+        manager_completed_count))
 
     while jobs_running and polling_count != 0:
 
@@ -279,7 +280,8 @@ async def run_load_test():
 
         logger.info("completed jobs count : {}".format(completed_count))
 
-        if completed_count == (manager_completed_count + test_config.count_of_obj):
+        if completed_count == (manager_completed_count +
+                               test_config.count_of_obj):
             # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")
