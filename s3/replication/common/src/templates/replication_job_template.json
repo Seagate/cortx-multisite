@@ -8,7 +8,7 @@
     "access_key": "_access_key_",
     "secret_key": "_secret_key_",
     "operation": {
-      "type": "replicate_object_tags",
+      "type": "replicate_object",
       "attributes": {
         "ACL": "_base64_encoded_acl_json_",
         "Bucket-Name": "_source_bucket_name_",

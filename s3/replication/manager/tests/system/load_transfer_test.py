@@ -260,6 +260,13 @@ async def run_load_test():
     # Max polling iterations to avoid infinite loop
     polling_count = test_config.polling_count
 
+    async with manager_session.get(url + '/jobs?count&completed') as resp:
+        logger.info(
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
+        manager_completed_count = response['count']
+    logger.info("Present completed jobs by manager : {}".format(manager_completed_count))
+
     while jobs_running and polling_count != 0:
 
         completed_count = 0
@@ -272,7 +279,7 @@ async def run_load_test():
 
         logger.info("completed jobs count : {}".format(completed_count))
 
-        if completed_count == test_config.count_of_obj:
+        if completed_count == (manager_completed_count + test_config.count_of_obj):
             # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")
@@ -282,7 +289,7 @@ async def run_load_test():
             # There are atleast some running jobs, give time to complete.
             logger.debug(
                 "Pending status for total {} jobs.".format(
-                    test_config.count_of_obj - completed_count))
+                    (test_config.count_of_obj + manager_completed_count) - completed_count))
             logger.info("Waiting for {} secs before polling job status...".
                         format(test_config.polling_wait_time))
             time.sleep(test_config.polling_wait_time)

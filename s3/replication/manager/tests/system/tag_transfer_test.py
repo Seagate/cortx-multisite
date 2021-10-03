@@ -130,7 +130,7 @@ async def setup_source(session, test_config):
 
         # Generate object name
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
-        tag_name = "user-tag-"+str(i)+'abc' #XXX can be part of config
+        tag_name = "user-tag-"+str(i) #XXX can be part of config
         tag_value = "tag-value-"+str(i)
 
         # Perform the PUT operation on source and capture md5.
@@ -203,6 +203,13 @@ async def run_load_test():
     # Max polling iterations to avoid infinite loop
     polling_count = test_config.polling_count
 
+    async with manager_session.get(url + '/jobs?count&completed') as resp:
+        logger.info(
+            'GET jobs returned http Status: {}'.format(resp.status))
+        response = await resp.json()
+        manager_completed_count = response['count']
+    logger.info("Present jobs completed by manager : {}".format(manager_completed_count))
+
     while jobs_running and polling_count != 0:
 
         completed_count = 0
@@ -215,7 +222,7 @@ async def run_load_test():
 
         logger.info("completed jobs count : {}".format(completed_count))
 
-        if completed_count == test_config.count_of_obj:
+        if completed_count == (test_config.count_of_obj + manager_completed_count):
             # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")
@@ -225,7 +232,7 @@ async def run_load_test():
             # There are atleast some running jobs, give time to complete.
             logger.debug(
                 "Pending status for total {} jobs.".format(
-                    test_config.count_of_obj - completed_count))
+                    (test_config.count_of_obj + manager_completed_count) - completed_count))
             logger.info("Waiting for {} secs before polling job status...".
                         format(test_config.polling_wait_time))
             time.sleep(test_config.polling_wait_time)
