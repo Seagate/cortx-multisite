@@ -39,8 +39,8 @@ class S3AsyncGetObject:
         self._bucket_name = bucket_name
         self._object_name = object_name
         self._object_size = object_size
-        self._offset = offset
-        self._length = length
+        self._range_read_offset = offset
+        self._range_read_length = length
 
         self.remote_down = False
         self._http_status = None
@@ -78,10 +78,10 @@ class S3AsyncGetObject:
         body = ""
 
         # check for range read request
-        if self._length >= 0:
+        if self._range_read_length >= 0:
             # get object range read function
-            start_bytes = self._offset
-            end_bytes = self._offset + self._length
+            start_bytes = self._range_read_offset
+            end_bytes = self._range_read_offset + self._range_read_length
             object_range = "bytes=" + str(start_bytes) + "-" + str(end_bytes)
             total_to_fetch = (end_bytes - start_bytes) + 1
         else:

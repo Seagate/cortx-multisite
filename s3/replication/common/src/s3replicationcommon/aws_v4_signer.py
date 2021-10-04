@@ -196,7 +196,7 @@ class AWSV4Signer(object):
             request_uri,
             query_params,
             body,
-            obj_range=None):
+            read_range=None):
         """
         Generate headers used for authorization requests.
 
@@ -209,7 +209,7 @@ class AWSV4Signer(object):
                       example param1=abc&param2=somevalue
         body - content
         Range - range of bytes string,
-                example bytes=start_range-end_range
+                example : total_read_bytes = range_start - range_end
 
         Returns:
             headers dictionary with following header keys: Authorization,
@@ -226,8 +226,8 @@ class AWSV4Signer(object):
                    'Accept': 'text/plain'}
 
         # Add range header field in request headers
-        if obj_range is not None:
-            headers['Range'] = obj_range
+        if read_range is not None:
+            headers['Range'] = read_range
 
         # Generate the signature and setup Authorization header.
         headers['Authorization'] = self.sign_request_v4(

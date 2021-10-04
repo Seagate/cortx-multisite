@@ -55,7 +55,7 @@ async def main():
     object_reader = S3AsyncGetObject(session, request_id,
                                      config.source_bucket_name,
                                      source_object_name, config.object_size,
-                                     config.offset, config.length)
+                                     config.range_read_offset, config.range_read_length)
     object_writer = S3AsyncPutObject(session, request_id,
                                      config.target_bucket_name,
                                      target_object_name, config.object_size)
