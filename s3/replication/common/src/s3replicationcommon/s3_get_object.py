@@ -27,7 +27,9 @@ from s3replicationcommon.timer import Timer
 
 class S3AsyncGetObject:
     def __init__(self, session, request_id,
-                 bucket_name, object_name, object_size):
+                 bucket_name, object_name,
+                 object_size, offset,
+                 length):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -37,9 +39,12 @@ class S3AsyncGetObject:
         self._bucket_name = bucket_name
         self._object_name = object_name
         self._object_size = object_size
+        self._range_read_offset = offset
+        self._range_read_length = length
 
         self.remote_down = False
         self._http_status = None
+        self._object_range = None
 
         self._timer = Timer()
         self._state = S3RequestState.INITIALISED
@@ -60,6 +65,10 @@ class S3AsyncGetObject:
         """Get content length."""
         return int(self._response_headers["Content-Length"])
 
+    def get_total_object_range(self):
+        """Get object range."""
+        return self._object_range
+
     # yields data chunk for given size
     async def fetch(self, chunk_size):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
@@ -67,6 +76,18 @@ class S3AsyncGetObject:
 
         query_params = ""
         body = ""
+
+        # check for range read request
+        if self._range_read_length >= 0:
+            # get object range read function
+            start_bytes = self._range_read_offset
+            end_bytes = self._range_read_offset + self._range_read_length
+            object_range = "bytes=" + str(start_bytes) + "-" + str(end_bytes)
+            total_to_fetch = (end_bytes - start_bytes) + 1
+        else:
+            # get object
+            object_range = None
+            total_to_fetch = self._object_size
 
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -77,15 +98,13 @@ class S3AsyncGetObject:
             'GET',
             request_uri,
             query_params,
-            body)
+            body,
+            object_range)
 
         if (headers['Authorization'] is None):
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to generate v4 signature")
             sys.exit(-1)
-
-        # Maximum to fetch so we dont keep reading indefinitely.
-        total_to_fetch = self._object_size
 
         self._logger.info(fmt_reqid_log(self._request_id) +
                           'GET on {}'.format(
@@ -97,22 +116,43 @@ class S3AsyncGetObject:
             async with self._session.get_client_session().get(
                     self._session.endpoint + request_uri,
                     headers=headers) as resp:
+                print("response {} ".format(resp))
                 self._http_status = resp.status
-                if resp.status == 200:
-                    self._logger.info(
-                        fmt_reqid_log(self._request_id) +
-                        'GET Object completed with http status: {}'.format(
-                            resp.status))
-                else:
-                    self._state = S3RequestState.FAILED
-                    error_msg = await resp.text()
-                    self._logger.error(
-                        fmt_reqid_log(self._request_id) +
-                        'GET Object failed with http status: {}'.
-                        format(resp.status) +
-                        'Error Response: {}'.format(error_msg))
-                    return
                 self._response_headers = resp.headers
+
+                if object_range is None:
+                    if resp.status == 200:
+                        # get object successful with 200 status code
+                        self._logger.info(
+                            fmt_reqid_log(self._request_id) +
+                            'GET Object completed with http status: {}'.format(
+                                resp.status))
+                    else:
+                        self._state = S3RequestState.FAILED
+                        error_msg = await resp.text()
+                        self._logger.error(
+                            fmt_reqid_log(self._request_id) +
+                            'GET Object failed with http status: {}'.
+                            format(resp.status) +
+                            '\nError Response: {}'.format(error_msg))
+                        return
+                else:
+                    if resp.status == 206:
+                        # get object range read successful with 206 status code
+                        self._logger.info(fmt_reqid_log(
+                            self._request_id) + 'GET object range read'
+                            'completed with http status: {}'.format(
+                            resp.status))
+                    else:
+                        self._state = S3RequestState.FAILED
+                        error_msg = await resp.text()
+                        self._logger.error(
+                            fmt_reqid_log(self._request_id) +
+                            'GET object range read failed '
+                            'with http status: {}'. format(resp.status)
+                            + ' Error Response: {}'.format(error_msg))
+                        return
+
                 self._state = S3RequestState.RUNNING
                 while True:
                     # If abort requested, stop the loop and return.
@@ -126,9 +166,10 @@ class S3AsyncGetObject:
                         break
 
                     data_chunk = await resp.content.read(chunk_size)
+                    self._object_range = len(data_chunk)
                     if not data_chunk:
                         break
-                    self._logger.debug(
+                    self._logger.info(
                         fmt_reqid_log(self._request_id) +
                         "Received data_chunk of size {} bytes.".format(
                             len(data_chunk)))

@@ -52,22 +52,37 @@ async def main():
     # Generate object names
     object_name = config.object_name_prefix + "test"
     object_size = config.object_size
+    range_read_offset = config.range_read_offset
+    range_read_length = config.range_read_length
     request_id = "dummy-request-id"
 
     object_reader = S3AsyncGetObject(session, request_id,
-                                     bucket_name,
-                                     object_name, object_size)
+                                     bucket_name, object_name,
+                                     object_size, range_read_offset,
+                                     range_read_length)
 
     reader_generator = object_reader.fetch(object_size)
     async for _ in reader_generator:
         pass
 
-    if object_size == object_reader.get_content_length():
-        logger.info("Content-Length matched!")
-        logger.info("S3AsyncGetObject test passed!")
+    content_length = object_reader.get_content_length()
+
+    if range_read_length >= 0:
+        # Validate if content length matches to total object range
+        if object_reader.get_total_object_range() == content_length:
+            logger.info("Content-Length matched!")
+            logger.info("S3AsyncGetObjectRangeRead test passed!")
+        else:
+            logger.error("Error : size mismatched")
+            logger.info("S3AsyncGetObjectRangeRead test failed!")
     else:
-        logger.error("Error : size mismatched")
-        logger.info("S3AsyncGetObject test failed!")
+        # Validate if content length matches to object size in config
+        if object_size == content_length:
+            logger.info("Content-Length matched!")
+            logger.info("S3AsyncGetObject test passed!")
+        else:
+            logger.error("Error : size mismatched")
+            logger.info("S3AsyncGetObject test failed!")
 
     await session.close()
 

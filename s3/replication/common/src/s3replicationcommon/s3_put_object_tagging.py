@@ -127,6 +127,9 @@ class S3AsyncPutObjectTagging:
                     self._logger.info('Response headers {}'.format(
                         self._response_headers))
 
+                    # Delete temporary tagset file.
+                    os.system('rm -rf tagset.xml')
+
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
