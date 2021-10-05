@@ -1,0 +1,37 @@
+{
+  "ACL": "base64-encoded-acl-json",
+  "Bucket-Name": "_source_bucket_name_",
+  "Object-Name": "_source_object_name_",
+  "Object-URI": "_source_bucket_name_\\\\_source_object_name_",
+  "System-Defined": {
+    "Content-Length": "_source_object_size_",
+    "Content-MD5": "_source_object_md5_",
+    "Content-Type": "",
+    "Date": "_source_object_creation_time_",
+    "Last-Modified": "_source_object_creation_time_",
+    "Owner-Account": "_source_object_owner_account_name_",
+    "Owner-Account-id": "_source_object_owner_account_id_",
+    "Owner-Canonical-id": "_source_object_owner_account_canonical_id_",
+    "Owner-User": "_source_object_owner_user_name_",
+    "Owner-User-id": "_source_object_owner_user_id_",
+    "x-amz-server-side-encryption": "None",
+    "x-amz-server-side-encryption-aws-kms-key-id": "",
+    "x-amz-server-side-encryption-customer-algorithm": "",
+    "x-amz-server-side-encryption-customer-key": "",
+    "x-amz-server-side-encryption-customer-key-MD5": "",
+    "x-amz-storage-class": "STANDARD",
+    "x-amz-version-id": "_source_object_version_id_",
+    "x-amz-website-redirect-location": "None"
+  },
+  "User-Defined-Tags": {
+    "tag-key": "tag-value"
+  },
+  "User-Defined": {
+    "x-amz-meta-replication": "true",
+    "x-amz-meta-target-site": "cortxs3",
+    "x-amz-meta-target-bucket": "_target_bucket_name_"
+  },
+  "create_timestamp": "_object_create_timestamp_",
+  "layout_id": 1,
+  "motr_oid": "_motr_object_id_"
+}

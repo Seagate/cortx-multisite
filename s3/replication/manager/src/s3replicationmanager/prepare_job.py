@@ -80,10 +80,11 @@ class PrepareReplicationJob:
         epoch_t = datetime.datetime.utcnow()
 
         # Combination of following fields makes S3 metadata update unique.
-        job_dict["replication-id"] = fdmi_record["Bucket-Name"] + \
-            fdmi_record["Object-Name"] + \
-            fdmi_record["System-Defined"]["x-amz-version-id"] + \
-            fdmi_record["create_timestamp"]
+        job_dict["replication-id"] = fdmi_record["Bucket-Name"] + '_' + \
+            fdmi_record["Object-Name"] + '_' + \
+            fdmi_record["System-Defined"]["x-amz-version-id"] + '_' + \
+            fdmi_record["create_timestamp"] + '_' + \
+            epoch_t.strftime('%Y%m%dT%H%M%SZ')
 
         job_dict["replication-event-create-time"] = epoch_t.strftime(
             '%Y%m%dT%H%M%SZ')
@@ -121,6 +122,11 @@ class PrepareReplicationJob:
             fdmi_record["System-Defined"]["Owner-User-id"]
         job_dict["source"]["operation"]["attributes"]["x-amz-version-id"] = \
             fdmi_record["System-Defined"]["x-amz-version-id"]
+
+        # if tags are present # need to remove if record lacks this field.
+        if "User-Defined-Tags" in fdmi_record.keys():
+            job_dict["source"]["operation"]["type"] = "replicate_object_tags"
+            job_dict["User-Defined-Tags"] = fdmi_record["User-Defined-Tags"]
 
         # XXX: Change after S3 changes are ready for replication.
         if fdmi_record["User-Defined"]["x-amz-meta-target-site"] == "cortxs3":

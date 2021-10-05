@@ -80,20 +80,20 @@ class S3AsyncGetBucketReplication():
         if 'DeleteMarkerReplication' in rule:
             if 'Status' in rule['DeleteMarkerReplication']:
                 policy_obj._delete_marker_replication_status = \
-                        rule['DeleteMarkerReplication']['Status']
+                    rule['DeleteMarkerReplication']['Status']
         if 'Destination' in rule:
             if 'Bucket' in rule['Destination']:
                 policy_obj._dest_bucket = rule['Destination']['Bucket'].split(
                     ':')[-1]
             if 'EncryptionConfiguration' in rule['Destination']:
                 policy_obj._encryption_replication_key_id = \
-                        rule['Destination'][
-                            'EncryptionConfiguration']['ReplicaKmsKeyID']
+                    rule['Destination'][
+                        'EncryptionConfiguration']['ReplicaKmsKeyID']
             if 'Account' in rule['Destination']:
                 policy_obj._account_id = rule['Destination']['Account']
             if 'ReplicationTime' in rule['Destination']:
                 policy_obj._replication_time_status = \
-                        rule['Destination']['ReplicationTime']['Status']
+                    rule['Destination']['ReplicationTime']['Status']
         if 'Status' in rule:
             policy_obj._status = rule['Status']
         if 'Filter' in rule.keys():
@@ -106,7 +106,6 @@ class S3AsyncGetBucketReplication():
         if 'Priority' in rule:
             policy_obj._priority = rule['Priority']
         return policy_obj
-
 
     def get_replication_rule(self, obj_name):
         """Returns matched replication rule for given bucket.
@@ -144,8 +143,6 @@ class S3AsyncGetBucketReplication():
             self._logger.error(
                 "Failed to get rule! Exception type : {}".format(e))
 
-
-
     async def get(self):
         """Yields data chunk for given size."""
         request_uri = AWSV4Signer.fmt_s3_request_uri(self._bucket_name)
@@ -176,7 +173,7 @@ class S3AsyncGetBucketReplication():
         url = self._session.endpoint + request_uri
 
         self._logger.info(fmt_reqid_log(self._request_id) +
-            'GET on {}'.format(url))
+                          'GET on {}'.format(url))
 
         self._timer.start()
 
@@ -185,10 +182,10 @@ class S3AsyncGetBucketReplication():
             async with self._session.get_client_session().get(
                     url, params=query_params, headers=headers) as resp:
                 self._logger.debug(fmt_reqid_log(self._request_id) +
-                    "Response url {}".format(
-                        (resp.url)))
+                                   "Response url {}".format(
+                    (resp.url)))
                 self._logger.debug(fmt_reqid_log(self._request_id) +
-                    "Received response url {}".format(resp))
+                                   "Received response url {}".format(resp))
 
                 if resp.status == 200:
                     self._logger.info(fmt_reqid_log(self._request_id) +
@@ -206,10 +203,10 @@ class S3AsyncGetBucketReplication():
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
                     self._logger.error(fmt_reqid_log(self._request_id) +
-                        'Error Response: {}'.format(error_msg))
+                                       'Error Response: {}'.format(error_msg))
         except Exception as e:
             self._logger.error(fmt_reqid_log(self._request_id) +
-                "Error: Exception '{}' occured!".format(e))
+                               "Error: Exception '{}' occured!".format(e))
 
         self._timer.stop()
         self._logger.debug(fmt_reqid_log(self._request_id) +
