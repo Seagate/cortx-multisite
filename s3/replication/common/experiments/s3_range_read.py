@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -17,30 +15,33 @@
 #
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
-
+#
 
 from config import Config
 import aiohttp
 import asyncio
 import sys
-import urllib
 from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
 sys.path.append(abspath(join(dirname(__file__), '..', 'tests', 'system')))
 
+
 async def main():
     async with aiohttp.ClientSession() as session:
 
         config = Config()
 
-        # Ensure bucket is exists before test.
+        # Ensure bucket and object exists before test.
         bucket_name = config.source_bucket_name
         object_name = config.object_name_prefix + "test"
-        request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
 
-        query_params = urllib.parse.urlencode({'tagging': None})
+        # Get object range from config
+        obj_range = config.object_range
+
+        request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
+        query_params = ""
         body = ""
 
         headers = AWSV4Signer(
@@ -52,7 +53,8 @@ async def main():
             'GET',
             request_uri,
             query_params,
-            body)
+            body,
+            obj_range)
 
         if (headers['Authorization'] is None):
             print("Failed to generate v4 signature")
@@ -60,16 +62,13 @@ async def main():
 
         print('GET on {}'.format(config.endpoint + request_uri))
         async with session.get(config.endpoint + request_uri,
-                        params=query_params, headers=headers) as resp:
+                               headers=headers) as resp:
             http_status = resp.status
-            received_tagset = await resp.text()
-            print("\nReceived Tagset {}".format(received_tagset))
-        if http_status == 200:
+
+        if http_status == 206:
             print("HTTP status {} OK!".format(http_status))
         else:
             print("ERROR : BAD RESPONSE! status = {}".format(http_status))
 
 loop = asyncio.get_event_loop()
-
 loop.run_until_complete(main())
-

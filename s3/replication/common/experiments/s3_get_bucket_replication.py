@@ -17,7 +17,11 @@
 #
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
+#
 
+#
+# Test file to get bucket's replication policy.
+#
 
 from config import Config
 import aiohttp
@@ -30,6 +34,7 @@ from s3replicationcommon.aws_v4_signer import AWSV4Signer
 # Import config module from '../tests/system'
 sys.path.append(abspath(join(dirname(__file__), '..', 'tests', 'system')))
 
+
 async def main():
     async with aiohttp.ClientSession() as session:
 
@@ -37,10 +42,8 @@ async def main():
 
         # Ensure bucket is exists before test.
         bucket_name = config.source_bucket_name
-        object_name = config.object_name_prefix + "test"
-        request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)
-
-        query_params = urllib.parse.urlencode({'tagging': None})
+        request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name)
+        query_params = urllib.parse.urlencode({'replication': None})
         body = ""
 
         headers = AWSV4Signer(
@@ -58,18 +61,22 @@ async def main():
             print("Failed to generate v4 signature")
             sys.exit(-1)
 
-        print('GET on {}'.format(config.endpoint + request_uri))
-        async with session.get(config.endpoint + request_uri,
-                        params=query_params, headers=headers) as resp:
-            http_status = resp.status
-            received_tagset = await resp.text()
-            print("\nReceived Tagset {}".format(received_tagset))
-        if http_status == 200:
-            print("HTTP status {} OK!".format(http_status))
-        else:
-            print("ERROR : BAD RESPONSE! status = {}".format(http_status))
+        # Request url
+        url = config.endpoint + request_uri
+
+        print('GET on {}'.format(url))
+        async with session.get(
+                url, params=query_params, headers=headers) as resp:
+            print("Response url {}".format((resp.url)))
+            print("Received reponse {}".format((resp)))
+
+            total_received = 0
+            while True:
+                chunk = await resp.content.read(1024)
+                if not chunk:
+                    break
+                total_received += len(chunk)
+                print("Received chunk {}".format(chunk))
 
 loop = asyncio.get_event_loop()
-
 loop.run_until_complete(main())
-

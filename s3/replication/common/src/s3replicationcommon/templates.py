@@ -47,6 +47,19 @@ def fdmi_record_template():
     return template
 
 
+def fdmi_record_tag_template():
+    """Returns fdmi record template with tag loaded from json file."""
+    template_path = os.path.join(
+        os.path.dirname(__file__),
+        '..', 'templates',
+        'fdmi_record_tag_template.json')
+
+    with open(template_path, 'r') as template_file:
+        template = json.load(template_file)
+
+    return template
+
+
 def subscribe_payload_template():
     """Returns subscribe payload template loaded from json file."""
     template_path = os.path.join(

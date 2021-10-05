@@ -34,11 +34,13 @@ import uuid
 import yaml
 from random import randrange
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
+from s3replicationcommon.s3_put_object_tagging import S3AsyncPutObjectTagging
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.templates import fdmi_record_template
+from s3replicationcommon.templates import fdmi_record_tag_template
 from s3replicationmanager.config import Config as ManagerConfig
 from s3_config import S3Config
 
@@ -67,56 +69,6 @@ class TestConfig:
 # Helper methods
 
 
-class ObjectDataGenerator:
-    def __init__(self, logger, object_name, object_size):
-        """Initialise."""
-        self._logger = logger
-        self._object_name = object_name
-        self._object_size = object_size
-        self._hash = hashlib.md5()
-        self._state = S3RequestState.INITIALISED
-
-    def get_state(self):
-        """Returns current request state."""
-        return self._state
-
-    def get_etag(self):
-        if self._state == S3RequestState.COMPLETED:
-            return self._md5
-        return None
-
-    async def fetch(self, chunk_size):
-        pending_size = self._object_size
-        # Generate only one chunk and just keep sending same for each iteration
-        data = os.urandom(chunk_size)
-        self._state = S3RequestState.RUNNING
-        self._logger.debug("Start data gen. pending_size {} bytes.".
-                           format(pending_size))
-        while pending_size > 0:
-            if pending_size >= chunk_size:
-                pending_size -= chunk_size
-                self._hash.update(data)
-                self._logger.debug("pending_size {} bytes.".
-                                   format(pending_size))
-                self._logger.debug("Yielding data of size {} bytes.".
-                                   format(chunk_size))
-                yield data
-            else:
-                # pending size is less than chunk size, generate only pending
-                # size
-                last_data = os.urandom(pending_size)
-                self._hash.update(last_data)
-                self._logger.debug(
-                    "Yielding last unit of data of size {} bytes.".
-                    format(pending_size))
-                yield last_data
-                pending_size = 0
-        self._logger.debug("Data generation completed for object {}.".
-                           format(self._object_name))
-        self._md5 = self._hash.hexdigest()
-        self._state = S3RequestState.COMPLETED
-
-
 def init_logger():
     log_config_file = os.path.join(os.path.dirname(__file__),
                                    'config', 'logger_config.yaml')
@@ -130,16 +82,14 @@ def init_logger():
 
 
 def create_job_with_fdmi_record(s3_config, test_config, object_info):
-    job_dict = fdmi_record_template()
+    job_dict = fdmi_record_tag_template()
 
     # Update the fields in template.
+    # XXX Removed md5 and lenght
     job_dict["Bucket-Name"] = test_config.source_bucket
     job_dict["Object-Name"] = object_info["object_name"]
     job_dict["Object-URI"] = test_config.source_bucket + \
         '\\\\' + object_info["object_name"]
-    job_dict["System-Defined"]["Content-Length"] = object_info["size"]
-    job_dict["System-Defined"]["Content-MD5"] = object_info["md5"]
-
     job_dict["User-Defined"]["x-amz-meta-target-site"] = \
         s3_config.s3_service_name
     job_dict["User-Defined"]["x-amz-meta-target-bucket"] = \
@@ -148,30 +98,24 @@ def create_job_with_fdmi_record(s3_config, test_config, object_info):
     return job_dict
 
 
-async def async_put_object(session, bucket_name, object_name, object_size,
-                           transfer_chunk_size):
+async def async_put_object_tagging(session, bucket_name, object_name, tag_name, tag_value):
 
     request_id = str(uuid.uuid4())
 
-    object_reader = ObjectDataGenerator(session.logger,
-                                        object_name, object_size)
-    object_writer = S3AsyncPutObject(session, request_id, bucket_name,
-                                     object_name, object_size)
+    obj = S3AsyncPutObjectTagging(session, request_id, bucket_name,
+                                  object_name, tag_name, tag_value)
+
+    await obj.send()
 
     status = "success"
     # Start transfer
-    await object_writer.send(object_reader, transfer_chunk_size)
-    if object_writer.get_state() != S3RequestState.COMPLETED:
-        status = "failed"
+    # if object_writer.get_state() != S3RequestState.COMPLETED:
+    #    status = "failed"
 
-    return {"object_name": object_name, "size": object_size,
-            "md5": object_reader.get_etag(),
-            "etag": object_writer.get_response_header("ETag"),
-            "status": status
-            }
+    return {"object_name": object_name, "status": status}
 
 
-async def setup_source(session, test_config, transfer_chunk_size):
+async def setup_source(session, test_config):
     # Create objects at source and returns list with object info
 
     # [{"object_name": "object-name1", "size": 4096, "md5": abcd},
@@ -187,11 +131,12 @@ async def setup_source(session, test_config, transfer_chunk_size):
 
         # Generate object name
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
+        tag_name = "user-tag-" + str(i)
+        tag_value = "tag-value-" + str(i)
 
         # Perform the PUT operation on source and capture md5.
         task = asyncio.ensure_future(
-            async_put_object(session, test_config.source_bucket, object_name,
-                             object_size, transfer_chunk_size))
+            async_put_object_tagging(session, test_config.source_bucket, object_name, tag_name, tag_value))
         put_task_list.append(task)
     objects_info = await asyncio.gather(*put_task_list)
     return objects_info
@@ -223,9 +168,8 @@ async def run_load_test():
         s3_config.access_key,
         s3_config.secret_key)
 
-    # Prepare the source data
-    objects_info = await setup_source(s3_session, test_config,
-                                      s3_config.transfer_chunk_size)
+    # Put data on source
+    objects_info = await setup_source(s3_session, test_config)
 
     manager_session = aiohttp.ClientSession()
     # Post replication jobs to manager.
@@ -265,7 +209,7 @@ async def run_load_test():
             'GET jobs returned http Status: {}'.format(resp.status))
         response = await resp.json()
         manager_completed_count = response['count']
-    logger.info("Present completed jobs by manager : {}".format(
+    logger.info("Present jobs completed by manager : {}".format(
         manager_completed_count))
 
     while jobs_running and polling_count != 0:
@@ -280,8 +224,8 @@ async def run_load_test():
 
         logger.info("completed jobs count : {}".format(completed_count))
 
-        if completed_count == (manager_completed_count +
-                               test_config.count_of_obj):
+        if completed_count == (
+                test_config.count_of_obj + manager_completed_count):
             # No jobs pending then exit here.
             jobs_running = False
             logger.info("All jobs completed.")

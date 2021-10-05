@@ -54,8 +54,14 @@ class Config:
         self.object_name_prefix = self._config["object_name_prefix"]
         self.object_tag_name = self._config["object_tag_name"]
         self.object_tag_value = self._config["object_tag_value"]
+<<<<<<< HEAD
+=======
+        self.range_read_offset = self._config["range_read_offset"]
+        self.range_read_length = self._config["range_read_length"]
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
         self.object_size = self._config["object_size"]
         self.total_objects = self._config["total_objects"]
         self.transfer_chunk_size = self._config["transfer_chunk_size"]
         self.max_s3_connections = self._config["max_s3_connections"]
         self.max_threads_for_boto3 = self._config["max_threads_for_boto3"]
+        self.iam_role = self._config["iam_role"]

@@ -19,6 +19,7 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
+from config import Config
 import aiohttp
 import asyncio
 import sys
@@ -27,8 +28,7 @@ from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
-sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
-from config import Config
+sys.path.append(abspath(join(dirname(__file__), '..', 'tests', 'system')))
 
 
 async def data_generator(object_sz, chunk_size):
@@ -67,8 +67,10 @@ async def main():
         headers["Content-Length"] = str(config.object_size)
 
         url = config.endpoint + request_uri
-        data = data_generator(config.object_size,config.object_size)
-        print('PUT on {} for object size {} bytes.'.format(url, config.object_size))
+        data = data_generator(config.object_size, config.object_size)
+        print(
+            'PUT on {} for object size {} bytes.'.format(
+                url, config.object_size))
 
         async with session.put(url, headers=headers, data=data) as resp:
             http_status = resp.status

@@ -19,8 +19,15 @@
 import aiohttp
 import fileinput
 import os
+<<<<<<< HEAD
 import re
 import sys
+=======
+import sys
+from os.path import join, dirname, abspath
+import re
+from pathlib import Path
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
 import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
@@ -59,13 +66,28 @@ class S3AsyncPutObjectTagging:
         return self._timer.elapsed_time_ms()
 
     async def send(self):
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
         query_params = urllib.parse.urlencode({'tagging': ''})
         body = ""
+<<<<<<< HEAD
         # Create temporary tagset file.
         os.system('cp ./tests/system/config/object_tagset.xml tagset.xml')
+=======
+
+        # Create temporary tagset file.
+        path = os.environ['VIRTUAL_ENV']  # XXX Need to figure out better way.
+        os.system(
+            'cp ' +
+            path +
+            '/../common/tests/system/config/object_tagset.xml tagset.xml')
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
         matches = ['_TAG_KEY_', '_TAG_VALUE_']
 
         # Read tagset and make replacements based on config options.
@@ -127,6 +149,12 @@ class S3AsyncPutObjectTagging:
                     self._logger.info('Response headers {}'.format(
                         self._response_headers))
 
+<<<<<<< HEAD
+=======
+                    # Delete temporary tagset file.
+                    os.system('rm -rf tagset.xml')
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()

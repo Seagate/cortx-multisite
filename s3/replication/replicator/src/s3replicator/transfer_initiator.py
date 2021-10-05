@@ -21,6 +21,7 @@ import logging
 from s3replicationcommon.job import ReplicationJobType
 from s3replicationcommon.job import JobEvents
 from .object_replicator import ObjectReplicator
+from .object_tag_replicator import ObjectTagReplicator
 from .session_manager import get_session
 
 _logger = logging.getLogger('s3replicator')
@@ -91,6 +92,8 @@ class TransferInitiator:
         if operation_type == ReplicationJobType.OBJECT_REPLICATION:
             object_replicator = ObjectReplicator(
                 job, app["config"].transfer_chunk_size_bytes,
+                app["config"].range_read_offset,
+                app["config"].range_read_length,
                 source_session, target_session)
             object_replicator.setup_observers(
                 "all_events", TranferEventHandler(app))
@@ -102,6 +105,20 @@ class TransferInitiator:
             semaphore = app['semaphore']
             async with semaphore:
                 await object_replicator.start()
+
+        elif operation_type == ReplicationJobType.OBJECT_TAGS_REPLICATION:
+            object_tag_replicator = ObjectTagReplicator(
+                job, source_session, target_session)
+            object_tag_replicator.setup_observers(
+                "all_events", TranferEventHandler(app))
+
+            job.set_replicator(object_tag_replicator)
+            job.mark_started()
+
+            # Start the replication.
+            semaphore = app['semaphore']
+            async with semaphore:
+                await object_tag_replicator.start()
         else:
             _logger.error(
                 "Operation type [{}] not supported.".format(operation_type))

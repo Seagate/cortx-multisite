@@ -69,6 +69,10 @@ class Config:
 
             self.max_replications = \
                 config_props['transfer']["max_replications"]
+            self.range_read_offset = \
+                config_props['transfer']["range_read_offset"]
+            self.range_read_length = \
+                config_props['transfer']["range_read_length"]
             self.transfer_chunk_size_bytes = \
                 config_props['transfer']["transfer_chunk_size_bytes"]
             self.max_connections_per_s3_session = \

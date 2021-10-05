@@ -1,0 +1,14 @@
+{
+    "Role": "arn:aws:iam::_ACCOUNT_ID_:role/service-role/s3crr_role_for__REPLICATION_ENABLED_BUCKET_",
+    "Rules": [
+        {
+            "Status": "Enabled",
+            "Priority": 1,
+            "DeleteMarkerReplication": { "Status": "Disabled" },
+            "Filter" : { "Prefix": "_PREFIX_"},
+            "Destination": {
+                "Bucket": "arn:aws:s3:::_DESTINATION_BUCKET_"
+            }
+        }
+    ]
+}

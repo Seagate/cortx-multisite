@@ -6,6 +6,14 @@ import argparse
 import random
 import time
 
+<<<<<<< HEAD
+=======
+import sys
+import boto3
+from botocore.exceptions import ClientError
+
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
 def get_s3(region=None):
     """
     Get a Boto 3 Amazon S3 resource with a specific AWS Region or with your
@@ -56,7 +64,10 @@ def create_1GB_file():
 
 def list_my_buckets(s3):
     print('Buckets:\n\t', *[b.name for b in s3.buckets.all()], sep="\n\t")
+<<<<<<< HEAD
     
+=======
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
 
 def create_bucket(bucket_name, region):
     s3=get_s3(region)
@@ -67,6 +78,10 @@ def create_bucket(bucket_name, region):
             'LocationConstraint': region
         }
     )
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     return bucket
 
 
@@ -74,10 +89,16 @@ def enable_versioning(bucket_name, s3_resource):
     versioning = s3_resource.BucketVersioning(bucket_name)
     versioning.enable()
 
+<<<<<<< HEAD
 
 def create_iam_role(role_name):
     json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]}')
 
+=======
+def create_iam_role(role_name):
+    json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]}')
+    
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     session = boto3.session.Session(profile_name='default')
     iam = session.client('iam')
     response = iam.create_role(
@@ -85,9 +106,17 @@ def create_iam_role(role_name):
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
 
+<<<<<<< HEAD
 def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
     role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
     
+=======
+
+def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
+
+    role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
+
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     client = boto3.client('iam')
     response = client.put_role_policy(
         PolicyDocument=json.dumps(role_permissions_policy),
@@ -129,10 +158,17 @@ def is_data_equal(src_bucket, dest_bucket):
         dest_body.append(obj.get()['Body'].read())
 
     if dest_key != src_key:
+<<<<<<< HEAD
         print("Replication does not copy the key value as expected: src_key=" + str(src_key) + " and dest_key="+ str(dest_key))
     elif dest_body != src_body:
         print("Replication does not copy the object body as expected: src_body=" + str(src_body) + " and dest_body="+ str(dest_body))
     return ((dest_key == src_key) and (dest_body == src_body))
+=======
+        print("Replication does not copy the key value as expected: src_key=" + str(src_key) " and dest_key="+ str(dest_key))
+    elif dest_body != src_body:
+        print("Replication does not copy the object body as expected: src_body=" + str(src_body) " and dest_body="+ str(dest_body))
+    return ((dest_key == src_key) && (dest_body == src_body))
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
             
 
 def add_data(file_name, bucket_name):
@@ -167,9 +203,14 @@ def create_replication_policy(bucket_name, region, role_name, policy_name):
     client = boto3.client('s3')
     return replication_config
 
+<<<<<<< HEAD
 def does_replication_policy_creates_folder_in_bucket(replication_config):
     # replication policy exists
     sleep(100)
+=======
+def replication_policy_creates_folder_in_bucket(replication_config):
+    # replication policy exists
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     if(does_replication_policy_exist()):
         client.put_bucket_replication(Bucket=src_bucket, ReplicationConfiguration=replication_config)
         response = client.get_bucket_replication(Bucket=src_bucket)
@@ -180,7 +221,11 @@ def does_replication_policy_creates_folder_in_bucket(replication_config):
         file_name=create_file()
         add_data(file_name, src_bucket)
         is_data_equal=is_data_equal(src_bucket, dest_bucket)
+<<<<<<< HEAD
         return success_response and is_data_equal
+=======
+        return success_response && is_data_equal
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     else:
         print("Replication policy does not create folder as expected")
         return False
@@ -277,14 +322,23 @@ def auto():
     role_name='adgtestrole'+rand_int
     policy_name='adgpolicy'+rand_int
     
+<<<<<<< HEAD
     replication_config = create_replication_policy(bucket_name, region, role_name, policy_name)
     result = does_replication_policy_creates_folder_in_bucket(replication_config)
  
+=======
+    response = create_replication_policy(bucket_name, region, role_name, policy_name)
+    result = (200 == ((response['ResponseMetadata'])['HTTPStatusCode']))
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     print_result("create_replication_policy", result)
 
 
 def main():
+<<<<<<< HEAD
     auto()    
+=======
+    auto()
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
     #prompt()
 
 if __name__ == '__main__':

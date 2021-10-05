@@ -1,13 +1,41 @@
-endpoint: "http://s3.seagate.com"
-s3_service_name: cortxs3
-s3_region: us-west2
-source_bucket_name: sourcebucket
-target_bucket_name: targetbucket
+# cortx configs
+endpoint: "http://s3.seagate.com" # Server endpoint. for aws : "http://s3.amazonaws.com"
+s3_service_name: cortxs3 # Change to s3 to test against amazon
+s3_region: us-west2 # User should update region in case of aws
+source_bucket_name: sourcebucket # User should makesure that
+target_bucket_name: targetbucket # Buckets does exist on server
 object_name_prefix: foo_
 object_tag_name: user-tag
 object_tag_value: user-tag-value
+<<<<<<< HEAD
+=======
+range_read_offset: -1
+range_read_length: -1
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
 object_size: 1024
 total_objects: 100
 transfer_chunk_size: 4096
 max_s3_connections: 100
 max_threads_for_boto3: 100
+<<<<<<< HEAD
+=======
+iam_role: <user_account_number> # User's Account ID
+
+# aws configs
+#endpoint: "http://s3.amazonaws.com"
+#s3_service_name: s3
+#s3_region: <aws_s3_region> # e.g. us-east-1
+#source_bucket_name: stxsourcebucket
+#target_bucket_name: stxtargetbucket
+#object_name_prefix: foo_
+#object_tag_name: user-tag
+#object_tag_value: user-tag-value
+#range_read_offset: -1
+#range_read_length: -1
+#object_size: 1024
+#total_objects: 100
+#transfer_chunk_size: 4096
+#max_s3_connections: 100
+#max_threads_for_boto3: 100
+#iam_role: <user_account_number> # AWS User's Account ID. e.g. 456758429921
+>>>>>>> 3dccadb9f330c79ecb71ab4bdc3c733f68008eb1
