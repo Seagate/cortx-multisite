@@ -6,6 +6,11 @@ import argparse
 import random
 import time
 
+import sys
+import boto3
+from botocore.exceptions import ClientError
+
+
 def get_s3(region=None):
     """
     Get a Boto 3 Amazon S3 resource with a specific AWS Region or with your
@@ -56,7 +61,6 @@ def create_1GB_file():
 
 def list_my_buckets(s3):
     print('Buckets:\n\t', *[b.name for b in s3.buckets.all()], sep="\n\t")
-    
 
 def create_bucket(bucket_name, region):
     s3=get_s3(region)
@@ -67,6 +71,7 @@ def create_bucket(bucket_name, region):
             'LocationConstraint': region
         }
     )
+
     return bucket
 
 
@@ -74,10 +79,9 @@ def enable_versioning(bucket_name, s3_resource):
     versioning = s3_resource.BucketVersioning(bucket_name)
     versioning.enable()
 
-
 def create_iam_role(role_name):
     json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]}')
-
+    
     session = boto3.session.Session(profile_name='default')
     iam = session.client('iam')
     response = iam.create_role(
@@ -85,9 +89,11 @@ def create_iam_role(role_name):
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
 
+
 def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
+
     role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
-    
+
     client = boto3.client('iam')
     response = client.put_role_policy(
         PolicyDocument=json.dumps(role_permissions_policy),
@@ -282,7 +288,7 @@ def auto():
 
 
 def main():
-    auto()    
+    auto()
     #prompt()
 
 if __name__ == '__main__':
