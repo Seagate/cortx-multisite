@@ -56,7 +56,7 @@ async def main():
     request_id = "dummy-request-id"
 
     object_reader = FixedObjectDataGenerator(
-                        logger, object_name, object_size)
+        logger, object_name, object_size)
 
     object_writer = S3AsyncPutObject(session, request_id,
                                      bucket_name,
