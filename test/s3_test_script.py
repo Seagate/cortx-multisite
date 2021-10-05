@@ -129,10 +129,10 @@ def is_data_equal(src_bucket, dest_bucket):
         dest_body.append(obj.get()['Body'].read())
 
     if dest_key != src_key:
-        print("Replication does not copy the key value as expected: src_key=" + str(src_key) " and dest_key="+ str(dest_key))
+        print("Replication does not copy the key value as expected: src_key=" + str(src_key) + " and dest_key="+ str(dest_key))
     elif dest_body != src_body:
-        print("Replication does not copy the object body as expected: src_body=" + str(src_body) " and dest_body="+ str(dest_body))
-    return ((dest_key == src_key) && (dest_body == src_body))
+        print("Replication does not copy the object body as expected: src_body=" + str(src_body) + " and dest_body="+ str(dest_body))
+    return ((dest_key == src_key) and (dest_body == src_body))
             
 
 def add_data(file_name, bucket_name):
@@ -167,8 +167,9 @@ def create_replication_policy(bucket_name, region, role_name, policy_name):
     client = boto3.client('s3')
     return replication_config
 
-def replication_policy_creates_folder_in_bucket(replication_config):
+def does_replication_policy_creates_folder_in_bucket(replication_config):
     # replication policy exists
+    sleep(100)
     if(does_replication_policy_exist()):
         client.put_bucket_replication(Bucket=src_bucket, ReplicationConfiguration=replication_config)
         response = client.get_bucket_replication(Bucket=src_bucket)
@@ -179,7 +180,7 @@ def replication_policy_creates_folder_in_bucket(replication_config):
         file_name=create_file()
         add_data(file_name, src_bucket)
         is_data_equal=is_data_equal(src_bucket, dest_bucket)
-        return success_response && is_data_equal
+        return success_response and is_data_equal
     else:
         print("Replication policy does not create folder as expected")
         return False
@@ -276,8 +277,9 @@ def auto():
     role_name='adgtestrole'+rand_int
     policy_name='adgpolicy'+rand_int
     
-    response = create_replication_policy(bucket_name, region, role_name, policy_name)
-    result = (200 == ((response['ResponseMetadata'])['HTTPStatusCode']))
+    replication_config = create_replication_policy(bucket_name, region, role_name, policy_name)
+    result = does_replication_policy_creates_folder_in_bucket(replication_config)
+ 
     print_result("create_replication_policy", result)
 
 
