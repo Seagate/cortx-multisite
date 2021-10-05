@@ -28,13 +28,15 @@ _logger = logging.getLogger('s3replicator')
 
 
 class ObjectReplicator:
-    def __init__(self, job, transfer_chunk_size_bytes, source_session,
-                 target_session) -> None:
+    def __init__(self, job, transfer_chunk_size_bytes, range_read_offset,
+                 range_read_length, source_session, target_session) -> None:
         """Initialise."""
         self._transfer_chunk_size_bytes = transfer_chunk_size_bytes
         self._job_id = job.get_job_id()
         self._request_id = self._job_id
         self._timer = Timer()
+        self._range_read_offset = range_read_offset
+        self._range_read_length = range_read_length
 
         # A set of observers to watch for varius notifications.
         # To start with job completed (success/failure)
@@ -47,7 +49,9 @@ class ObjectReplicator:
             self._request_id,
             job.get_source_bucket_name(),
             job.get_source_object_name(),
-            int(job.get_source_object_size()))
+            int(job.get_source_object_size()),
+            self._range_read_offset,
+            self._range_read_length)
 
         # Setup target site info
         self._s3_target_session = target_session

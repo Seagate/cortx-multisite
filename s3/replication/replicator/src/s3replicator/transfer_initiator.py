@@ -92,6 +92,8 @@ class TransferInitiator:
         if operation_type == ReplicationJobType.OBJECT_REPLICATION:
             object_replicator = ObjectReplicator(
                 job, app["config"].transfer_chunk_size_bytes,
+                app["config"].range_read_offset,
+                app["config"].range_read_length,
                 source_session, target_session)
             object_replicator.setup_observers(
                 "all_events", TranferEventHandler(app))

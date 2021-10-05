@@ -61,7 +61,6 @@ class S3AsyncPutObjectTagging:
         return self._timer.elapsed_time_ms()
 
     async def send(self):
-        print("INSIDE SEND CALL")
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
@@ -70,7 +69,7 @@ class S3AsyncPutObjectTagging:
         body = ""
 
         # Create temporary tagset file.
-        path = os.environ['VIRTUAL_ENV'] #XXX Need to figure out better way.
+        path = os.environ['VIRTUAL_ENV']  # XXX Need to figure out better way.
         os.system(
             'cp ' +
             path +

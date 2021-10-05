@@ -73,8 +73,6 @@ class ObjectTagReplicator:
                 self._timer.elapsed_time_ms(), self._job_id))
         self._tags = object_tag_reader.get_tags_dict()
 
-        print("My tags are : {}".format(self._tags))
-
         object_tag_writer = S3AsyncPutObjectTagging(
             self._s3_target_session,
             self._request_id,
