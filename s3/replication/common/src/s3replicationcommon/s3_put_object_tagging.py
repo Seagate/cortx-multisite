@@ -29,11 +29,10 @@ from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
-
 class S3AsyncPutObjectTagging:
     def __init__(self, session, request_id,
                  bucket_name, object_name,
-                 tag_name, tag_value):
+                 obj_tag_set):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -43,8 +42,7 @@ class S3AsyncPutObjectTagging:
         self._bucket_name = bucket_name
         self._object_name = object_name
 
-        self._tag_name = tag_name
-        self._tag_value = tag_value
+        self._tag_set = obj_tag_set
 
         self._remote_down = False
         self._http_status = None
@@ -64,35 +62,17 @@ class S3AsyncPutObjectTagging:
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
-
         query_params = urllib.parse.urlencode({'tagging': ''})
         body = ""
 
-        # Create temporary tagset file.
-        path = os.environ['VIRTUAL_ENV']  # XXX Need to figure out better way.
-        os.system(
-            'cp ' +
-            path +
-            '/../common/tests/system/config/object_tagset.xml tagset.xml')
+        # Prepare tag xml format
+        str1 = "<Tagging><TagSet>"
+        str2 = "</TagSet></Tagging>"
+        result = ""
+        for key, val in (self._tag_set).items():
+            result = result + "<Tag><Key>"+key+"</Key><Value>"+val+"</Value></Tag>"
 
-        matches = ['_TAG_KEY_', '_TAG_VALUE_']
-
-        # Read tagset and make replacements based on config options.
-        with fileinput.FileInput('tagset.xml', inplace=True) as file:
-            # Read each line and match the pattern and do replacement.
-            for line in file:
-                if all(x in line for x in matches):
-                    line = re.sub('(_TAG_KEY_)', self._tag_name, line)
-                    line = re.sub('(_TAG_VALUE_)', self._tag_value, line)
-                    print(line)
-                else:
-                    print(line, end='')
-
-        os.system('cat tagset.xml')
-
-        # open a file and read the tagset
-        file = os.open('tagset.xml', os.O_RDONLY)
-        tagset = os.read(file, os.path.getsize(file))
+        tagset = str1 + result + str2
 
         headers = AWSV4Signer(
             self._session.endpoint,
