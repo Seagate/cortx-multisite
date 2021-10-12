@@ -98,12 +98,12 @@ def create_job_with_fdmi_record(s3_config, test_config, object_info):
     return job_dict
 
 
-async def async_put_object_tagging(session, bucket_name, object_name, tag_name, tag_value):
+async def async_put_object_tagging(session, bucket_name, object_name, tag_set):
 
     request_id = str(uuid.uuid4())
 
     obj = S3AsyncPutObjectTagging(session, request_id, bucket_name,
-                                  object_name, tag_name, tag_value)
+                                  object_name, tag_set)
 
     await obj.send()
 
@@ -129,14 +129,20 @@ async def setup_source(session, test_config):
                 test_config.min_obj_size,
                 test_config.max_obj_size)
 
+        tagset = {}
+
         # Generate object name
         object_name = "test_object_" + str(i) + "_sz" + str(object_size)
-        tag_name = "user-tag-" + str(i)
-        tag_value = "tag-value-" + str(i)
+
+        # Adding 2 exmaple tags to tagset to replicate
+        for i in range(2):
+            tag_name = object_name + "-tag-" + str(i)
+            tag_value = object_name + "-value-" + str(i)
+            tagset[tag_name]=tag_value
 
         # Perform the PUT operation on source and capture md5.
         task = asyncio.ensure_future(
-            async_put_object_tagging(session, test_config.source_bucket, object_name, tag_name, tag_value))
+            async_put_object_tagging(session, test_config.source_bucket, object_name, tagset))
         put_task_list.append(task)
     objects_info = await asyncio.gather(*put_task_list)
     return objects_info

@@ -53,12 +53,15 @@ async def main():
     request_id = "dummy-request-id"
 
     # Get tag-name and tag-value from config
+    tagset = {}
+
     tag_name = config.object_tag_name
     tag_value = config.object_tag_value
+    tagset[tag_name]=tag_value
 
     tag_object = S3AsyncPutObjectTagging(session, request_id,
                                          bucket_name, object_name,
-                                         tag_name, tag_value)
+                                         tagset)
 
     await tag_object.send()
 

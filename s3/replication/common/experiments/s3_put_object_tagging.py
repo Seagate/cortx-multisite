@@ -18,7 +18,6 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from config import Config
 import aiohttp
 import asyncio
 import fileinput
@@ -30,15 +29,15 @@ from os.path import abspath, join, dirname
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 
 # Import config module from '../tests/system'
-sys.path.append(abspath(join(dirname(__file__), '..', 'tests', 'system')))
-
+sys.path.append(abspath(join(dirname(__file__),'..','tests', 'system')))
+from config import Config
 
 async def main():
     async with aiohttp.ClientSession() as session:
         config = Config()
 
         bucket_name = config.source_bucket_name
-        object_name = config.object_name_prefix  # + "test"
+        object_name = config.object_name_prefix #+ "test"
         tag_name = config.object_tag_name
         tag_value = config.object_tag_value
 
@@ -62,7 +61,7 @@ async def main():
         os.system('cat tagset.xml')
 
         # open a file and read the tagset
-        file = os.open('tagset.xml', os.O_RDONLY)
+        file = os.open('tagset.xml',os.O_RDONLY)
         tagset = os.read(file, os.path.getsize(file))
 
         headers = AWSV4Signer(
@@ -83,7 +82,7 @@ async def main():
         print('PUT on {}'.format(config.endpoint + request_uri))
 
         async with session.put(config.endpoint + request_uri,
-                               data=tagset, params=query_params, headers=headers) as resp:
+            data=tagset, params=query_params, headers=headers) as resp:
             http_status = resp.status
             print("Response of PUT request {} ".format(resp))
 

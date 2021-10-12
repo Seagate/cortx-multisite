@@ -78,7 +78,7 @@ class ObjectTagReplicator:
             self._request_id,
             self._target_bucket,
             self._target_object,
-            list(self._tags.keys())[0], list(self._tags.values())[0])
+            self._tags)
 
         self._timer.start()
         await object_tag_writer.send()
