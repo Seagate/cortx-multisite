@@ -16,8 +16,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
-
+import json
 import logging
+import os
 from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
@@ -37,6 +38,7 @@ class ObjectReplicator:
         self._timer = Timer()
         self._range_read_offset = range_read_offset
         self._range_read_length = range_read_length
+        self._job = job
 
         # A set of observers to watch for varius notifications.
         # To start with job completed (success/failure)
@@ -79,6 +81,7 @@ class ObjectReplicator:
         _logger.info(
             "Replication completed in {}ms for job_id {}".format(
                 self._timer.elapsed_time_ms(), self._job_id))
+
         # notify job state events
         for label, observer in self._observers.items():
             _logger.debug(
@@ -89,6 +92,56 @@ class ObjectReplicator:
                 await observer.notify(JobEvents.ABORTED, self._job_id)
             else:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
+
+        if JobEvents.COMPLETED:
+            source_etag = self._object_reader.get_etag()
+            target_etag = self._object_writer.get_etag()
+
+            _logger.info(
+                "MD5 : Source {} and Target {}".format(
+                    source_etag, target_etag))
+
+            # check md5 of source and replicated objects at target
+            if source_etag == target_etag:
+                _logger.info("MD5 matched for job_id {}".format(self._job_id))
+            else:
+                _logger.error(
+                    "MD5 not matched for job_id {}".format(
+                        self._job_id))
+
+            # check content length of source and target objects [system-defined
+            # metadata]
+            target_response = None
+            command = 'aws s3api get-object --bucket ' + \
+                self._job.get_target_bucket_name() + ' --key ' + \
+                self._job.get_source_object_name() + ' outfile >> outf.py'
+            os.system(command)
+
+            with open("outf.py", "r") as out:
+                contents = out.read()
+                target_response = json.loads(contents)
+            _logger.info(target_response)
+
+            source_content_length = self._object_reader.get_content_length()
+            target_content_length = target_response['ContentLength']
+
+            _logger.info(
+                "Content Length : Source {} and Target {}".format(
+                    source_content_length,
+                    target_content_length))
+
+            if source_content_length == target_content_length:
+                _logger.info(
+                    "Content length matched for job_id {}".format(
+                        self._job_id))
+            else:
+                _logger.error(
+                    "Content length not matched for job_id {}".format(
+                        self._job_id))
+
+            out.close()
+            os.system("rm -rf outf.py")
+            os.system("rm -rf outfile")
 
     def pause(self):
         """Pause the running object tranfer."""

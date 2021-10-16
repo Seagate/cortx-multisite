@@ -16,7 +16,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
-
+import json
+import os
 import logging
 from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_common import S3RequestState
@@ -96,6 +97,39 @@ class ObjectTagReplicator:
                 await observer.notify(JobEvents.ABORTED, self._job_id)
             else:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
+
+        if JobEvents.COMPLETED:
+            # check object tags count of source and target objects
+            # [user-defined metadata]
+            target_response = None
+            command = 'aws s3api get-object --bucket ' + \
+                self._target_bucket + ' --key ' + self._target_object + ' outfile.txt >> tagset.py'
+
+            os.system(command)
+            with open("tagset.py", "r") as out:
+                contents = out.read()
+                target_response = json.loads(contents)
+            _logger.info(target_response)
+
+            source_tags_count = object_tag_reader.get_tags_count()
+            target_tags_count = target_response['TagCount']
+
+            _logger.info(
+                "Object tags count : Source {} and Target {}".format(
+                    source_tags_count, target_tags_count))
+
+            if source_tags_count == target_tags_count:
+                _logger.info(
+                    "Object tags count matched for job_id {}".format(
+                        self._job_id))
+            else:
+                _logger.error(
+                    "Object tags count not matched for job_id {}".format(
+                        self._job_id))
+
+            out.close()
+            os.system("rm -rf tagset.py")
+            os.system("rm -rf outfile.txt")
 
     def pause(self):
         """Pause the running object tranfer."""

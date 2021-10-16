@@ -65,6 +65,10 @@ class S3AsyncGetObject:
         """Get content length."""
         return int(self._response_headers["Content-Length"])
 
+    def get_tags_count(self):
+        """Get object tags count."""
+        return int(self._response_headers["x-amz-tagging-count"])
+
     def get_total_object_range(self):
         """Get object range."""
         return self._object_range
