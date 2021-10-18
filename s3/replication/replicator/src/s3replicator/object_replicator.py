@@ -16,9 +16,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
-import json
+
 import logging
-import os
 from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
@@ -46,7 +45,7 @@ class ObjectReplicator:
 
         self._s3_source_session = source_session
 
-        self._object_reader = S3AsyncGetObject(
+        self._object_source_reader = S3AsyncGetObject(
             self._s3_source_session,
             self._request_id,
             job.get_source_bucket_name(),
@@ -65,6 +64,15 @@ class ObjectReplicator:
             job.get_source_object_name(),
             int(job.get_source_object_size()))
 
+        self._object_target_reader = S3AsyncGetObject(
+            self._s3_target_session,
+            self._request_id,
+            job.get_target_bucket_name(),
+            job.get_source_object_name(),
+            int(job.get_source_object_size()),
+            self._range_read_offset,
+            self._range_read_length)
+
     def get_execution_time(self):
         """Return total time for Object replication."""
         return self._timer.elapsed_time_ms()
@@ -75,7 +83,7 @@ class ObjectReplicator:
     async def start(self):
         # Start transfer
         self._timer.start()
-        await self._object_writer.send(self._object_reader,
+        await self._object_writer.send(self._object_source_reader,
                                        self._transfer_chunk_size_bytes)
         self._timer.stop()
         _logger.info(
@@ -94,7 +102,7 @@ class ObjectReplicator:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
 
         if JobEvents.COMPLETED:
-            source_etag = self._object_reader.get_etag()
+            source_etag = self._object_source_reader.get_etag()
             target_etag = self._object_writer.get_etag()
 
             _logger.info(
@@ -109,21 +117,15 @@ class ObjectReplicator:
                     "MD5 not matched for job_id {}".format(
                         self._job_id))
 
-            # check content length of source and target objects [system-defined
-            # metadata]
-            target_response = None
-            command = 'aws s3api get-object --bucket ' + \
-                self._job.get_target_bucket_name() + ' --key ' + \
-                self._job.get_source_object_name() + ' outfile >> outf.py'
-            os.system(command)
+            # check content length of source and target objects
+            # [system-defined metadata]
+            reader_generator = self._object_target_reader.fetch(
+                self._transfer_chunk_size_bytes)
+            async for _ in reader_generator:
+                pass
 
-            with open("outf.py", "r") as out:
-                contents = out.read()
-                target_response = json.loads(contents)
-            _logger.info(target_response)
-
-            source_content_length = self._object_reader.get_content_length()
-            target_content_length = target_response['ContentLength']
+            source_content_length = self._object_source_reader.get_content_length()
+            target_content_length = self._object_target_reader.get_content_length()
 
             _logger.info(
                 "Content Length : Source {} and Target {}".format(
@@ -138,10 +140,6 @@ class ObjectReplicator:
                 _logger.error(
                     "Content length not matched for job_id {}".format(
                         self._job_id))
-
-            out.close()
-            os.system("rm -rf outf.py")
-            os.system("rm -rf outfile")
 
     def pause(self):
         """Pause the running object tranfer."""
