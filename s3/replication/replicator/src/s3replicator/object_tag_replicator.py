@@ -100,7 +100,6 @@ class ObjectTagReplicator:
         if JobEvents.COMPLETED:
             # check object tags count of source and target objects
             # [user-defined metadata]
-
             object_target_tag_reader = S3AsyncGetObjectTagging(
                 self._s3_target_session,
                 self._request_id,
