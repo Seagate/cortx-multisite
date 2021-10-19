@@ -59,19 +59,19 @@ class ObjectTagReplicator:
 
     async def start(self):
         # Start transfer
-        object_tag_reader = S3AsyncGetObjectTagging(
+        object_source_tag_reader = S3AsyncGetObjectTagging(
             self._s3_source_session,
             self._request_id,
             self._source_bucket,
             self._source_object)
 
         self._timer.start()
-        await object_tag_reader.fetch()
+        await object_source_tag_reader.fetch()
         self._timer.stop()
         _logger.info(
             "Tag read completed in {}ms for job_id {}".format(
                 self._timer.elapsed_time_ms(), self._job_id))
-        self._tags = object_tag_reader.get_tags_dict()
+        self._tags = object_source_tag_reader.get_tags_dict()
 
         object_tag_writer = S3AsyncPutObjectTagging(
             self._s3_target_session,
@@ -96,6 +96,32 @@ class ObjectTagReplicator:
                 await observer.notify(JobEvents.ABORTED, self._job_id)
             else:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
+
+        if JobEvents.COMPLETED:
+            # check object tags count of source and target objects
+            # [user-defined metadata]
+            object_target_tag_reader = S3AsyncGetObjectTagging(
+                self._s3_target_session,
+                self._request_id,
+                self._target_bucket,
+                self._target_object)
+
+            await object_target_tag_reader.fetch()
+            source_tags_count = object_source_tag_reader.get_tags_count()
+            target_tags_count = object_target_tag_reader.get_tags_count()
+
+            _logger.info(
+                "Object tags count : Source {} and Target {}".format(
+                    source_tags_count, target_tags_count))
+
+            if source_tags_count == target_tags_count:
+                _logger.info(
+                    "Object tags count matched for job_id {}".format(
+                        self._job_id))
+            else:
+                _logger.error(
+                    "Object tags count not matched for job_id {}".format(
+                        self._job_id))
 
     def pause(self):
         """Pause the running object tranfer."""
