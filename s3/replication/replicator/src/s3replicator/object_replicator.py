@@ -37,7 +37,6 @@ class ObjectReplicator:
         self._timer = Timer()
         self._range_read_offset = range_read_offset
         self._range_read_length = range_read_length
-        self._job = job
 
         # A set of observers to watch for varius notifications.
         # To start with job completed (success/failure)

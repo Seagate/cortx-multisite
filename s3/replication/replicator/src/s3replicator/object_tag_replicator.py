@@ -36,7 +36,6 @@ class ObjectTagReplicator:
         self._timer = Timer()
         self._tagset = job.get_object_tagset()
         self._s3_source_session = source_session
-        self._job = job
 
         self._source_bucket = job.get_source_bucket_name()
         self._source_object = job.get_source_object_name()
