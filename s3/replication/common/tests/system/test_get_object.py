@@ -50,7 +50,7 @@ async def main():
     bucket_name = config.source_bucket_name
 
     # Generate object names
-    object_name = config.object_name_prefix + "test"
+    object_name = str(config.object_name_prefix)
     object_size = config.object_size
     range_read_offset = config.range_read_offset
     range_read_length = config.range_read_length

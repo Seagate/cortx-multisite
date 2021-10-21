@@ -48,7 +48,7 @@ async def main():
     # Generate bucket names
     bucket_name = config.source_bucket_name
     # Generate object names
-    object_name = config.object_name_prefix + "test"
+    object_name = str(config.object_name_prefix)
     request_id = "dummy-request-id"
 
     tag_object = S3AsyncGetObjectTagging(session, request_id,
