@@ -46,7 +46,7 @@ async def main():
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate object name
-    object_name = config.object_name_prefix + "test"
+    object_name = str(config.object_name_prefix)
     bucket_name = config.source_bucket_name
     request_id = "dummy-request-id"
 

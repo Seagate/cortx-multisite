@@ -48,7 +48,7 @@ def main():
     # CONFIG OPTIONS
     bucket_name = config.source_bucket_name
     dest_bucket_name = config.target_bucket_name
-    object_name_prefix = config.object_name_prefix
+    object_name_prefix = str(config.object_name_prefix)
     iam_role = config.iam_role
 
     # Create temp replication policy file.
