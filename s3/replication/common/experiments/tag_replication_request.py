@@ -17,17 +17,22 @@ headers["Accept"] = "text/plain"
 # Create a parser and parse the arguments
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('-s', type=str, required=True, help="source bucket")
-arg_parser.add_argument('-o', type=str, required=True, help="source object name")
+arg_parser.add_argument('-o', type=str, required=True, help="source object")
 arg_parser.add_argument('-l', type=str, required=True, help="object length")
 arg_parser.add_argument('-t', type=str, required=True, help="target bucket")
 
 args = arg_parser.parse_args()
 
+source_bucket = args.s
+object_name = args.o
+object_length = args.l
+target_bucket = args.t
+
 data = {'ACL': '',
-        'Bucket-Name': args.s,
-        'Object-Name': args.o,
+        'Bucket-Name': source_bucket,
+        'Object-Name': object_name,
         'Object-URI': '',
-        'System-Defined': {'Content-Length': args.l,
+        'System-Defined': {'Content-Length': object_length,
                            'Content-MD5': 'ccf003ff936fae257c9457a153779953',
                            'Content-Type': 'text/plain',
                            'Date': '2021-10-23T06:56:54.000Z',
@@ -46,7 +51,7 @@ data = {'ACL': '',
                            'x-amz-version-id': '',
                            'x-amz-website-redirect-location': 'None'},
         'User-Defined': {'x-amz-meta-replication': 'true',
-                         'x-amz-meta-target-bucket': args.t,
+                         'x-amz-meta-target-bucket': target_bucket,
                          'x-amz-meta-target-site': 'cortxs3'},
         'User-Defined-Tags': {},
         'create_timestamp': '2021-10-23T06:57:23.000Z',
