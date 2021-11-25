@@ -50,10 +50,16 @@ async def main():
     bucket_name = config.source_bucket_name
     request_id = "dummy-request-id"
 
+    # For Cortx, Default value of version id=None
+    # For AWS, please provide the version id
     head_obj = S3AsyncHeadObject(session, request_id,
-                                 bucket_name,
-                                 object_name)
-    await head_obj.get()
+                                 bucket_name, object_name,
+                                 None)
+
+    # Pass the part_number to get specific part's information
+    # For Cortx, default value of part_number=None
+    # For AWS, please provide the part number
+    await head_obj.get(None)
 
     # Validate if content length matches to object size
     if config.object_size == head_obj.get_content_length():
