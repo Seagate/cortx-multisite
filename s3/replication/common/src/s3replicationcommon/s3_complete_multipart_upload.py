@@ -76,11 +76,11 @@ class S3AsyncCompleteMultipartUpload:
         body = ""
 
         # Prepare xml format
-        str1 = "<CompleteMultipartUpload>"
-        for part, tag in self._etag_dict.items():
-            str1 += "<Part><ETag>" + \
-                str(tag) + "</ETag><PartNumber>" + str(part) + "</PartNumber></Part>"
-        str1 += "</CompleteMultipartUpload>"
+        etag_str = "<CompleteMultipartUpload>"
+        for part, etag in self._etag_dict.items():
+            etag_str += "<Part><ETag>" + \
+                str(etag) + "</ETag><PartNumber>" + str(part) + "</PartNumber></Part>"
+        etag_str += "</CompleteMultipartUpload>"
 
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -93,6 +93,7 @@ class S3AsyncCompleteMultipartUpload:
             query_params,
             body)
 
+        # check the header signature
         if (headers['Authorization'] is None):
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to generate v4 signature")
@@ -108,7 +109,7 @@ class S3AsyncCompleteMultipartUpload:
         try:
             async with self._session.get_client_session().post(
                     self._session.endpoint + request_uri,
-                    data=str1, params=query_params,
+                    data=etag_str, params=query_params,
                     headers=headers) as resp:
 
                 self._logger.info(
@@ -119,12 +120,15 @@ class S3AsyncCompleteMultipartUpload:
                     self._session.endpoint + request_uri))
 
                 if resp.status == 200:
+                    # Get the response header and body
                     self._response_headers = resp.headers
                     self._logger.info('Response headers {}'.format(
                         self._response_headers))
 
                     # Response body
                     resp_body = await resp.text()
+
+                    # Remove the namespace from response body elements
                     resp_body = re.sub(
                         'xmlns="[^"]+"', '', resp_body)
                     xml_dict = fromstring(resp_body)
@@ -133,6 +137,7 @@ class S3AsyncCompleteMultipartUpload:
                     self._final_etag = xml_dict.find('ETag').text
 
                 else:
+                    # show the error messages
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
                     self._logger.error(

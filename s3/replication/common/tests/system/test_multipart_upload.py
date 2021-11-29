@@ -28,10 +28,10 @@ from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.s3_create_multipart_upload \
-                        import S3AsyncCreateMultipartUpload
+    import S3AsyncCreateMultipartUpload
 from s3replicationcommon.s3_upload_part import S3AsyncUploadPart
 from s3replicationcommon.s3_complete_multipart_upload \
-                        import S3AsyncCompleteMultipartUpload
+    import S3AsyncCompleteMultipartUpload
 
 
 async def main():

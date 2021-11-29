@@ -52,7 +52,7 @@ async def main():
     total_parts = config.total_parts
     request_id = "dummy-request-id"
 
-    # Upload id
+    # Provide actual upload ID in place of __UPLOAD_ID__
     upload_id = "__UPLOAD_ID__"
 
     obj_data_generator = MultipartObjectDataGenerator(

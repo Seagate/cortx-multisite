@@ -24,7 +24,7 @@ import sys
 from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_complete_multipart_upload   \
-                    import S3AsyncCompleteMultipartUpload
+    import S3AsyncCompleteMultipartUpload
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 
@@ -51,9 +51,9 @@ async def main():
     bucket_name = config.source_bucket_name
     request_id = "dummy-request-id"
 
-    # Upload id
-    #upload_id = "__UPLOAD_ID__"
-    upload_id = "313b0a0d-a5ed-4b87-9149-d7f6f5587e77"
+    # Provide actual upload ID in place of __UPLOAD_ID__
+    upload_id = "__UPLOAD_ID__"
+
     # Etag dictionary
     # Example : etag_dict = {1: '"7ade650b8547b04d5fa6ba96e10c8b5f"'}
     etag_dict = {1: "__ETAG_PART1__", 2: "__ETAG_PART2__"}

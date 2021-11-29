@@ -36,7 +36,7 @@ async def main():
         bucket_name = config.source_bucket_name
         object_name = config.object_name_prefix
 
-        # Upload id
+        # Provide actual upload ID in place of __UPLOAD_ID__
         upload_id = "__UPLOAD_ID__"
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(bucket_name, object_name)

@@ -17,17 +17,14 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 import aiohttp
-import fileinput
 import os
 import sys
-from os.path import join, dirname, abspath
-import re
-from pathlib import Path
 import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
+
 
 class S3AsyncPutObjectTagging:
     def __init__(self, session, request_id,
@@ -66,13 +63,13 @@ class S3AsyncPutObjectTagging:
         body = ""
 
         # Prepare tag xml format
-        str1 = "<Tagging><TagSet>"
-        str2 = "</TagSet></Tagging>"
+        tag_str1 = "<Tagging><TagSet>"
+        tag_str2 = "</TagSet></Tagging>"
         result = ""
         for key, val in (self._tag_set).items():
-            result = result + "<Tag><Key>"+key+"</Key><Value>"+val+"</Value></Tag>"
+            result = result + "<Tag><Key>" + key + "</Key><Value>" + val + "</Value></Tag>"
 
-        tagset = str1 + result + str2
+        tagset = tag_str1 + result + tag_str2
 
         headers = AWSV4Signer(
             self._session.endpoint,

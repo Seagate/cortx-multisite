@@ -24,7 +24,7 @@ import sys
 from config import Config
 from s3replicationcommon.log import setup_logger
 from s3replicationcommon.s3_create_multipart_upload \
-                    import S3AsyncCreateMultipartUpload
+    import S3AsyncCreateMultipartUpload
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 

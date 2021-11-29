@@ -42,7 +42,7 @@ async def main():
         total_parts = int(config.total_parts)
         object_size = int(config.object_size)
 
-        # Upload id
+        # Provide actual upload ID in place of __UPLOAD_ID__
         upload_id = "__UPLOAD_ID__"
         total_chunk = int(object_size / total_parts)
 

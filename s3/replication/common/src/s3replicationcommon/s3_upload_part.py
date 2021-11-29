@@ -142,16 +142,3 @@ class S3AsyncUploadPart:
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
         return
-
-    def pause(self):
-        self._state = S3RequestState.PAUSED
-        # XXX Take real pause action
-
-    def resume(self):
-        self._state = S3RequestState.PAUSED
-        # XXX Take real resume action
-
-    def abort(self):
-        self._state = S3RequestState.ABORTED
-        # Abort the reader so that PUT can stop.
-        self._data_reader.abort()
