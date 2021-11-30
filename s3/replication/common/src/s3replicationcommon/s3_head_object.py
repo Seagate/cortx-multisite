@@ -18,6 +18,7 @@
 #
 import aiohttp
 import sys
+import urllib
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
@@ -26,7 +27,8 @@ from s3replicationcommon.log import fmt_reqid_log
 
 class S3AsyncHeadObject:
     def __init__(self, session, request_id,
-                 bucket_name, object_name):
+                 bucket_name, object_name,
+                 version_id):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -35,6 +37,8 @@ class S3AsyncHeadObject:
 
         self._bucket_name = bucket_name
         self._object_name = object_name
+
+        self._version_id = version_id
 
         self.remote_down = False
         self._http_status = None
@@ -401,11 +405,14 @@ class S3AsyncHeadObject:
         """Return total time for HEAD Object operation."""
         return self._timer.elapsed_time_ms()
 
-    async def get(self):
+    async def get(self, part_number):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
 
-        query_params = ""
+        self._part_number = part_number
+
+        query_params = urllib.parse.urlencode(
+            {'partNumber': self._part_number, 'versionId': self._version_id})
         body = ""
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -434,7 +441,7 @@ class S3AsyncHeadObject:
         try:
             async with self._session.get_client_session().head(
                     self._session.endpoint + request_uri,
-                    headers=headers) as resp:
+                    params=query_params, headers=headers) as resp:
 
                 if resp.status == 200:
                     self._response_headers = dict(resp.headers)
@@ -452,7 +459,7 @@ class S3AsyncHeadObject:
                         fmt_reqid_log(self._request_id) +
                         'HEAD Object failed with http status: {}'.
                         format(resp.status) +
-                        'Error Response: {}'.format(error_msg))
+                        ' Error Response: {}'.format(error_msg))
                     return
 
                 self._state = S3RequestState.RUNNING

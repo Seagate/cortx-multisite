@@ -169,7 +169,7 @@ class S3AsyncGetObject:
                     self._object_range = len(data_chunk)
                     if not data_chunk:
                         break
-                    self._logger.info(
+                    self._logger.debug(
                         fmt_reqid_log(self._request_id) +
                         "Received data_chunk of size {} bytes.".format(
                             len(data_chunk)))
