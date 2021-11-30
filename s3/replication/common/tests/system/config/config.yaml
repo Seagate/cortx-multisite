@@ -9,9 +9,10 @@ object_tag_name: user-tag
 object_tag_value: user-tag-value
 range_read_offset: -1
 range_read_length: -1
-object_size: 1024
+object_size: 26214400 # i.e. 25MB
 total_objects: 100
 transfer_chunk_size: 4096
+total_parts: 5 # Make sure object_size / total_parts >= 5Mb for all parts.
 max_s3_connections: 100
 max_threads_for_boto3: 100
 iam_role: <user_account_number> # User's Account ID
@@ -27,9 +28,10 @@ iam_role: <user_account_number> # User's Account ID
 #object_tag_value: user-tag-value
 #range_read_offset: -1
 #range_read_length: -1
-#object_size: 1024
+#object_size: 26214400 # i.e. 25MB
 #total_objects: 100
 #transfer_chunk_size: 4096
+#total_parts: 5 # Make sure object_size / total_parts >= 5Mb for all parts.
 #max_s3_connections: 100
 #max_threads_for_boto3: 100
 #iam_role: <user_account_number> # AWS User's Account ID. e.g. 456758429921
