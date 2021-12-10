@@ -33,7 +33,6 @@ import sys
 import time
 import uuid
 import yaml
-from random import randrange
 from s3replicationcommon.s3_create_multipart_upload import S3AsyncCreateMultipartUpload
 from s3replicationcommon.s3_upload_part import S3AsyncUploadPart
 from s3replicationcommon.s3_complete_multipart_upload import S3AsyncCompleteMultipartUpload

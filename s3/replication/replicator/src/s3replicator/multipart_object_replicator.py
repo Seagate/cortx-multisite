@@ -126,9 +126,32 @@ class MultipartObjectReplicator:
             else:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
 
-        # Future reference
         # Validation of Source and Target object ETag should be done after
         # completion of replication.
+        self._obj_reader = S3AsyncGetObject(
+                self._s3_source_session,
+                self._request_id,
+                self._source_bucket,
+                self._source_object,
+                int(self._object_size),
+                -1, -1)
+
+        reader_generator = self._obj_reader.fetch(
+                self._transfer_chunk_size_bytes)
+        async for _ in reader_generator:
+            pass
+
+        source_etag = self._obj_reader.get_etag()
+        target_etag = self._obj_complete.get_final_etag()
+        if source_etag == target_etag:
+            _logger.info(
+                "ETag matched for job_id {}".format(
+                self._job_id))
+        else:
+            _logger.error(
+                "ETag not matched for job_id {}".format(
+                self._job_id))
+
 
     def pause(self):
         """Pause the running object tranfer."""
