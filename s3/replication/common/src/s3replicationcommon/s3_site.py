@@ -21,11 +21,12 @@ from urllib.parse import urlparse
 
 
 class S3Site:
-    def __init__(self, endpoint, service_name, region):
+    def __init__(self, endpoint, service_name, region, admin_endpoint=None):
         """Initialise S3 session."""
         self.endpoint = endpoint
         self.service_name = service_name
         self.region = region
+        self.admin_endpoint = admin_endpoint
 
     def get_netloc(self):
         return urlparse(self.endpoint).netloc

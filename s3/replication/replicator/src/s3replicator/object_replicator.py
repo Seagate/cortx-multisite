@@ -22,6 +22,7 @@ from s3replicationcommon.job import JobEvents
 from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.s3_get_object import S3AsyncGetObject
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
+from s3replicationcommon.s3_update_replication_status import S3AsyncUpdatereplicationStatus
 from s3replicationcommon.timer import Timer
 
 _logger = logging.getLogger('s3replicator')
@@ -52,6 +53,12 @@ class ObjectReplicator:
             int(job.get_source_object_size()),
             self._range_read_offset,
             self._range_read_length)
+
+        self._object_status = S3AsyncUpdatereplicationStatus(
+            self._s3_source_session,
+            self._request_id,
+            job.get_source_bucket_name(),
+            job.get_source_object_name())
 
         # Setup target site info
         self._s3_target_session = target_session
@@ -101,6 +108,8 @@ class ObjectReplicator:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
 
         if JobEvents.COMPLETED:
+            await self._object_status.update('COMPLETED')
+
             source_etag = self._object_source_reader.get_etag()
             target_etag = self._object_writer.get_etag()
 

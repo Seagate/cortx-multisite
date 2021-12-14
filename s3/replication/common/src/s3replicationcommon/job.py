@@ -119,6 +119,8 @@ class Job:
             assert self.get_source_object_size() is not None
 
             assert self.get_source_endpoint() is not None
+            #XXX Will be mandatory after service account integration
+            #assert self.get_source_admin_endpoint() is not None
             assert self.get_source_s3_service_name() is not None
             assert self.get_source_s3_region() is not None
 
@@ -254,7 +256,8 @@ class Job:
         """
         return S3Site(self.get_source_endpoint(),
                       self.get_source_s3_service_name(),
-                      self.get_source_s3_region())
+                      self.get_source_s3_region(),
+                      self.get_source_admin_endpoint())
 
     def get_source_bucket_name(self):
         """
@@ -273,6 +276,12 @@ class Job:
 
     def get_source_endpoint(self):
         return self._obj["source"]["endpoint"]
+
+    def get_source_admin_endpoint(self):
+        try:
+            return self._obj["source"]["admin_endpoint"]
+        except KeyError:
+            return None
 
     def get_source_s3_service_name(self):
         return self._obj["source"]["service_name"]
