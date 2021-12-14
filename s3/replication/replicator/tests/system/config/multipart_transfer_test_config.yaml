@@ -1,11 +1,12 @@
-# Load tranfer test configs for replicator
-count_of_obj: 2
+# Multipart tranfer test config for replicator
+count_of_obj: 1
 min_obj_size: 1024  # 1k - size in bytes
 max_obj_size: 2048  # 2k - size in bytes
-fixed_size: 1024  # 1k - size in bytes
+fixed_size: 26214400  # 25Mb - size in bytes
 # True use random size objects, False fixed size.
-random_size_enabled: true
+random_size_enabled: false
 source_bucket: "sourcebucket"
 target_bucket: "targetbucket"
+total_parts: 5 # 5 parts of 1 object for multipart upload.
 polling_wait_time: 5  # 5 secs wait between polling job status.
 polling_count: 10

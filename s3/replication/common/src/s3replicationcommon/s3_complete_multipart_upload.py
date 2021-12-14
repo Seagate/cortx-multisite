@@ -70,6 +70,7 @@ class S3AsyncCompleteMultipartUpload:
         return self._final_etag
 
     async def complete_upload(self):
+        self._state = S3RequestState.RUNNING
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
         query_params = urllib.parse.urlencode({'uploadId': self._upload_id})
@@ -120,6 +121,7 @@ class S3AsyncCompleteMultipartUpload:
                     self._session.endpoint + request_uri))
 
                 if resp.status == 200:
+                    self._state = S3RequestState.COMPLETED
                     # Get the response header and body
                     self._response_headers = resp.headers
                     self._logger.info('Response headers {}'.format(
