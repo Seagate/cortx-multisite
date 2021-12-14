@@ -17,17 +17,20 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 import aiohttp
-import sys
-import json
 import base64
-from s3replicationcommon.s3_common import S3RequestState
-from s3replicationcommon.timer import Timer
+import json
+import urllib.parse
+import sys
+
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
 from s3replicationcommon.log import fmt_reqid_log
+from s3replicationcommon.s3_common import S3RequestState
+from s3replicationcommon.timer import Timer
+from yarl import URL
 
 
 class S3AsyncUpdatereplicationStatus:
-    def __init__(self, session, request_id,
+    def __init__(self, session, request_id, account_id,
                  bucket_name, object_name):
         """Initialise."""
         self._session = session
@@ -35,17 +38,17 @@ class S3AsyncUpdatereplicationStatus:
         self._request_id = request_id
         self._logger = session.logger
 
+        self._account_id = account_id
         self._bucket_name = bucket_name
         self._object_name = object_name
 
-        self.remote_down = False
+        self._remote_down = False
         self._http_status = None
 
         self._timer = Timer()
         self._state = S3RequestState.INITIALISED
 
-        self.global_bucket_index_id = "AAAAAAAAAHg=-AQAQAAAAAAA="
-        self.bucket_metadata_index_id = "AAAAAAAAAHg=-AgAQAAAAAAA="
+        self._bucket_metadata_index_id = "AAAAAAAAAHg=-AgAQAAAAAAA="
 
     def get_state(self):
         """Returns current request state."""
@@ -56,8 +59,11 @@ class S3AsyncUpdatereplicationStatus:
         return self._timer.elapsed_time_ms()
 
     def kv_session(self, index, key, value=None):
-        request_uri = '/indexes/{}/{}'.format(index, key)
-        full_uri = self._session.admin_endpoint + request_uri
+        """Set up connection context for admin KV store API."""
+        canonical_uri = '/indexes/{}/{}'.format(
+            urllib.parse.quote(index, safe=""),
+            urllib.parse.quote(key))
+        request_uri = self._session.admin_endpoint + canonical_uri
 
         query_params = ""
         body = value or ""
@@ -68,7 +74,7 @@ class S3AsyncUpdatereplicationStatus:
             self._session.access_key,
             self._session.secret_key).prepare_signed_header(
             'GET' if value is None else 'PUT',
-            request_uri,
+            canonical_uri,
             query_params,
             body
         )
@@ -80,23 +86,29 @@ class S3AsyncUpdatereplicationStatus:
 
         self._logger.info(fmt_reqid_log(self._request_id) +
                           'Motr index operation on {} {}'.format(
-                              full_uri, body))
+                              request_uri, body))
 
         if value is None:
+            # Called without a new value, assumed to be an HTTP GET
             return self._session.get_client_session().get(
-                full_uri,
+                URL(request_uri, encoded=True),
                 params=query_params, headers=headers)
         else:
+            # Going to PUT the new value
             return self._session.get_client_session().put(
-                full_uri,
+                URL(request_uri, encoded=True),
                 params=query_params, headers=headers,
                 data=body.encode())
 
     async def update(self, status):
+        """Use KV store admin API to update x-amz-replication-status."""
         self._timer.start()
         self._state = S3RequestState.RUNNING
 
         try:
+            # After integration with service account,
+            # this might become mandatory. Skip for now to
+            # avoid breaking existing code.
             if self._session.admin_endpoint is None:
                 self._logger.warn(fmt_reqid_log(self._request_id)
                                   + 'Admin API not configured, '
@@ -104,39 +116,17 @@ class S3AsyncUpdatereplicationStatus:
                 self._state = S3RequestState.COMPLETED
                 return
 
+            # Step 1. Get bucket metadata
+            # This is needed to figure out the Motr index holding
+            # object metadata for this bucket.
             async with self.kv_session(
-                    self.global_bucket_index_id,
-                    self._bucket_name) as resp:
+                    self._bucket_metadata_index_id,
+                    # The key in the bucket index is of the form
+                    #     <account-id>/<bucket-name>
+                    self._account_id + '/' + self._bucket_name) as resp:
 
                 if resp.status == 200:
-                    bucket_info = json.loads(await resp.text())
-                    self._logger.info(fmt_reqid_log(self._request_id) +
-                                      'Bucket index lookup for {}'.
-                                      format(self._bucket_name) +
-                                      'response received with' +
-                                      ' status code: {}'.
-                                      format(resp.status))
-                    self._logger.debug(
-                        'bucket info: {}'.format(bucket_info))
-
-                else:
-                    self._state = S3RequestState.FAILED
-                    error_msg = await resp.text()
-                    self._logger.error(
-                        fmt_reqid_log(self._request_id) +
-                        'Index operation failed with http status: {}'.
-                        format(resp.status) +
-                        ' Error Response: {}'.format(error_msg))
-                    return
-
-            bucket_owner = bucket_info['account_id']
-
-            async with self.kv_session(
-                    self.bucket_metadata_index_id,
-                    bucket_owner + '/' + self._bucket_name) as resp:
-
-                if resp.status == 200:
-                    bucket_metadata = json.loads(await resp.text())
+                    bucket_metadata = await resp.json(content_type=None)
 
                     self._logger.info(fmt_reqid_log(self._request_id) +
                                       'Bucket index lookup for {} response'.
@@ -156,18 +146,25 @@ class S3AsyncUpdatereplicationStatus:
                         ' Error Response: {}'.format(error_msg))
                     return
 
+            # Magic part: the object list index layout seems to be a
+            # base64 encoded memory dump of a C struct. We first decode,
+            # then slice the high and low 64 bit integer values of the
+            # Motr index ID we want. The server expects this 128 bit ID
+            # as base64 encoded halves separated by a dash, like
+            #     AAAAAAAAAHg=-AgAQAAAAAAA=
             layout = base64.b64decode(
-                    bucket_metadata['motr_object_list_index_layout'])
+                bucket_metadata['motr_object_list_index_layout'])
             id_hi = base64.b64encode(layout[0:8]).decode()
             id_lo = base64.b64encode(layout[8:16]).decode()
             metadata_index = id_hi + '-' + id_lo
 
+            # Step 2. GET object metadata
             async with self.kv_session(
                     metadata_index,
                     self._object_name) as resp:
 
                 if resp.status == 200:
-                    object_metadata = json.loads(await resp.text())
+                    object_metadata = await resp.json(content_type=None)
                     self._logger.info(fmt_reqid_log(self._request_id) +
                                       'Object index lookup for {} in {}'.
                                       format(self._object_name,
@@ -188,8 +185,10 @@ class S3AsyncUpdatereplicationStatus:
                         ' Error Response: {}'.format(error_msg))
                     return
 
+            # Step 3. Set replication status to the provided value
             object_metadata['x-amz-replication-status'] = status
 
+            # Step 4. PUT updated object metadata
             async with self.kv_session(
                     metadata_index,
                     self._object_name,
@@ -218,7 +217,7 @@ class S3AsyncUpdatereplicationStatus:
             self._state = S3RequestState.COMPLETED
 
         except aiohttp.client_exceptions.ClientConnectorError as e:
-            self.remote_down = True
+            self._remote_down = True
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))

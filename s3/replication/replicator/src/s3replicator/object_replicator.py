@@ -54,9 +54,10 @@ class ObjectReplicator:
             self._range_read_offset,
             self._range_read_length)
 
-        self._object_status = S3AsyncUpdatereplicationStatus(
+        self._source_replication_status = S3AsyncUpdatereplicationStatus(
             self._s3_source_session,
             self._request_id,
+            job.get_source_owner_account_id(),
             job.get_source_bucket_name(),
             job.get_source_object_name())
 
@@ -108,7 +109,7 @@ class ObjectReplicator:
                 await observer.notify(JobEvents.COMPLETED, self._job_id)
 
         if JobEvents.COMPLETED:
-            await self._object_status.update('COMPLETED')
+            await self._source_replication_status.update('COMPLETED')
 
             source_etag = self._object_source_reader.get_etag()
             target_etag = self._object_writer.get_etag()
