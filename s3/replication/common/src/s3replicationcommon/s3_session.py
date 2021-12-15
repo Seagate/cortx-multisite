@@ -26,6 +26,7 @@ class S3Session:
         """Initialise S3 session."""
         self.logger = logger
         self.endpoint = s3_site.endpoint
+        self.admin_endpoint = s3_site.admin_endpoint
         self.service_name = s3_site.service_name
         self.region = s3_site.region
 

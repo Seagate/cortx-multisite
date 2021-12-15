@@ -90,6 +90,9 @@ class PrepareReplicationJob:
             '%Y%m%dT%H%M%SZ')
 
         job_dict["source"]["endpoint"] = cortx_s3["endpoint"]
+
+        if "admin_endpoint" in cortx_s3:
+            job_dict["source"]["admin_endpoint"] = cortx_s3["admin_endpoint"]
         job_dict["source"]["service_name"] = cortx_s3["s3_service_name"]
         job_dict["source"]["region"] = cortx_s3["s3_region"]
 
