@@ -68,20 +68,16 @@ class KafkaMain:
     # Getter methods
     def get_topic(self, job_id):
         """Returns the topic."""
-        self._topic = KafkaMain.job_id_to_offset[job_id]["Topic"]
-        return self._topic
+        return KafkaMain.job_id_to_offset[job_id]["Topic"]
 
     def get_partition(self, job_id):
-        self._partition = KafkaMain.job_id_to_offset[job_id]["Partition"]
-        return self._partition
+        return KafkaMain.job_id_to_offset[job_id]["Partition"]
 
     def get_offset(self, job_id):
-        self._offset = KafkaMain.job_id_to_offset[job_id]["Offset"]
-        return self._offset
+        return KafkaMain.job_id_to_offset[job_id]["Offset"]
 
     # Remove job from job-id to offset mapping after commit
-    @staticmethod
-    def remove_job_from_mapping(job_id):
+    def remove_job_from_mapping(self, job_id):
         removed_key = KafkaMain.job_id_to_offset.pop(job_id, None)
         if removed_key is not None:
             print("Removed job id from mapping : {}".format(removed_key))
@@ -159,4 +155,4 @@ class KafkaMain:
                 KafkaMain.last_commited_offset))
 
         # Remove the completed job from dictionary
-        KafkaMain.remove_job_from_mapping(job_id)
+        self.remove_job_from_mapping(job_id)
