@@ -32,6 +32,7 @@ from s3replicationmanager.prepare_job import PrepareReplicationJob
 from aiokafka import AIOKafkaConsumer
 from aiokafka.structs import OffsetAndMetadata, TopicPartition
 
+
 class KafkaMain:
     consumer = None
 
@@ -50,9 +51,6 @@ class KafkaMain:
 
     def __init__(self):
         """Initialize."""
-        # List store topic, partition and offset of each job
-        self._consumer_details = {}
-        self._job_id = 0
 
     # Initialize the kafka consumer
     # This method should be called from app.py class on startup.
@@ -71,9 +69,11 @@ class KafkaMain:
         return KafkaMain.job_id_to_offset[job_id]["Topic"]
 
     def get_partition(self, job_id):
+        """Returns the partition."""
         return KafkaMain.job_id_to_offset[job_id]["Partition"]
 
     def get_offset(self, job_id):
+        """Returns the offset."""
         return KafkaMain.job_id_to_offset[job_id]["Offset"]
 
     # Remove job from job-id to offset mapping after commit
@@ -85,7 +85,7 @@ class KafkaMain:
             print("Job id [{}] does not exist".format(job_id))
 
     # Send job for replication after consuming from kafka
-    async def sendJob(self, data):
+    async def sendJob(self, data, topic, partition, offset):
         print("Sending Jobs...")
         fdmi_dict = literal_eval(data)
         job_record = PrepareReplicationJob.from_fdmi(fdmi_dict)
@@ -101,13 +101,12 @@ class KafkaMain:
             return
 
         job = jobs_list.add_job_using_json(job_record)
-        self._job_id = job.get_job_id()
-        print("Added Job : {}".format(self._job_id))
+        job_id = job.get_job_id()
+        print("Added Job : {}".format(job_id))
 
-        # Add job id and consumer details list to dictionary
-        KafkaMain.job_id_to_offset[self._job_id] = self._consumer_details
+        KafkaMain.job_id_to_offset[job_id] = {
+            "Topic": topic, "Partition": partition, "Offset": offset}
         print("Job-id to offset mapping : {}".format(KafkaMain.job_id_to_offset))
-        self._consumer_details = {}
 
     # Start the consumer and add the consumer details into list
     async def consume(self):
@@ -125,13 +124,8 @@ class KafkaMain:
                     obj = json.loads(msg.value.decode())
                     print("Event consumed : {}", obj['cr_val'])
 
-                    self._consumer_details["Topic"] = msg.topic
-                    self._consumer_details["Partition"] = msg.partition
-                    self._consumer_details["Offset"] = msg.offset
-                    print(self._consumer_details)
-
                     # Send jobs for replication
-                    await self.sendJob(obj['cr_val'])
+                    await self.sendJob(obj['cr_val'], msg.topic, msg.partition, msg.offset)
         except Exception as e:
             print("Exception : {}".format(e))
         finally:
