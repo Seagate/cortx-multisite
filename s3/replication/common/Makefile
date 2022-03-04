@@ -44,10 +44,12 @@ common_tests:
 	python tests/system/test_get_object_tagging.py
 	@(printf "\n\nTest case: Transfers test object\n")
 	python tests/system/s3_async_transfer_object.py
+	@(printf "\n\nTest case: Multipart upload\n")
+	python tests/system/test_multipart_upload.py
 
 ifeq ($(TARGET), aws)
 aws_supported_tests:
-	@(printf "\naws supporeted tests...\n")
+	@(printf "\naws supported tests...\n")
 	@(printf "________________________\n")
 	@(printf "\n\nTest case: put bucket replication\n")
 	python tests/system/test_put_bucket_replication.py

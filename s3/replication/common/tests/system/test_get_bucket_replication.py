@@ -49,8 +49,8 @@ async def main():
         sys.exit(-1)
 
     # Read configs for future comparision
-    replication_prefix = config.object_name_prefix
-    test_replication_object = replication_prefix + 'test'
+    replication_prefix = str(config.object_name_prefix)
+    test_replication_object = replication_prefix
     replication_dest_bucket = config.target_bucket_name
 
     s3_site = S3Site(config.endpoint, config.s3_service_name, config.s3_region)
@@ -71,11 +71,11 @@ async def main():
     assert replication_rule._prefix == replication_prefix, \
         "replication_prefix mismatched"
     assert replication_rule._dest_bucket == replication_dest_bucket, \
-        "replication_dest_bucket mismatch"
+        "replication_dest_bucket mismatched"
 
     await session.close()
 
-    logger.info("AsyncS3GetBucketRepication test passed!")
+    logger.info("AsyncS3GetBucketReplication test passed!")
 
 
 loop = asyncio.get_event_loop()

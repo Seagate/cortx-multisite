@@ -16,8 +16,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+
 import aiohttp
-import os
 import sys
 import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
@@ -26,10 +26,9 @@ from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
-class S3AsyncPutObjectTagging:
+class S3AsyncCreateMultipartUpload:
     def __init__(self, session, request_id,
-                 bucket_name, object_name,
-                 obj_tag_set):
+                 bucket_name, object_name):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -38,8 +37,6 @@ class S3AsyncPutObjectTagging:
 
         self._bucket_name = bucket_name
         self._object_name = object_name
-
-        self._tag_set = obj_tag_set
 
         self._remote_down = False
         self._http_status = None
@@ -51,25 +48,21 @@ class S3AsyncPutObjectTagging:
         """Returns current request state."""
         return self._state
 
+    def get_response_header(self, header_key):
+        """Returns response http header value."""
+        self._resp_header_key = self._response_headers.get(header_key, None)
+        return self._resp_header_key
+
     def get_execution_time(self):
         """Return total time for GET operation."""
         return self._timer.elapsed_time_ms()
 
-    async def send(self):
-
+    async def create(self):
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
-        query_params = urllib.parse.urlencode({'tagging': ''})
+
+        query_params = urllib.parse.urlencode({'uploads': ''})
         body = ""
-
-        # Prepare tag xml format
-        tag_str1 = "<Tagging><TagSet>"
-        tag_str2 = "</TagSet></Tagging>"
-        result = ""
-        for key, val in (self._tag_set).items():
-            result = result + "<Tag><Key>" + key + "</Key><Value>" + val + "</Value></Tag>"
-
-        tagset = tag_str1 + result + tag_str2
 
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -77,11 +70,10 @@ class S3AsyncPutObjectTagging:
             self._session.region,
             self._session.access_key,
             self._session.secret_key).prepare_signed_header(
-            'PUT',
+            'POST',
             request_uri,
             query_params,
-            body
-        )
+            body)
 
         if (headers['Authorization'] is None):
             self._logger.error(fmt_reqid_log(self._request_id) +
@@ -89,21 +81,21 @@ class S3AsyncPutObjectTagging:
             sys.exit(-1)
 
         self._logger.info(fmt_reqid_log(
-            self._request_id) + 'PUT on {}'.format(
+            self._request_id) + 'POST on {}'.format(
             self._session.endpoint + request_uri))
         self._logger.debug(fmt_reqid_log(self._request_id) +
-                           "PUT Request Header {}".format(headers))
+                           "POST Request Header {}".format(headers))
 
         self._timer.start()
         try:
-            async with self._session.get_client_session().put(
+            async with self._session.get_client_session().post(
                     self._session.endpoint + request_uri,
-                    data=tagset, params=query_params,
+                    params=query_params,
                     headers=headers) as resp:
 
                 self._logger.info(
                     fmt_reqid_log(self._request_id) +
-                    'PUT response received with'
+                    'POST response received with'
                     + ' status code: {}'.format(resp.status))
                 self._logger.info('Response url {}'.format(
                     self._session.endpoint + request_uri))
@@ -112,16 +104,15 @@ class S3AsyncPutObjectTagging:
                     self._response_headers = resp.headers
                     self._logger.info('Response headers {}'.format(
                         self._response_headers))
-
-                    # Delete temporary tagset file.
-                    os.system('rm -rf tagset.xml')
+                    self._upload_id = self._response_headers.get(
+                        "UploadId", None)
 
                 else:
                     self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
                     self._logger.error(
                         fmt_reqid_log(self._request_id) +
-                        'PUT failed with http status: {}'.
+                        'POST failed with http status: {}'.
                         format(resp.status) +
                         ' Error Response: {}'.format(error_msg))
                     return

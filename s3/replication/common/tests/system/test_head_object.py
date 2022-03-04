@@ -46,14 +46,24 @@ async def main():
     session = S3Session(logger, s3_site, config.access_key, config.secret_key)
 
     # Generate object name
-    object_name = config.object_name_prefix + "test"
+    object_name = str(config.object_name_prefix)
     bucket_name = config.source_bucket_name
     request_id = "dummy-request-id"
 
+    # For Cortx, default value of version_id=None
+    # For AWS, user of this class should provide version-id as well.
+    version_id = None
+
+    # For Cortx, default value of part_number=None
+    # For AWS, user of this class should provide part-number as well.
+    part_number = None
+
     head_obj = S3AsyncHeadObject(session, request_id,
-                                 bucket_name,
-                                 object_name)
-    await head_obj.get()
+                                 bucket_name, object_name,
+                                 version_id)
+
+    # Pass the part_number to get specific part's information
+    await head_obj.get(part_number)
 
     # Validate if content length matches to object size
     if config.object_size == head_obj.get_content_length():

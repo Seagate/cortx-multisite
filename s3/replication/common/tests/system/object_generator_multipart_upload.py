@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #
 # Copyright (c) 2021 Seagate Technology LLC and/or its Affiliates
 #
@@ -17,27 +19,26 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
 
-import aiohttp
+from os import urandom
+from s3replicationcommon.s3_common import S3RequestState
 
 
-class S3Session:
-    def __init__(self, logger, s3_site, access_key, secret_key,
-                 number_of_connections=100):
-        """Initialise S3 session."""
-        self.logger = logger
-        self.endpoint = s3_site.endpoint
-        self.admin_endpoint = s3_site.admin_endpoint
-        self.service_name = s3_site.service_name
-        self.region = s3_site.region
+class MultipartObjectDataGenerator:
+    def __init__(self, logger, object_size, part_number):
+        """Initialise."""
+        self._logger = logger
 
-        self.access_key = access_key
-        self.secret_key = secret_key
+        self.object_size = object_size
+        self.part_number = part_number
 
-        connector = aiohttp.TCPConnector(limit=number_of_connections)
-        self._client_session = aiohttp.ClientSession(connector=connector)
+        self._state = S3RequestState.INITIALISED
 
-    def get_client_session(self):
-        return self._client_session
+    def get_state(self):
+        """Returns current request state."""
+        return self._state
 
-    async def close(self):
-        await self._client_session.close()
+    async def fetch(self, total_chunks):
+        self._state = S3RequestState.RUNNING
+        data = urandom(total_chunks)
+        self._state = S3RequestState.COMPLETED
+        yield data

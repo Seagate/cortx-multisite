@@ -16,8 +16,8 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 #
+
 import aiohttp
-import os
 import sys
 import urllib
 from s3replicationcommon.aws_v4_signer import AWSV4Signer
@@ -26,10 +26,10 @@ from s3replicationcommon.s3_common import S3RequestState
 from s3replicationcommon.timer import Timer
 
 
-class S3AsyncPutObjectTagging:
+class S3AsyncUploadPart:
     def __init__(self, session, request_id,
                  bucket_name, object_name,
-                 obj_tag_set):
+                 upload_id):
         """Initialise."""
         self._session = session
         # Request id for better logging.
@@ -39,11 +39,12 @@ class S3AsyncPutObjectTagging:
         self._bucket_name = bucket_name
         self._object_name = object_name
 
-        self._tag_set = obj_tag_set
+        self._upload_id = upload_id
 
-        self._remote_down = False
+        self.remote_down = False
         self._http_status = None
 
+        self._etag_dict = {}
         self._timer = Timer()
         self._state = S3RequestState.INITIALISED
 
@@ -51,25 +52,36 @@ class S3AsyncPutObjectTagging:
         """Returns current request state."""
         return self._state
 
+    def get_response_header(self, header_key):
+        """Returns response http header value."""
+        if self._state == S3RequestState.COMPLETED:
+            return self._response_headers[header_key]
+        return None
+
     def get_execution_time(self):
-        """Return total time for GET operation."""
+        """Return total time for PUT Object operation."""
         return self._timer.elapsed_time_ms()
 
-    async def send(self):
+    def get_etag(self):
+        """Returns ETag for object."""
+        return self._response_headers["ETag"].strip("\"")
+
+    def get_etag_dict(self):
+        """Returns Etag dictionary."""
+        return self._etag_dict
+
+    # data_reader is object with fetch method that can yield data
+    async def upload(self, data_reader, part_no, chunk_size):
+        self._state = S3RequestState.RUNNING
+        self._part_no = part_no
 
         request_uri = AWSV4Signer.fmt_s3_request_uri(
             self._bucket_name, self._object_name)
-        query_params = urllib.parse.urlencode({'tagging': ''})
+
+        print("Part Number : {}".format(self._part_no))
+        query_params = urllib.parse.urlencode(
+            {'partNumber': self._part_no, 'uploadId': self._upload_id})
         body = ""
-
-        # Prepare tag xml format
-        tag_str1 = "<Tagging><TagSet>"
-        tag_str2 = "</TagSet></Tagging>"
-        result = ""
-        for key, val in (self._tag_set).items():
-            result = result + "<Tag><Key>" + key + "</Key><Value>" + val + "</Value></Tag>"
-
-        tagset = tag_str1 + result + tag_str2
 
         headers = AWSV4Signer(
             self._session.endpoint,
@@ -80,56 +92,53 @@ class S3AsyncPutObjectTagging:
             'PUT',
             request_uri,
             query_params,
-            body
-        )
+            body)
 
         if (headers['Authorization'] is None):
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to generate v4 signature")
             sys.exit(-1)
 
-        self._logger.info(fmt_reqid_log(
-            self._request_id) + 'PUT on {}'.format(
-            self._session.endpoint + request_uri))
+        headers["Content-Length"] = str(chunk_size)
+
+        self._logger.info(fmt_reqid_log(self._request_id) +
+                          "PUT on {}".format(
+                              self._session.endpoint + request_uri))
         self._logger.debug(fmt_reqid_log(self._request_id) +
-                           "PUT Request Header {}".format(headers))
+                           "PUT with headers {}".format(headers))
 
         self._timer.start()
         try:
             async with self._session.get_client_session().put(
                     self._session.endpoint + request_uri,
-                    data=tagset, params=query_params,
-                    headers=headers) as resp:
+                    headers=headers,
+                    params=query_params,
+                    data=data_reader.fetch(chunk_size)) as resp:
+                self._timer.stop()
+
+                self._http_status = resp.status
+                self._response_headers = resp.headers
 
                 self._logger.info(
                     fmt_reqid_log(self._request_id) +
-                    'PUT response received with'
-                    + ' status code: {}'.format(resp.status))
-                self._logger.info('Response url {}'.format(
-                    self._session.endpoint + request_uri))
+                    'PUT Object completed with http status: {}'
+                    '\n header{}'.format(
+                        resp.status, self._response_headers))
+
+                self._etag_dict[self._part_no] = self._response_headers["Etag"]
 
                 if resp.status == 200:
-                    self._response_headers = resp.headers
-                    self._logger.info('Response headers {}'.format(
-                        self._response_headers))
-
-                    # Delete temporary tagset file.
-                    os.system('rm -rf tagset.xml')
-
+                    self._state = S3RequestState.COMPLETED
                 else:
-                    self._state = S3RequestState.FAILED
                     error_msg = await resp.text()
                     self._logger.error(
                         fmt_reqid_log(self._request_id) +
-                        'PUT failed with http status: {}'.
-                        format(resp.status) +
-                        ' Error Response: {}'.format(error_msg))
-                    return
-
+                        'Error Response: {}'.format(error_msg))
+                    self._state = S3RequestState.FAILED
         except aiohttp.client_exceptions.ClientConnectorError as e:
-            self._remote_down = True
+            self._timer.stop()
+            self.remote_down = True
             self._state = S3RequestState.FAILED
             self._logger.error(fmt_reqid_log(self._request_id) +
                                "Failed to connect to S3: " + str(e))
-        self._timer.stop()
         return

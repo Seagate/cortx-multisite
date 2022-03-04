@@ -51,7 +51,7 @@ async def main():
     bucket_name = config.source_bucket_name
 
     # Generate object names
-    object_name = config.object_name_prefix + "test"
+    object_name = str(config.object_name_prefix)
     object_size = config.object_size
     request_id = "dummy-request-id"
 
