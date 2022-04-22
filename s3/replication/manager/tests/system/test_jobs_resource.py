@@ -22,7 +22,6 @@
 import aiohttp
 import pytest
 
-from fixtures.jobs import fdmi_job  # noqa: F401;
 
 # Global job id to perform validations across test cases.
 global_valid_job_id = ""

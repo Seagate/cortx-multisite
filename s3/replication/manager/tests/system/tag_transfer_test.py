@@ -26,20 +26,16 @@
 
 import aiohttp
 import asyncio
-import hashlib
 import os
 import sys
 import time
 import uuid
 import yaml
-from random import randrange
-from s3replicationcommon.s3_put_object import S3AsyncPutObject
+import secrets
 from s3replicationcommon.s3_put_object_tagging import S3AsyncPutObjectTagging
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
 from s3replicationcommon.log import setup_logger
-from s3replicationcommon.s3_common import S3RequestState
-from s3replicationcommon.templates import fdmi_record_template
 from s3replicationcommon.templates import fdmi_record_tag_template
 from s3replicationmanager.config import Config as ManagerConfig
 from s3_config import S3Config
@@ -125,8 +121,7 @@ async def setup_source(session, test_config):
         # Generate object size
         object_size = test_config.fixed_size
         if test_config.random_size_enabled:
-            object_size = randrange(
-                test_config.min_obj_size,
+            object_size = secrets.randbelow(
                 test_config.max_obj_size)
 
         tagset = {}

@@ -64,20 +64,24 @@ class KafkaMain:
             enable_auto_commit=False)
 
     # Getter methods
-    def get_topic(self, job_id):
+    @staticmethod
+    def get_topic(job_id):
         """Returns the topic."""
         return KafkaMain.job_id_to_offset[job_id]["Topic"]
 
-    def get_partition(self, job_id):
+    @staticmethod
+    def get_partition(job_id):
         """Returns the partition."""
         return KafkaMain.job_id_to_offset[job_id]["Partition"]
 
-    def get_offset(self, job_id):
+    @staticmethod
+    def get_offset(job_id):
         """Returns the offset."""
         return KafkaMain.job_id_to_offset[job_id]["Offset"]
 
     # Remove job from job-id to offset mapping after commit
-    def remove_job_from_mapping(self, job_id):
+    @staticmethod
+    def remove_job_from_mapping(job_id):
         removed_key = KafkaMain.job_id_to_offset.pop(job_id, None)
         if removed_key is not None:
             print("Removed job id from mapping : {}".format(removed_key))
@@ -138,8 +142,8 @@ class KafkaMain:
     # After getting replication status as completed
     async def commit_job(self, job_id):
         """Manual commit to Kafka."""
-        tp = TopicPartition(self.get_topic(job_id), self.get_partition(job_id))
-        offsets = {tp: OffsetAndMetadata(self.get_offset(job_id), '')}
+        tp = TopicPartition(KafkaMain.get_topic(job_id), KafkaMain.get_partition(job_id))
+        offsets = {tp: OffsetAndMetadata(KafkaMain.get_offset(job_id), '')}
         await KafkaMain.consumer.commit(offsets=offsets)
 
         # Get the last committed offset
@@ -149,4 +153,4 @@ class KafkaMain:
                 KafkaMain.last_commited_offset))
 
         # Remove the completed job from dictionary
-        self.remove_job_from_mapping(job_id)
+        KafkaMain.remove_job_from_mapping(job_id)

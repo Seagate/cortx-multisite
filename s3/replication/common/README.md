@@ -44,7 +44,6 @@ For some tests 'aws cli' installation is also required for now. aws s3api is use
 If user wants to run tests for aws endpoint, then one has to pass `TARGET=aws`.
 Before running `make test` be sure to provide right config options in ./tests/system/config/config.yaml file.
 
-
 ***Note: DO NOT accidently commit/checkin your access_key/secret_key***
 
 ```sh

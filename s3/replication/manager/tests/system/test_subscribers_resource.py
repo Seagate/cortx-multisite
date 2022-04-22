@@ -22,7 +22,6 @@
 import aiohttp
 import pytest
 
-from fixtures.subscribe import subscriber_record  # noqa: F401;
 
 # Global subscriber id to perform validations across test cases.
 global_valid_subscriber_id = ""

@@ -64,9 +64,7 @@ class JobEvents(Enum):
 
 
 class Job:
-
-    """
-    A Job class to store replication job attributes.
+    """A Job class to store replication job attributes.
 
     Provides methods to serialise/deserialise as json. Maintains S3
     replication source and target details, operation type etc. For Job json

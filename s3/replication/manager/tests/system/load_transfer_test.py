@@ -32,7 +32,7 @@ import sys
 import time
 import uuid
 import yaml
-from random import randrange
+import secrets
 from s3replicationcommon.s3_put_object import S3AsyncPutObject
 from s3replicationcommon.s3_site import S3Site
 from s3replicationcommon.s3_session import S3Session
@@ -73,7 +73,7 @@ class ObjectDataGenerator:
         self._logger = logger
         self._object_name = object_name
         self._object_size = object_size
-        self._hash = hashlib.md5()
+        self._hash = hashlib.sha512()
         self._state = S3RequestState.INITIALISED
 
     def get_state(self):
@@ -181,8 +181,7 @@ async def setup_source(session, test_config, transfer_chunk_size):
         # Generate object size
         object_size = test_config.fixed_size
         if test_config.random_size_enabled:
-            object_size = randrange(
-                test_config.min_obj_size,
+            object_size = secrets.randbelow(
                 test_config.max_obj_size)
 
         # Generate object name

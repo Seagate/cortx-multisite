@@ -1,11 +1,11 @@
 import boto3
-from botocore.exceptions import ClientError
 import json
 import os
 import time
 
 def get_s3(region=None):
     """
+
     Get a Boto 3 Amazon S3 resource with a specific AWS Region or with your
     default AWS Region.
     """
@@ -17,7 +17,6 @@ def delete_bucket(bucket):
 
     s3 = boto3.resource('s3')
     buckets=[b.name for b in s3.buckets.all()]
-    
     if bucket in buckets:
         initial = True
     else:
@@ -116,7 +115,8 @@ def enable_versioning(bucket_name, s3_resource):
 
 
 def create_iam_role(role_name):
-    json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"}, "Action": "sts:AssumeRole"}]}')
+    json_data=json.loads('{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "s3.amazonaws.com"},'\
+    '"Action": "sts:AssumeRole"}]}')
     role_name=role_name
 
     session = boto3.session.Session(profile_name='default')
@@ -128,7 +128,10 @@ def create_iam_role(role_name):
 
 def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
 
-    role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication","s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
+    role_permissions_policy=json.loads('{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetObjectVersionForReplication",'\
+    '"s3:GetObjectVersionAcl","s3:GetObjectVersionTagging"],"Resource":["arn:aws:s3:::'+src_bucket+'/*"]},'\
+    '{"Effect":"Allow","Action":["s3:ListBucket","s3:GetReplicationConfiguration"],"Resource":["arn:aws:s3:::'+src_bucket+'"]},'\
+    '{"Effect":"Allow","Action":["s3:ReplicateObject","s3:ReplicateDelete","s3:ReplicateTags"],"Resource":"arn:aws:s3:::'+dest_bucket+'/*"}]}')
 
     client = boto3.client('iam')
     response = client.put_role_policy(
@@ -138,7 +141,8 @@ def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
     )
     response=client.get_role(RoleName=role_name)
     arn = response['Role']['Arn']
-    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": { "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
+    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": { "Status": "Disabled" },'\
+    '"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
     client = boto3.client('s3')
     client.put_bucket_replication(Bucket=src_bucket, ReplicationConfiguration=replication_config)
 
@@ -363,6 +367,7 @@ def auto():
 def main():
     auto()
     #prompt()
+    
 
 if __name__ == '__main__':
     main()
