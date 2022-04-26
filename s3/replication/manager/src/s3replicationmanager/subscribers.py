@@ -54,6 +54,7 @@ class Subscriber:
             count (int): Number of jobs sent to subscriber.
 
         Returns:
+        -------
             int: -1 on failure if subscriber does not have enough capacity
                  defined by prefetch_count, 0 on success
         """
@@ -70,6 +71,7 @@ class Subscriber:
             count (int): Number of jobs acknowledged by subscriber.
 
         Returns:
+        -------
             int: -1 on failure - cannot acknowledged more than we have sent,
                  0 on success
         """
@@ -105,6 +107,7 @@ class Subscribers(OrderedDict):
         """Returns total subscribers in collection.
 
         Returns:
+        -------
             int: Count of subscribers in collection.
         """
         return len(self)

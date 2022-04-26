@@ -27,7 +27,7 @@ def fmt_reqid_log(request_id=None):
     """Generates formatted string with request id for logging.
 
     Args
-    -----
+    ----
         request_id (str, optional): ID used in logs for easy debugging.
         Defaults to None.
     """

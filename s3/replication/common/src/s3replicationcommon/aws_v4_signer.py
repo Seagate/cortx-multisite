@@ -197,8 +197,7 @@ class AWSV4Signer(object):
             query_params,
             body,
             read_range=None):
-        """
-        Generate headers used for authorization requests.
+        """Generate headers used for authorization requests.
 
         Parameters:
 

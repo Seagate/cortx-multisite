@@ -30,7 +30,6 @@ from s3replicationcommon.s3_common import make_baseurl
 
 
 class Config:
-
     """Configuration for replicator."""
 
     def __init__(self, configfile):

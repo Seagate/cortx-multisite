@@ -38,6 +38,7 @@ class TranferEventHandler:
         """Handles a given JobEvent.
 
         Args:
+        -------
             event (JobEvents): Job event enum value.
             job (Job): Job for which event is handled.
         """
