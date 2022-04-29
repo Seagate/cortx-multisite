@@ -120,10 +120,11 @@ def create_iam_role(role_name):
 
     session = boto3.session.Session(profile_name='default')
     iam = session.client('iam')
-    iam.create_role(
+    response = iam.create_role(
         RoleName=role_name,
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
+    print((response['ResponseMetadata'])['HTTPStatusCode'])
 
 def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
 
@@ -235,8 +236,8 @@ def verbose(verbose, prompt, message):
     if not verbose:
         return
 
-    # Commenting out due to codecy issue
-    # Commenting out doesn't seem to make any impact on code flow
+    # Call here taking two arguments even if function definition has one, and codacy flagged it.
+    # Commenting out given no functional need seen and no impact seen on removal
     # create_iam_role(src_bucket, dest_bucket)
     
     print("About to create bucket %s" % message)
