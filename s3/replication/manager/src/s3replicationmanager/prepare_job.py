@@ -35,7 +35,6 @@ class PrepareReplicationJob:
     @staticmethod
     def from_fdmi(fdmi_record):
         """Prepare replication job record from fdmi record."""
-
         # XXX All below, source/target credentials logic to change after
         # S3 server changes are ready for setting up replication.
 

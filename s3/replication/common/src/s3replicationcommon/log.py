@@ -46,7 +46,6 @@ def setup_logger(logger_name: str, log_config_file: str):
         None on failure
         logger on success
     """
-
     logger = logging.getLogger(logger_name)
 
     log_props = None
