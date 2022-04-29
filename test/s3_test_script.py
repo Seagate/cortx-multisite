@@ -56,7 +56,6 @@ def create_bucket(bucket_name, region):
 
 def delete_versioning(bucket, s3_resource):
     enabled=False
-    
     client=boto3.client('s3')
     try:
         response = client.get_bucket_versioning(
@@ -121,7 +120,7 @@ def create_iam_role(role_name):
 
     session = boto3.session.Session(profile_name='default')
     iam = session.client('iam')
-    response = iam.create_role(
+    iam.create_role(
         RoleName=role_name,
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
@@ -210,7 +209,8 @@ def create_replication_policy(bucket_name, region, role_name, policy_name):
     client = boto3.client('iam')
     response=client.get_role(RoleName=role_name)
     arn = response['Role']['Arn']
-    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": { "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
+    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": '\
+    '{ "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
     
     return replication_config
 
@@ -235,7 +235,9 @@ def verbose(verbose, prompt, message):
     if not verbose:
         return
 
-    create_iam_role(src_bucket, dest_bucket)
+    # Commenting out due to codecy issue
+    # Commenting out doesn't seem to make any impact on code flow
+    # create_iam_role(src_bucket, dest_bucket)
     
     print("About to create bucket %s" % message)
     input("Press Enter to continue")
