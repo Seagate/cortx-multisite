@@ -4,11 +4,7 @@ import os
 import time
 
 def get_s3(region=None):
-    """
-
-    Get a Boto 3 Amazon S3 resource with a specific AWS Region or with your
-    default AWS Region.
-    """
+    """Get a Boto 3 Amazon S3 resource with a specific AWS Region or with your default AWS Region."""
     return boto3.resource('s3', region_name=region) if region else boto3.resource('s3')
 
 def delete_bucket(bucket):
@@ -69,7 +65,7 @@ def delete_versioning(bucket, s3_resource):
         return False
     versioning = s3_resource.BucketVersioning(bucket)
     versioning.suspend()
-    
+
     try:
         response = client.get_bucket_versioning(
             Bucket=bucket
