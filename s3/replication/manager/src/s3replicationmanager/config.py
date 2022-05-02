@@ -55,7 +55,7 @@ class Config:
         and sets up members to be used within application.
 
         Returns:
-        -------
+        --------
             on success returns self
         """
         with open(self.configfile, 'r') as file_config:

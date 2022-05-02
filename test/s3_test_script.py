@@ -56,7 +56,6 @@ def create_bucket(bucket_name, region):
 
 def delete_versioning(bucket, s3_resource):
     enabled=False
-    
     client=boto3.client('s3')
     try:
         response = client.get_bucket_versioning(
@@ -125,6 +124,7 @@ def create_iam_role(role_name):
         RoleName=role_name,
         AssumeRolePolicyDocument=json.dumps(json_data),
     )
+    print((response['ResponseMetadata'])['HTTPStatusCode'])
 
 def put_role_policy(role_name, policy_name, src_bucket, dest_bucket):
 
@@ -210,7 +210,8 @@ def create_replication_policy(bucket_name, region, role_name, policy_name):
     client = boto3.client('iam')
     response=client.get_role(RoleName=role_name)
     arn = response['Role']['Arn']
-    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": { "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
+    replication_config=json.loads('{"Role": "'+arn+'","Rules": [{"Status": "Enabled","Priority": 1,"DeleteMarkerReplication": '\
+    '{ "Status": "Disabled" },"Filter" : { "Prefix": "Tax"},"Destination": {"Bucket": "arn:aws:s3:::'+dest_bucket+'"}}]}')
     
     return replication_config
 
@@ -235,7 +236,9 @@ def verbose(verbose, prompt, message):
     if not verbose:
         return
 
-    create_iam_role(src_bucket, dest_bucket)
+    # Call here taking two arguments even if function definition has one, and codacy flagged it.
+    # Commenting out given no functional need seen and no impact seen on removal
+    # create_iam_role(src_bucket, dest_bucket)
     
     print("About to create bucket %s" % message)
     input("Press Enter to continue")
