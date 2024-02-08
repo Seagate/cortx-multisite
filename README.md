@@ -1,8 +1,8 @@
 [![ license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/Seagate/cortx-multisite/blob/main/LICENSE)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6b67dd07d8b84fb0ab56036851b79b95)](https://app.codacy.com/gh/Seagate/cortx-multisite?utm_source=github.com&utm_medium=referral&utm_content=Seagate/cortx-multisite&utm_campaign=Badge_Grade_Settings)
 [![YouTube](https://img.shields.io/badge/Video-YouTube-red)](https://cortx.link/videos)
 [![Slack](https://img.shields.io/badge/chat-on%20Slack-blue")](https://cortx.link/join-slack)
 
+# Disclaimer: This project is not maintained anymore
 # CORTX S3 Multisite
 CORTX S3 Multisite feature provides ability to Asynchronous replication of S3 objects across CORTX clusters or S3 regions or to any S3 compatible object storages.
 
